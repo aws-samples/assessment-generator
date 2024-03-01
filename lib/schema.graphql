@@ -1,0 +1,36 @@
+type Stat {
+  feedback: Int
+  count: Int
+}
+
+type Summary {
+  id: ID!
+  name: String
+  contents: [String]
+  timestamp: String
+  stats: [Stat]
+  feedback: Feedback
+}
+
+type Feedback {
+  summaryid: ID!
+  feedback: Int
+  timestamp: String
+  summary: Summary
+}
+
+input CreateFeedbackInput {
+  summaryid: ID!
+  feedback: Int!
+}
+
+type Mutation {
+  createFeedback(input: CreateFeedbackInput!): Feedback
+}
+
+type Query {
+  listSummaries: [Summary]
+  getSummary(id: ID): Summary
+  listFeedbacks: [Feedback]
+  getFeedback(summaryid: ID): Feedback
+}
