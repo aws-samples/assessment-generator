@@ -129,7 +129,7 @@ export class FrontendStack extends NestedStack {
                   childProcess.execSync('cd ui/node_modules || (cd ui && npm ci)', execOptions);
                   childProcess.execSync('cd ui && npm run build', execOptions);
 
-                  fsExtra.copySync('ui/build', outputDir);
+                  fsExtra.copySync('ui/out', outputDir);
                   return true;
                 } catch {
                   return false;
