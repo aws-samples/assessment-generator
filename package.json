@@ -22,6 +22,8 @@
   },
   "dependencies": {
     "@aws-appsync/utils": "^1.7.0",
+    "@cloudscape-design/components": "^3.0.558",
+    "@cloudscape-design/global-styles": "^1.0.23",
     "aws-cdk-lib": "2.128.0",
     "cdk-nag": "^2.28.50",
     "constructs": "^10.0.0",
