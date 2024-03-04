@@ -2,7 +2,7 @@ import { Construct } from 'constructs';
 import { Stack, StackProps, CfnOutput, aws_dynamodb } from 'aws-cdk-lib';
 import { AuthStack } from './auth-stack';
 import { DataStack } from './data-stack';
-import {FrontendStack} from "./frontend-stack";
+import { FrontendStack } from './frontend-stack';
 
 export class GenAssessStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -12,7 +12,7 @@ export class GenAssessStack extends Stack {
 
     const { api } = new DataStack(this, 'DataStack', { userpool: auth.userpool });
 
-    const frontendStack = new FrontendStack(this, 'FrontendStack', {...props, graphqlUrl: api.graphqlUrl});
+    const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
 
     new CfnOutput(this, 'UiConfing', {
       value: JSON.stringify({

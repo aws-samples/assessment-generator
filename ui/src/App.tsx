@@ -1,23 +1,56 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
-import { Button } from '@cloudscape-design/components';
+import { AppLayout, BreadcrumbGroup, Flashbar, HelpPanel, SideNavigation } from '@cloudscape-design/components';
+import { I18nProvider } from '@cloudscape-design/components/i18n';
+import messages from '@cloudscape-design/components/i18n/messages/all.en';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
+import { withAuthenticator } from '@aws-amplify/ui-react';
+import { commonRoutes, teacherRoutes } from './routes';
 
-function App() {
+const LOCALE = 'en';
+
+const router = createBrowserRouter([...commonRoutes, ...teacherRoutes]);
+
+export function App({ signOut, user }: WithAuthenticatorProps) {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a className="App-link" href="https://reactjs.org" target="_blank" rel="noopener noreferrer">
-          Learn React
-        </a>
-        <Button>Cloudscape</Button>
-      </header>
-    </div>
+    <I18nProvider locale={LOCALE} messages={[messages]}>
+      <AppLayout
+        breadcrumbs={
+          <BreadcrumbGroup
+            items={[
+              { text: 'Home', href: '#' },
+              { text: 'Service', href: '#' },
+            ]}
+          />
+        }
+        navigationOpen={true}
+        navigation={
+          <SideNavigation
+            header={{
+              href: '/',
+              text: 'Gen Assess',
+            }}
+            items={teacherRoutes.map(({ path }) => ({ type: 'link', text: path.slice(1), href: path }))}
+          />
+        }
+        notifications={
+          <Flashbar
+            items={[
+              {
+                type: 'info',
+                dismissible: true,
+                content: 'This is an info flash message.',
+                id: 'message_1',
+              },
+            ]}
+          />
+        }
+        toolsOpen={false}
+        tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
+        content={<RouterProvider router={router} />}
+      />
+    </I18nProvider>
   );
 }
 
-export default App;
+export default withAuthenticator(App);
