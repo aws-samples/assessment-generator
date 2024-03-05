@@ -5,11 +5,14 @@ import messages from '@cloudscape-design/components/i18n/messages/all.en';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { withAuthenticator } from '@aws-amplify/ui-react';
-import { commonRoutes, teacherRoutes } from './routes';
+import { teacherRoutes, studentRoutes } from './routes';
+import { titlise } from './helpers';
 
 const LOCALE = 'en';
 
-const router = createBrowserRouter([...commonRoutes, ...teacherRoutes]);
+const routes = true ? teacherRoutes : studentRoutes;
+const router = createBrowserRouter(routes);
+const [sideNavRoutes] = routes;
 
 export function App({ signOut, user }: WithAuthenticatorProps) {
   const [activeHref, setActiveHref] = React.useState('#/parent-page/child-page1');
@@ -37,16 +40,17 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
               // e.preventDefault();
               // setActiveHref(event.detail.href);
             }}
-            items={teacherRoutes.map(({ path, children }) => {
+            items={sideNavRoutes.children.map(({ path, children }) => {
+              console.log(path);
               if (children) {
                 return {
                   type: 'expandable-link-group',
-                  text: path.slice(1),
+                  text: titlise(path),
                   href: path,
-                  items: children.map(({ path: childPath }) => ({ type: 'link', text: childPath, href: path + '/' + childPath })),
+                  items: children.map(({ path: childPath }) => ({ type: 'link', text: titlise(childPath), href: `/${path}/${childPath}` })),
                 };
               } else {
-                return { type: 'link', text: path.slice(1), href: path };
+                return { type: 'link', text: titlise(path), href: path };
               }
             })}
           />

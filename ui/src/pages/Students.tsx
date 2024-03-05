@@ -7,14 +7,14 @@ export default () => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [{ path: settingsRoute, children: settingsRoutes }] = teacherRoutes;
-  const paths = settingsRoutes!.map(({ path }) => path);
+  const [, , { path: studentsPath, children: studentsRoutes }] = teacherRoutes;
+  const paths = studentsRoutes!.map(({ path }) => path);
   return (
     <ContentLayout>
       <Container
         header={
           <SpaceBetween size="l">
-            <Header variant="h1">Settings:</Header>
+            <Header variant="h1">Students:</Header>
           </SpaceBetween>
         }
       >
@@ -22,7 +22,7 @@ export default () => {
           <SpaceBetween size="l" alignItems="center">
             <SpaceBetween size="l" direction="horizontal">
               {paths?.map((path) => (
-                <Button key={`button-${path}`} href={`${settingsRoute}/${path}`}>
+                <Button key={`button-${path}`} href={`${studentsPath}/${path}`}>
                   <Box variant="h2" padding="m">
                     {path}
                   </Box>
