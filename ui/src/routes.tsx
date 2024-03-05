@@ -1,9 +1,14 @@
 import React from 'react';
 import DefaultSettings from './pages/DefaultSettings';
 import Settings from './pages/Settings';
+import Assessments from './pages/Assessments';
 import CreateKowledgeBase from './pages/CreateKnowledgeBase';
 import ModifyKnowledgeBase from './pages/ModifyKnowledgeBase';
 import CreateAssessmentTemplate from './pages/CreateAssessmentTemplate';
+import FindExistingAssessments from './pages/FindExistingAssessments';
+import GenerateAssessments from './pages/GenerateAssessments';
+import EditAssessments from './pages/EditAssessments';
+import SendAssessments from './pages/SendAssessments';
 
 export const commonRoutes = [
   {
@@ -37,7 +42,25 @@ export const teacherRoutes = [
   },
   {
     path: '/assessments',
-    element: <div>Assessments</div>,
+    element: <Assessments />,
+    children: [
+      {
+        path: 'find-existing-assessments',
+        element: <FindExistingAssessments />,
+      },
+      {
+        path: 'generate-assessments',
+        element: <GenerateAssessments />,
+      },
+      {
+        path: 'edit-assessments',
+        element: <EditAssessments />,
+      },
+      {
+        path: 'send-assessments',
+        element: <SendAssessments />,
+      },
+    ],
   },
   {
     path: '/students',

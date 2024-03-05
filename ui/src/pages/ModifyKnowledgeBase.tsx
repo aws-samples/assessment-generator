@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FileUpload, FormField, SpaceBetween, Box, Header, ContentLayout, Container, Form, Button } from '@cloudscape-design/components';
 
 export default () => {
-  const [file, setFile] = React.useState<File[]>([]);
+  const [files, setFiles] = React.useState<File[]>([]);
   return (
     <form onSubmit={(e) => e.preventDefault()}>
       <Form
@@ -11,7 +11,7 @@ export default () => {
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary" disabled={!file.length}>
+            <Button variant="primary" disabled={!files.length}>
               Submit
             </Button>
           </SpaceBetween>
@@ -30,8 +30,8 @@ export default () => {
               <SpaceBetween size="l" alignItems="start">
                 <FormField>
                   <FileUpload
-                    onChange={({ detail }) => setFile(detail.value)}
-                    value={file}
+                    onChange={({ detail }) => setFiles(detail.value)}
+                    value={files}
                     i18nStrings={{
                       uploadButtonText: (e) => (e ? 'Choose files' : 'Choose file'),
                       dropzoneText: (e) => (e ? 'Drop files to upload' : 'Drop file to upload'),
