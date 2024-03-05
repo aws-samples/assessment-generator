@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppLayout, BreadcrumbGroup, Flashbar, HelpPanel, SideNavigation } from '@cloudscape-design/components';
 import { I18nProvider } from '@cloudscape-design/components/i18n';
 import messages from '@cloudscape-design/components/i18n/messages/all.en';
@@ -12,6 +12,8 @@ const LOCALE = 'en';
 const router = createBrowserRouter([...commonRoutes, ...teacherRoutes]);
 
 export function App({ signOut, user }: WithAuthenticatorProps) {
+  const [activeHref, setActiveHref] = React.useState('#/parent-page/child-page1');
+
   return (
     <I18nProvider locale={LOCALE} messages={[messages]}>
       <AppLayout
@@ -26,11 +28,27 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
         navigationOpen={true}
         navigation={
           <SideNavigation
+            // activeHref={activeHref}
             header={{
               href: '/',
               text: 'Gen Assess',
             }}
-            items={teacherRoutes.map(({ path }) => ({ type: 'link', text: path.slice(1), href: path }))}
+            onFollow={(e) => {
+              // e.preventDefault();
+              // setActiveHref(event.detail.href);
+            }}
+            items={teacherRoutes.map(({ path, children }) => {
+              if (children) {
+                return {
+                  type: 'expandable-link-group',
+                  text: path.slice(1),
+                  href: path,
+                  items: children.map(({ path: childPath }) => ({ type: 'link', text: childPath, href: path + '/' + childPath })),
+                };
+              } else {
+                return { type: 'link', text: path.slice(1), href: path };
+              }
+            })}
           />
         }
         notifications={
