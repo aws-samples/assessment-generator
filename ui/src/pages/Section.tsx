@@ -1,7 +1,7 @@
 import React from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
-import { teacherRoutes } from '../routes';
+import { routes } from '../routes';
 import { titlise } from '../helpers';
 
 type SectionProps = { id: number };
@@ -10,9 +10,9 @@ export default (props: SectionProps) => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const { path: rootPath, children: routes } = teacherRoutes[0].children[props.id];
+  const { path: rootPath, children: childRoutes }: any = routes[0][0].children[props.id];
 
-  const paths = routes!.map(({ path }) => path);
+  const paths = childRoutes!.map(({ path }: any) => path);
   return (
     <ContentLayout>
       <Container
@@ -25,7 +25,7 @@ export default (props: SectionProps) => {
         <Box padding="xxxl">
           <SpaceBetween size="l" alignItems="center">
             <SpaceBetween size="l" direction="horizontal">
-              {paths?.map((path) => (
+              {paths?.map((path: any) => (
                 <Button key={`button-${path}`} href={`${rootPath}/${path}`}>
                   <Box variant="h2" padding="m">
                     {titlise(path)}

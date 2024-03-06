@@ -1,16 +1,20 @@
 import React from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
-import { teacherRoutes } from '../routes';
+import { routes } from '../routes';
 import { titlise } from '../helpers';
 
-export default () => {
+type HomePageProps = {
+  route: number;
+};
+
+export default (props: HomePageProps) => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [{ path: rootPath, children: routes }] = teacherRoutes;
+  const [{ path: rootPath, children: childRoutes }] = routes[props.route];
 
-  const paths = routes!.map(({ path }) => path);
+  const paths = childRoutes!.map(({ path }) => path);
   return (
     <ContentLayout>
       <Container

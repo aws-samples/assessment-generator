@@ -1,13 +1,13 @@
 import React from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
-import { teacherRoutes } from '../routes';
+import { routes } from '../routes';
 
 export default () => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [, , { path: studentsPath, children: studentsRoutes }] = teacherRoutes;
+  const [, , { path: studentsPath, children: studentsRoutes }] = routes[0];
   const paths = studentsRoutes!.map(({ path }) => path);
   return (
     <ContentLayout>
