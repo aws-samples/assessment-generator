@@ -56,10 +56,6 @@ export const routes = [
               element: <GenerateAssessments />,
             },
             {
-              path: 'edit-assessments',
-              element: <EditAssessments />,
-            },
-            {
               path: 'send-assessments',
               element: <SendAssessments />,
             },
@@ -81,6 +77,7 @@ export const routes = [
         },
       ],
     },
+    { path: 'edit-assessment/:id', element: <EditAssessments />, children: [] },
   ],
   [
     {

@@ -12,11 +12,13 @@ import {
   Checkbox,
   FileUpload,
 } from '@cloudscape-design/components';
+import { useNavigate } from 'react-router-dom';
 
 const assessTemplates = ['template1', 'template2', 'template3'].map((temp) => ({ value: temp }));
 const coarses = ['biology', 'chemistry', 'maths'].map((temp) => ({ value: temp }));
 
 export default () => {
+  const navigate = useNavigate();
   const [useDefault, setUseDefault] = useState(true);
   const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
   const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
@@ -30,7 +32,9 @@ export default () => {
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary">Generate Assessment</Button>
+            <Button onClick={() => navigate('/edit-assessment/111')} variant="primary">
+              Generate Assessment
+            </Button>
           </SpaceBetween>
         }
         header={<Header variant="h1">Generate Assessments</Header>}
