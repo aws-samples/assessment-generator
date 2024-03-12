@@ -3,20 +3,67 @@ import { Stack, StackProps, CfnOutput, aws_dynamodb } from 'aws-cdk-lib';
 import { AuthStack } from './auth-stack';
 import { DataStack } from './data-stack';
 import { FrontendStack } from './frontend-stack';
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import * as cr from 'aws-cdk-lib/custom-resources';
 
 export class GenAssessStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
-    const auth = new AuthStack(this, 'AuthStack');
+    const authStack = new AuthStack(this, 'AuthStack');
 
-    const { api } = new DataStack(this, 'DataStack', { userpool: auth.userpool });
+    const { api } = new DataStack(this, 'DataStack', { userpool: authStack.userpool });
 
     const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
 
+    const config = {
+      Auth: {
+        Cognito: {
+          userPoolId: authStack.userpool.userPoolId,
+          userPoolClientId: authStack.client.userPoolClientId,
+        },
+      },
+      API: {
+        GraphQL: {
+          endpoint: api.graphqlUrl,
+          region: this.region,
+          defaultAuthMode: 'userPool',
+        },
+      },
+    };
+    new StringParameter(this, 'ConfigParameter', {
+      parameterName: 'GenAssessConfig',
+      stringValue: JSON.stringify(config),
+    });
+
+    const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
+      onUpdate: {
+        service: 'S3',
+        action: 'putObject',
+        parameters: {
+          Bucket: frontendStack.bucket.bucketName,
+          Key: 'config.json',
+          Body: JSON.stringify(config),
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('NO_DELETE_REQUIRED'),
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [frontendStack.bucket.bucketArn, `${frontendStack.bucket.bucketArn}/*`],
+      }),
+      installLatestAwsSdk: false,
+    });
+
+    putConfig.node.addDependency(frontendStack.assetDeployment);
+    putConfig.node.addDependency(authStack);
+
     new CfnOutput(this, 'UiConfing', {
       value: JSON.stringify({
-        Auth: { Cognito: { userPoolId: auth.userpool.userPoolId, userPoolClientId: auth.client.userPoolClientId } },
+        Auth: {
+          Cognito: {
+            userPoolId: authStack.userpool.userPoolId,
+            userPoolClientId: authStack.client.userPoolClientId,
+          },
+        },
         API: {
           GraphQL: {
             endpoint: api.graphqlUrl,
@@ -25,6 +72,10 @@ export class GenAssessStack extends Stack {
           },
         },
       }),
+    });
+
+    new CfnOutput(this, 'ApplicationUrl', {
+      value: frontendStack.applicationURL,
     });
   }
 }

@@ -13,6 +13,18 @@ export class AuthStack extends NestedStack {
       signInAliases: { username: false, email: true },
       autoVerify: { email: true },
     });
+
+    let teachersUserGroup = new aws_cognito.CfnUserPoolGroup(this, "TeachersGroup", {
+      groupName: "teachers",
+      userPoolId: this.userpool.userPoolId
+    });
+
+    let studentsUserGroup = new aws_cognito.CfnUserPoolGroup(this, "StudentsGroup", {
+      groupName: "students",
+      userPoolId: this.userpool.userPoolId
+    });
+
+
     this.client = this.userpool.addClient('gen-assess-client');
   }
 }
