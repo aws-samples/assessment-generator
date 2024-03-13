@@ -82,7 +82,7 @@ export class GenAssessStack extends Stack {
     });
 
     new CfnOutput(this, 'RAGBucketSource', {
-      value: ragPipipelineStack.bucket.bucketName,
+      value: ragPipipelineStack.artifactsUploadBucket.bucketName,
     });
   }
 }
