@@ -27,28 +27,14 @@ import { Tracer } from '@aws-lambda-powertools/tracer';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
-
-import * as bedrock from '@aws-sdk/client-bedrock-runtime';
-import * as bedrock_agent from '@aws-sdk/client-bedrock-agent';
-
-import * as aws_os from '@opensearch-project/opensearch';
-
 import {
-  OpenSearchServerlessClient,
-  CreateSecurityPolicyCommand,
-  CreateAccessPolicyCommand,
-  CreateCollectionCommand,
-  BatchGetCollectionCommand,
-} from "@aws-sdk/client-opensearchserverless";
-import * as aws4 from "aws4";
+  BedrockAgentClient, CreateKnowledgeBaseCommand, CreateKnowledgeBaseRequest, CreateKnowledgeBaseResponse,
+  KnowledgeBaseSummary,
+  ListKnowledgeBasesCommand,
+  ListKnowledgeBasesResponse,
+} from '@aws-sdk/client-bedrock-agent';
 
-import {
-  BedrockAgentClient, KnowledgeBaseSummary,
-  ListAgentKnowledgeBasesCommand,
-  ListKnowledgeBasesCommand, ListKnowledgeBasesResponse,
-} from "@aws-sdk/client-bedrock-agent";
-import { Client, Connection } from "@opensearch-project/opensearch";
-import { Aws } from "aws-cdk-lib";
+import { Client } from '@opensearch-project/opensearch';
 
 /**
  * Creating a global instance for the Powertools logger
@@ -111,8 +97,8 @@ const unquote = (event: S3EventRecord): S3EventRecord => {
 
 const bedrockAgentClient = new BedrockAgentClient();
 
-function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string) {
-  return false;
+function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string): KnowledgeBaseSummary {
+  return knowledgeBaseSummaries.find((kbSummary) => kbSummary.name == kbName);
 }
 
 /**
@@ -164,7 +150,7 @@ class Lambda implements LambdaInterface {
     // noinspection TypeScriptValidateTypes
     logger.info("KB output:", { data: response });
 
-    const opssHost = "https://w1v81g3hzps7q1yt2hlg.us-east-1.aoss.amazonaws.com";
+    const opssHost = process.env.OPSS_HOST;
     let awsSigv4SignerResponse = AwsSigv4Signer({
       region: process.env.AWS_REGION,
       service: "aoss",
@@ -187,27 +173,66 @@ class Lambda implements LambdaInterface {
     if (!(response.knowledgeBaseSummaries && kbExist(response.knowledgeBaseSummaries, kbName))) {
       logger.info(`KnowledgeBase: ${kbName} does not exist, creating`);
       // Create OpenSearchServerless Index
-
       const settings = {
         "settings": {
-          "index": {
-            "number_of_shards": "2",
-            "knn.algo_param": {
-              "ef_search": "512"
+          "index.knn": "true",
+        },
+        "mappings": {
+          "properties": {
+            "vector": {
+              "type": "knn_vector",
+              "dimension": 1536,
             },
-            "knn": "true",
-            "number_of_replicas": "0",
-          }
+            "text": {
+              "type": "text",
+            },
+            "text-metadata": {
+              "type": "text",
+            },
+          },
         },
       };
 
-      const indexCreationResponse = await opssClient.indices.create({
-        index: kbName,
-        body: settings,
+      if (await opssClient.indices.exists({ index: kbName })) {
+        logger.info(`${kbName} exists`);
+      } else {
+        const indexCreationResponse = await opssClient.indices.create({
+          index: kbName,
+          body: settings,
+        });
+        // noinspection TypeScriptValidateTypes
+        logger.info("Index Created", { index: indexCreationResponse });
+      }
+
+      const createKbRequest = new CreateKnowledgeBaseCommand({
+        name: kbName,
+        knowledgeBaseConfiguration: {
+          type: "VECTOR",
+          vectorKnowledgeBaseConfiguration: {
+            embeddingModelArn: `arn:aws:bedrock:${process.env.AWS_REGION}::foundation-model/amazon.titan-embed-text-v1`,
+          },
+        },
+        roleArn: process.env.BEDROCK_ROLE_ARN,
+        storageConfiguration: {
+          "type": "OPENSEARCH_SERVERLESS",
+          "opensearchServerlessConfiguration": {
+            "collectionArn": process.env.OPSS_COLLECTION_ARN,
+            "vectorIndexName": kbName,
+            "fieldMapping": {
+              "vectorField": "vector",
+              "textField": "text",
+              "metadataField": "text-metadata",
+            },
+          },
+        },
       });
+      // noinspection TypeScriptValidateTypes
+      logger.info("KB creating", { request: createKbRequest });
+
+      const createKbResponse = await bedrockAgentClient.send<CreateKnowledgeBaseResponse>(createKbRequest);
 
       // noinspection TypeScriptValidateTypes
-      logger.info("Index Created", {index: indexCreationResponse});
+      logger.info("KB Created", { response: createKbResponse });
 
     }
     /*

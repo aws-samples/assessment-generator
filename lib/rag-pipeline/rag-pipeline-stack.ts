@@ -100,6 +100,45 @@ export class RagPipelineStack extends NestedStack {
     });
     cfnCollection.addDependency(cfnNetworkSecurityPolicy);
     cfnCollection.addDependency(cfnEncryptionSecurityPolicy);
+    // AmazonBedrockExecutionRoleForKnowledgeBase_
+    const bedrockExecutionRole = new aws_iam.Role(this, 'AmazonBedrockExecutionRoleForKnowledgeBase_1', {
+      roleName: "AmazonBedrockExecutionRoleForKnowledgeBase_1",
+      assumedBy: new aws_iam.ServicePrincipal('bedrock.amazonaws.com').withConditions({
+        "StringEquals": {
+          "aws:SourceAccount": this.account,
+        },
+        "ArnLike": {
+          "aws:SourceArn": `arn:aws:bedrock:${this.region}:${this.account}:knowledge-base/*`,
+        },
+      }),
+    });
+    bedrockExecutionRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        `arn:aws:bedrock:${this.region}::foundation-model/amazon.titan-embed-text-v1`,
+      ],
+      "actions": [
+        "bedrock:InvokeModel",
+      ],
+    }));
+    bedrockExecutionRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "actions": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels",
+      ],
+      "resources": ["*"],
+    }));
+    bedrockExecutionRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        cfnCollection.attrArn,
+      ],
+      "actions": [
+        "aoss:APIAccessAll",
+      ],
+    }));
+
 
     const lambdaRole = new aws_iam.Role(this, 'OpssAdminRole', {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
@@ -142,28 +181,13 @@ export class RagPipelineStack extends NestedStack {
         ],
         "Principal": [
           `${lambdaRole.roleArn}`,
-          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard"
+          `${bedrockExecutionRole.roleArn}`,
+          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard",
         ],
         "Description": "data-access-rule",
       },
     ];
 
-    /*
-    [{"Rules":
-    [{"Resource":["collection/opss-sc"],"Permission":["aoss:CreateCollectionItems","aoss:DeleteCollectionItems","aoss:UpdateCollectionItems","aoss:DescribeCollectionItems"],"ResourceType":"collection"},
-    {"Resource":["index/opss-sc/!*"],"Permission":["aoss:CreateIndex","aoss:DeleteIndex","aoss:UpdateIndex","aoss:DescribeIndex","aoss:ReadDocument","aoss:WriteDocument"],"ResourceType":"index"}],"Principal":["arn:aws:iam::089689156629:role/GenAssessStack-RagStackNested-OpssAdminRole01D8769F-OcnYeRdTqm25"],"Description":"data-access-rule"}]
-    Policy json is invalid, error: [
-    $[0].Rules[1].Resource[0]: does not match the regex pattern ^index/(?:[a-z][a-z0-9-]{2,31}\*?|\*)/([a-z;0-9&$%][+.\-_a-z;0-9&$%]*\*?|\*)$,
-    $[0].Rules[1].Permission[1]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
-    $[0].Rules[1].Permission[5]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
-    $[0].Rules[1].Resource[0]: does not match the regex pattern ^collection/(?:[a-z][a-z0-9-]{2,31}\*?|\*)$,
-    $[0].Rules[1].Permission[0]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
-    $[0].Rules[1].Permission[2]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
-    $[0].Rules[1].Permission[4]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
-    $[0].Rules[1].ResourceType: must be a constant value collection,
-    $[0].Rules[1].Permission[3]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*]]
-
-    * */
     const dataAccessPolicyName = `${opssSearchCollection}-policy`;
     const cfnAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, "OpssDataAccessPolicy", {
       name: dataAccessPolicyName,
@@ -205,14 +229,26 @@ export class RagPipelineStack extends NestedStack {
           region: cdk.Aws.REGION,
           account: cdk.Aws.ACCOUNT_ID,
           arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
-          resourceName: "*"
-        })
+          resourceName: "*",
+        }),
       ],
       "actions": [
         "aoss:APIAccessAll",
         "aoss:DashboardAccessAll",
       ],
     }));
+
+    //Add Bedrock permissions on the Lambda function
+    lambdaRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        "*",
+      ],
+      "actions": [
+        "bedrock:*",
+      ],
+    }));
+
 
     // Display the OpenSearch endpoint.
     new CfnOutput(this, 'OpenSearchEndpoint', {
@@ -241,6 +277,7 @@ export class RagPipelineStack extends NestedStack {
       removalPolicy: RemovalPolicy.DESTROY,
       enforceSSL: true,
     });
+    kbStagingBucket.grantReadWrite(bedrockExecutionRole);
 
 
     // Creating the processing queue with related S3 trigger and DLQ.
@@ -285,7 +322,9 @@ export class RagPipelineStack extends NestedStack {
       environment: {
         POWERTOOLS_SERVICE_NAME: "document-processor",
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
-        // SNS_TARGET_TOPIC: this.eventBus.topicArn,
+        BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
+        OPSS_HOST: cfnCollection.attrCollectionEndpoint,
+        OPSS_COLLECTION_ARN: cfnCollection.attrArn,
       },
       bundling: {
         minify: true,
@@ -304,117 +343,6 @@ export class RagPipelineStack extends NestedStack {
       reportBatchItemFailures: true,
     }));
 
-
-    /*
-
-        // Create the S3 trigger monitoring the artifactsUploadBucket
-        // for uploaded objects.
-        const trigger = new S3EventTrigger.Builder()
-          .withScope(this)
-          .withIdentifier('Trigger')
-          .withCacheStorage(cache)
-          .withBucket(this.artifactsUploadBucket)
-          .build();
-
-
-        // Convert PDF documents to text.
-        const pdfConverter = new PdfTextConverter.Builder()
-          .withScope(this)
-          .withIdentifier('PdfConverter')
-          .withCacheStorage(cache)
-          .withSource(trigger)
-          .build();
-
-        // Convert text-oriented documents (Docx, Markdown, HTML, etc) to text.
-        const pandocConverter = new PandocTextConverter.Builder()
-          .withScope(this)
-          .withIdentifier('PandocConverter')
-          .withCacheStorage(cache)
-          .withSource(trigger)
-          .build();
-
-        // Convert audio recordings to text.
-        const transcribe = new TranscribeAudioProcessor.Builder()
-          .withScope(this)
-          .withIdentifier('TranscribeTextProcessor')
-          .withCacheStorage(cache)
-          .withSource(trigger)
-          .withOutputFormats('vtt')
-          .build();
-
-        // Convert the VTT transcription file to a summarized
-        // version of the conversation.
-        const textProcessor = new AnthropicTextProcessor.Builder()
-          .withScope(this)
-          .withIdentifier('TextProcessor')
-          .withCacheStorage(cache)
-          .withSource(transcribe)
-          .withModel(AnthropicTextModel.ANTHROPIC_CLAUDE_INSTANT_V1)
-          .withRegion('us-east-1')
-          .withPrompt(`
-            Give a very comprehensive description of the content of this transcription file with these constraints:
-            - Summarize all the data points of the transcript.
-            - Focus only on the content of the transcript, not the formatting.
-            - Don't say "This is a transcription of an audio file" or anything similar, just output the summary.
-            - The output should be spread in multiple paragraphs.
-          `)
-          .build();
-
-        ///////////////////////////////////////////
-        //////////     Text Splitter     //////////
-        ///////////////////////////////////////////
-
-        // Split the text into chunks.
-        const textSplitter = new RecursiveCharacterTextSplitter.Builder()
-          .withScope(this)
-          .withIdentifier('RecursiveCharacterTextSplitter')
-          .withCacheStorage(cache)
-          .withChunkSize(4096)
-          .withSources([
-            trigger,
-            pdfConverter,
-            pandocConverter,
-            textProcessor,
-          ])
-          .build();
-
-        /////////////////////////////////////
-        ////   Embeddings with Bedrock   ////
-        /////////////////////////////////////
-
-        // Create embeddings for each chunk of text using
-        // the Amazon Titan embedding model hosted on Amazon Bedrock.
-        const bedrockProcessor = new TitanEmbeddingProcessor.Builder()
-          .withScope(this)
-          .withIdentifier('BedrockEmbeddingProcessor')
-          .withCacheStorage(cache)
-          .withSource(textSplitter)
-          .withRegion('us-east-1')
-          .build();
-
-        ///////////////////////////////////////////
-        ////     Pipeline Storage Providers    ////
-        ///////////////////////////////////////////
-
-        // Vector storage for text.
-        new OpenSearchVectorStorageConnector.Builder()
-          .withScope(this)
-          .withIdentifier('TextVectorStorage')
-          .withCacheStorage(cache)
-          .withEndpoint(openSearch.domain)
-          .withSource(bedrockProcessor)
-          .withVpc(vpc)
-          .withIncludeDocument(true)
-          .withIndex(new OpenSearchVectorIndexDefinition.Builder()
-            .withIndexName('text-vectors')
-            .withKnnMethod('hnsw')
-            .withKnnEngine('nmslib')
-            .withSpaceType('l2')
-            .withDimensions(1536)
-            .withParameters({ 'ef_construction': 512, 'm': 16 })
-            .build(),
-          )
-          .build();*/
 
     // Display the source artifactsUploadBucket information in the console.
     new CfnOutput(this, 'SourceBucket', {
