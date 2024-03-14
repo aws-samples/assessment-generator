@@ -10,6 +10,7 @@
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.136",
+    "@types/aws4": "^1.11.6",
     "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.5",
     "@types/node": "20.7.1",
@@ -22,9 +23,12 @@
   },
   "dependencies": {
     "@aws-appsync/utils": "^1.7.0",
+    "@aws-sdk/client-bedrock-agent": "^3.533.0",
     "@aws-sdk/client-bedrock-runtime": "^3.529.1",
+    "@aws-sdk/client-opensearchserverless": "^3.533.0",
     "@cloudscape-design/components": "^3.0.558",
     "@cloudscape-design/global-styles": "^1.0.23",
+    "@opensearch-project/opensearch": "^2.6.0",
     "@project-lakechain/bedrock-embedding-processors": "^0.4.0",
     "@project-lakechain/bedrock-text-processors": "^0.4.0",
     "@project-lakechain/core": "^0.4.0",
@@ -36,6 +40,7 @@
     "@project-lakechain/s3-event-trigger": "^0.4.0",
     "@project-lakechain/transcribe-audio-processor": "^0.4.0",
     "aws-cdk-lib": "2.132.1",
+    "aws4": "^1.12.0",
     "cdk-nag": "^2.28.50",
     "constructs": "^10.0.0",
     "esbuild": "^0.20.1",

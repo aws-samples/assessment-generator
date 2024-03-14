@@ -18,12 +18,62 @@ import { randomUUID } from 'crypto';
 import { getDocument } from './get-document';
 import { InvalidDocumentObjectException, ObjectNotFoundException } from './exceptions';
 import { LambdaInterface } from '@aws-lambda-powertools/commons';
-import { logger, tracer } from '@project-lakechain/sdk/powertools';
 import { next } from '@project-lakechain/sdk/decorators';
-
 import { Context, S3Event, S3EventRecord, SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
 import { CloudEvent, DataEnvelope, EventType as DocumentEvent } from '@project-lakechain/sdk/models';
 import { BatchProcessor, EventType, processPartialResponse } from '@aws-lambda-powertools/batch';
+import { Metrics } from '@aws-lambda-powertools/metrics';
+import { Tracer } from '@aws-lambda-powertools/tracer';
+import { Logger } from '@aws-lambda-powertools/logger';
+import { defaultProvider } from '@aws-sdk/credential-provider-node';
+import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
+
+import * as bedrock from '@aws-sdk/client-bedrock-runtime';
+import * as bedrock_agent from '@aws-sdk/client-bedrock-agent';
+
+import * as aws_os from '@opensearch-project/opensearch';
+
+import {
+  OpenSearchServerlessClient,
+  CreateSecurityPolicyCommand,
+  CreateAccessPolicyCommand,
+  CreateCollectionCommand,
+  BatchGetCollectionCommand,
+} from "@aws-sdk/client-opensearchserverless";
+import * as aws4 from "aws4";
+
+import {
+  BedrockAgentClient, KnowledgeBaseSummary,
+  ListAgentKnowledgeBasesCommand,
+  ListKnowledgeBasesCommand, ListKnowledgeBasesResponse,
+} from "@aws-sdk/client-bedrock-agent";
+import { Client, Connection } from "@opensearch-project/opensearch";
+import { Aws } from "aws-cdk-lib";
+
+/**
+ * Creating a global instance for the Powertools logger
+ * to be used across the different applications.
+ */
+export const logger = new Logger({
+  serviceName: process.env.POWERTOOLS_SERVICE_NAME,
+});
+
+/**
+ * Creating a global instance for the Powertools metrics
+ * to be used across the different applications.
+ */
+export const metrics = new Metrics({
+  defaultDimensions: {
+    region: process.env.AWS_REGION ?? 'N/A',
+    executionEnv: process.env.AWS_EXECUTION_ENV ?? 'N/A',
+  },
+});
+
+/**
+ * Creating a global instance for the Powertools tracer
+ * to be used across the different applications.
+ */
+export const tracer = new Tracer();
 
 /**
  * The async batch processor processes the received
@@ -59,6 +109,12 @@ const unquote = (event: S3EventRecord): S3EventRecord => {
   return (event);
 };
 
+const bedrockAgentClient = new BedrockAgentClient();
+
+function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string) {
+  return false;
+}
+
 /**
  * The lambda class definition containing the lambda handler.
  * @note using a `LambdaInterface` is required in
@@ -76,8 +132,10 @@ class Lambda implements LambdaInterface {
   @next()
   async s3RecordHandler(s3Event: S3EventRecord): Promise<CloudEvent> {
     const event = unquote(s3Event);
+    const objectKey = s3Event.s3.object.key;
+
     // noinspection TypeScriptValidateTypes
-    logger.info("Normalised event", { data: event.s3.object.key });
+    logger.info("Normalised event", { data: { original: objectKey, normalised: event.s3.object.key } });
     const eventType = getEventType(event.eventName);
 
     // Construct a document from the S3 object.
@@ -88,6 +146,103 @@ class Lambda implements LambdaInterface {
     );
 
     //Get file path
+    const keyPaths = objectKey.split("/");
+    if (keyPaths.length <= 1) {
+      // noinspection TypeScriptValidateTypes
+      logger.error("Object key has no prefix", { data: s3Event.s3.object });
+      throw new Error("Unable to process files at bucket root");
+    }
+    const kbName = keyPaths[0]; //the prefix of objects corresponds to the Knowledge Base name
+    //TODO- sanitise and hash input + store in DB for better lookup
+
+    const listKnowledgeBasesCommand = new ListKnowledgeBasesCommand({
+      maxResults: 1000,
+    });
+
+    // noinspection TypeScriptValidateTypes
+    const response: ListKnowledgeBasesResponse = await bedrockAgentClient.send(listKnowledgeBasesCommand);
+    // noinspection TypeScriptValidateTypes
+    logger.info("KB output:", { data: response });
+
+    const opssHost = "https://w1v81g3hzps7q1yt2hlg.us-east-1.aoss.amazonaws.com";
+    let awsSigv4SignerResponse = AwsSigv4Signer({
+      region: process.env.AWS_REGION,
+      service: "aoss",
+      getCredentials: () => {
+        const credentialsProvicer = defaultProvider();
+        return credentialsProvicer();
+      },
+    });
+
+
+    const opssClient = new Client({
+      requestTimeout: 60000,
+      node: opssHost,
+      Connection: awsSigv4SignerResponse.Connection,
+      Transport: awsSigv4SignerResponse.Transport,
+    });
+
+    // const client = new OpenSearchServerlessClient
+    // if the knowledge base does not exist, go and create one
+    if (!(response.knowledgeBaseSummaries && kbExist(response.knowledgeBaseSummaries, kbName))) {
+      logger.info(`KnowledgeBase: ${kbName} does not exist, creating`);
+      // Create OpenSearchServerless Index
+
+      const settings = {
+        "settings": {
+          "index": {
+            "number_of_shards": "2",
+            "knn.algo_param": {
+              "ef_search": "512"
+            },
+            "knn": "true",
+            "number_of_replicas": "0",
+          }
+        },
+      };
+
+      const indexCreationResponse = await opssClient.indices.create({
+        index: kbName,
+        body: settings,
+      });
+
+      // noinspection TypeScriptValidateTypes
+      logger.info("Index Created", {index: indexCreationResponse});
+
+    }
+    /*
+
+      let host;
+      var client = new Client({
+        node: host,
+        Connection: class extends Connection {
+          buildRequestObject(params) {
+            const request = super.buildRequestObject(params)
+            request.service = 'aoss';
+            request.region = process.env.AWS_REGION; // e.g. us-east-1
+            var body = request.body;
+            request.body = undefined;
+            delete request.headers['content-length'];
+            request.headers['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD';
+            request = aws4.sign(request, AWS.config.credentials);
+            request.body = body;
+
+            return request;
+          }
+        }
+      });
+
+      // Create an index
+      try {
+        var index_name = "sitcoms-eighties";
+
+        var response = await client.indices.create({
+          index: index_name
+        });
+*/
+    // Create Bedrock knowledge base
+
+
     //Check prefix
     //if new prefix - create Opensearch Index, Create KB
     //Upload file to destination S3 bucket

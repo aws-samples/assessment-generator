@@ -1,8 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
-import { CfnOutput, Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
+import { ArnFormat, aws_iam, CfnOutput, Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import { OpenSearchDomain } from '@project-lakechain/opensearch-domain';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
@@ -12,6 +11,8 @@ import path from "path";
 import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import * as opensearchserverless from 'aws-cdk-lib/aws-opensearchserverless';
+import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
 
 /**
@@ -36,7 +37,7 @@ const DOCUMENT_PROCESSOR_NAME = 'DocumentProcessor';
 
 export class RagPipelineStack extends NestedStack {
   public artifactsUploadBucket: Bucket;
-  private DEFAULT_MEMORY_SIZE: number = 128;
+  private DEFAULT_MEMORY_SIZE: number = 512;
   private documentProcessor: NodejsFunction;
 
   constructor(scope: Construct, id: string, props?: NestedStackProps) {
@@ -45,17 +46,182 @@ export class RagPipelineStack extends NestedStack {
     // The VPC in which OpenSearch will be deployed.
     const vpc = this.createVpc('Vpc');
 
-    // The OpenSearch domain.
-    const openSearch = new OpenSearchDomain(this, 'Domain', {
-      vpc,
-      opts: {
-        capacity: {
-          multiAzWithStandbyEnabled: false,
+    // The OpenSearch Serverless domain.
+    const opssSearchCollection = "opss-sc";
+
+    const networkSecurityPolicy = [{
+      "Rules": [
+        {
+          "Resource": [
+            `collection/${opssSearchCollection}`,
+          ],
+          "ResourceType": "dashboard",
         },
-        zoneAwareness: {
-          enabled: false,
+        {
+          "Resource": [
+            `collection/${opssSearchCollection}`,
+          ],
+          "ResourceType": "collection",
         },
+      ],
+      "AllowFromPublic": true,
+    }];
+
+    const networkSecurityPolicyName = `${opssSearchCollection}-security-policy`;
+    const cfnNetworkSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, "NetworkSecurityPolicy", {
+      name: networkSecurityPolicyName,
+      type: "network",
+      policy: JSON.stringify(networkSecurityPolicy),
+    });
+
+    const encryptionSecurityPolicy = {
+      "Rules": [
+        {
+          "Resource": [
+            `collection/${opssSearchCollection}`,
+          ],
+          "ResourceType": "collection",
+        },
+      ],
+      "AWSOwnedKey": true,
+    };
+
+    const encryptionSecuritiyPolicyName = `${opssSearchCollection}-security-policy`;
+    const cfnEncryptionSecurityPolicy = new opensearchserverless.CfnSecurityPolicy(this, "EncryptionSecurityPolicy", {
+      name: encryptionSecuritiyPolicyName,
+      policy: JSON.stringify(encryptionSecurityPolicy),
+      type: "encryption",
+    });
+
+
+    const cfnCollection = new opensearchserverless.CfnCollection(this, opssSearchCollection, {
+      name: opssSearchCollection,
+      type: "VECTORSEARCH",
+    });
+    cfnCollection.addDependency(cfnNetworkSecurityPolicy);
+    cfnCollection.addDependency(cfnEncryptionSecurityPolicy);
+
+    const lambdaRole = new aws_iam.Role(this, 'OpssAdminRole', {
+      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaVPCAccessExecutionRole"),
+        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaSQSQueueExecutionRole"),
+      ],
+    });
+
+    const dataAccessPolicy = [
+      {
+        "Rules": [
+          {
+            "Resource": [
+              `collection/${opssSearchCollection}`,
+            ],
+            "Permission": [
+              "aoss:CreateCollectionItems",
+              "aoss:DeleteCollectionItems",
+              "aoss:UpdateCollectionItems",
+              "aoss:DescribeCollectionItems",
+            ],
+            "ResourceType": "collection",
+          },
+          {
+            "Resource": [
+              `index/${opssSearchCollection}/*`,
+            ],
+            "Permission": [
+              "aoss:CreateIndex",
+              "aoss:DeleteIndex",
+              "aoss:UpdateIndex",
+              "aoss:DescribeIndex",
+              "aoss:ReadDocument",
+              "aoss:WriteDocument",
+            ],
+            "ResourceType": "index",
+          },
+        ],
+        "Principal": [
+          `${lambdaRole.roleArn}`,
+          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard"
+        ],
+        "Description": "data-access-rule",
       },
+    ];
+
+    /*
+    [{"Rules":
+    [{"Resource":["collection/opss-sc"],"Permission":["aoss:CreateCollectionItems","aoss:DeleteCollectionItems","aoss:UpdateCollectionItems","aoss:DescribeCollectionItems"],"ResourceType":"collection"},
+    {"Resource":["index/opss-sc/!*"],"Permission":["aoss:CreateIndex","aoss:DeleteIndex","aoss:UpdateIndex","aoss:DescribeIndex","aoss:ReadDocument","aoss:WriteDocument"],"ResourceType":"index"}],"Principal":["arn:aws:iam::089689156629:role/GenAssessStack-RagStackNested-OpssAdminRole01D8769F-OcnYeRdTqm25"],"Description":"data-access-rule"}]
+    Policy json is invalid, error: [
+    $[0].Rules[1].Resource[0]: does not match the regex pattern ^index/(?:[a-z][a-z0-9-]{2,31}\*?|\*)/([a-z;0-9&$%][+.\-_a-z;0-9&$%]*\*?|\*)$,
+    $[0].Rules[1].Permission[1]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
+    $[0].Rules[1].Permission[5]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
+    $[0].Rules[1].Resource[0]: does not match the regex pattern ^collection/(?:[a-z][a-z0-9-]{2,31}\*?|\*)$,
+    $[0].Rules[1].Permission[0]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
+    $[0].Rules[1].Permission[2]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
+    $[0].Rules[1].Permission[4]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*],
+    $[0].Rules[1].ResourceType: must be a constant value collection,
+    $[0].Rules[1].Permission[3]: does not have a value in the enumeration [aoss:CreateCollectionItems, aoss:DeleteCollectionItems, aoss:UpdateCollectionItems, aoss:DescribeCollectionItems, aoss:*]]
+
+    * */
+    const dataAccessPolicyName = `${opssSearchCollection}-policy`;
+    const cfnAccessPolicy = new opensearchserverless.CfnAccessPolicy(this, "OpssDataAccessPolicy", {
+      name: dataAccessPolicyName,
+      policy: JSON.stringify(dataAccessPolicy),
+      type: "data",
+    });
+
+
+    lambdaRole.addToPolicy(new PolicyStatement({
+      "sid": "AdministeringOpenSearchServerlessCollections1",
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        cfnCollection.attrArn,
+      ],
+      "actions": [
+        "aoss:CreateCollection",
+        "aoss:DeleteCollection",
+        "aoss:UpdateCollection",
+      ],
+    }));
+    lambdaRole.addToPolicy(new PolicyStatement({
+      "sid": "AdministeringOpenSearchServerlessCollections2",
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": ["*"],
+      "actions": [
+        "aoss:BatchGetCollection",
+        "aoss:ListCollections",
+        "aoss:CreateAccessPolicy",
+        "aoss:CreateSecurityPolicy",
+      ],
+    }));
+    lambdaRole.addToPolicy(new PolicyStatement({
+      "sid": "OpenSearchServerlessDataPlaneAccess1",
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        this.formatArn({
+          service: "aoss",
+          resource: "collection",
+          region: cdk.Aws.REGION,
+          account: cdk.Aws.ACCOUNT_ID,
+          arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+          resourceName: "*"
+        })
+      ],
+      "actions": [
+        "aoss:APIAccessAll",
+        "aoss:DashboardAccessAll",
+      ],
+    }));
+
+    // Display the OpenSearch endpoint.
+    new CfnOutput(this, 'OpenSearchEndpoint', {
+      description: 'The endpoint of the OpenSearch domain.',
+      value: cfnCollection.attrCollectionEndpoint,
+    });
+    new CfnOutput(this, 'DashboardsURL', {
+      description: 'The endpoint of the OpenSearch dashboard.',
+      value: cfnCollection.attrDashboardEndpoint,
     });
 
     // The source artifactsUploadBucket.
@@ -110,6 +276,7 @@ export class RagPipelineStack extends NestedStack {
       entry: path.resolve(__dirname, 'lambdas', 'event-handler', 'index.ts'),
       memorySize: this.DEFAULT_MEMORY_SIZE,
       vpc: vpc,
+      role: lambdaRole,
       timeout: PROCESSING_TIMEOUT,
       runtime: EXECUTION_RUNTIME,
       architecture: Architecture.ARM_64,
@@ -128,6 +295,8 @@ export class RagPipelineStack extends NestedStack {
         ],
       },
     });
+
+    //TODO add permissions for bedrock & opensearch
 
     this.documentProcessor.addEventSource(new SqsEventSource(eventQueue, {
       batchSize: 10,
@@ -253,11 +422,6 @@ export class RagPipelineStack extends NestedStack {
       value: this.artifactsUploadBucket.bucketName,
     });
 
-    // Display the OpenSearch endpoint.
-    new CfnOutput(this, 'OpenSearchEndpoint', {
-      description: 'The endpoint of the OpenSearch domain.',
-      value: `https://${openSearch.domain.domainEndpoint}`,
-    });
   }
 
   /**
