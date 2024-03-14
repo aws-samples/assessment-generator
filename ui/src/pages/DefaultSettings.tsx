@@ -1,16 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Box, Select, SelectProps } from '@cloudscape-design/components';
+import { generateClient } from 'aws-amplify/api';
+import { Lang, AssessType } from '../graphql/API';
+import { getSettings } from '../graphql/queries';
+import { upsertSettings } from '../graphql/mutations';
+import { optionise } from '../helpers';
 
-const languages = ['en', 'fr', 'es'].map((lang) => ({ value: lang }));
-const assessTypes = ['type1', 'type2', 'type3'].map((lang) => ({ value: lang }));
+const client = generateClient();
+
+const langs = Object.values(Lang).map(optionise);
+const assessTypes = Object.values(AssessType).map(optionise);
 
 export default () => {
-  const [uiLanguage, setUiLanguage] = useState<SelectProps.Option>(languages[0]);
-  const [docLanguage, setDocLanguage] = useState<SelectProps.Option>(languages[0]);
-  const [assessType, setAssessType] = useState<SelectProps.Option>(assessTypes[0]);
+  const [uiLang, setUiLang] = useState<SelectProps.Option | null>(null);
+  const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
+  const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const settings = (await client.graphql({ query: getSettings })).data.getSettings;
+      if (!settings) return;
+      setUiLang(optionise(settings.uiLang!));
+      setDocLang(optionise(settings.docLang!));
+      setAssessType(optionise(settings.assessType!));
+    })();
+  }, []);
 
   return (
-    <form onSubmit={(e) => e.preventDefault()}>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        await client.graphql({
+          query: upsertSettings,
+          variables: { input: { uiLang: uiLang?.value as Lang, docLang: docLang?.value as Lang, assessType: assessType?.value as AssessType } },
+        });
+      }}
+    >
       <Form
         actions={
           <SpaceBetween direction="horizontal" size="xs">
@@ -27,10 +52,10 @@ export default () => {
             <Box padding="xxxl">
               <SpaceBetween direction="horizontal" size="l">
                 <FormField label="UI Language">
-                  <Select options={languages} selectedOption={uiLanguage} onChange={({ detail }) => setUiLanguage(detail.selectedOption)} />
+                  <Select options={langs} selectedOption={uiLang} onChange={({ detail }) => setUiLang(detail.selectedOption)} />
                 </FormField>
                 <FormField label="Document Language">
-                  <Select options={languages} selectedOption={docLanguage} onChange={({ detail }) => setDocLanguage(detail.selectedOption)} />
+                  <Select options={langs} selectedOption={docLang} onChange={({ detail }) => setDocLang(detail.selectedOption)} />
                 </FormField>
                 <FormField label="Default Assessment Type">
                   <Select options={assessTypes} selectedOption={assessType} onChange={({ detail }) => setAssessType(detail.selectedOption)} />

@@ -1,36 +1,31 @@
-type Stat {
-  feedback: Int
-  count: Int
+enum Lang {
+  EN
+  FR
+  ES
 }
 
-type Summary {
-  id: ID!
-  name: String
-  contents: [String]
-  timestamp: String
-  stats: [Stat]
-  feedback: Feedback
+enum AssessType {
+  Type1
+  Type2
+  Type3
 }
 
-type Feedback {
-  summaryid: ID!
-  feedback: Int
-  timestamp: String
-  summary: Summary
+type Settings {
+  uiLang: Lang
+  docLang: Lang
+  assessType: AssessType
 }
 
-input CreateFeedbackInput {
-  summaryid: ID!
-  feedback: Int!
+input UpsertSettingsInput {
+  uiLang: Lang!
+  docLang: Lang!
+  assessType: AssessType!
 }
 
 type Mutation {
-  createFeedback(input: CreateFeedbackInput!): Feedback
+  upsertSettings(input: UpsertSettingsInput): Settings
 }
 
 type Query {
-  listSummaries: [Summary]
-  getSummary(id: ID): Summary
-  listFeedbacks: [Feedback]
-  getFeedback(summaryid: ID): Feedback
+  getSettings: Settings
 }

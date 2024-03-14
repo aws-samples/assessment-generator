@@ -4,3 +4,5 @@ export const titlise = (input: string) => {
     .map((word) => word[0].toUpperCase() + word.slice(1))
     .join(' ');
 };
+
+export const optionise = (value: string) => ({ value });

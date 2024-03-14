@@ -6,7 +6,8 @@
   },
   "scripts": {
     "test": "jest",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "postcdk": "npx @aws-amplify/cli codegen"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.136",
