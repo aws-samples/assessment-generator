@@ -1,7 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { ArnFormat, aws_iam, CfnOutput, Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
 import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
@@ -42,9 +41,6 @@ export class RagPipelineStack extends NestedStack {
 
   constructor(scope: Construct, id: string, props?: NestedStackProps) {
     super(scope, id, props);
-
-    // The VPC in which OpenSearch will be deployed.
-    const vpc = this.createVpc('Vpc');
 
     // The OpenSearch Serverless domain.
     const opssSearchCollection = "opss-sc";
@@ -102,7 +98,6 @@ export class RagPipelineStack extends NestedStack {
     cfnCollection.addDependency(cfnEncryptionSecurityPolicy);
     // AmazonBedrockExecutionRoleForKnowledgeBase_
     const bedrockExecutionRole = new aws_iam.Role(this, 'AmazonBedrockExecutionRoleForKnowledgeBase_1', {
-      roleName: "AmazonBedrockExecutionRoleForKnowledgeBase_1",
       assumedBy: new aws_iam.ServicePrincipal('bedrock.amazonaws.com').withConditions({
         "StringEquals": {
           "aws:SourceAccount": this.account,
@@ -288,7 +283,7 @@ export class RagPipelineStack extends NestedStack {
     });
     const eventQueue = new sqs.Queue(this, 'Queue', {
       retentionPeriod: cdk.Duration.days(14),
-      visibilityTimeout: cdk.Duration.seconds(10),
+      visibilityTimeout: cdk.Duration.seconds(30),
       deadLetterQueue: {
         maxReceiveCount: 5,
         queue: deadLetterQueue,
@@ -312,7 +307,6 @@ export class RagPipelineStack extends NestedStack {
       description: 'Processes uploaded S3 documents and adds to the KB.',
       entry: path.resolve(__dirname, 'lambdas', 'event-handler', 'index.ts'),
       memorySize: this.DEFAULT_MEMORY_SIZE,
-      vpc: vpc,
       role: lambdaRole,
       timeout: PROCESSING_TIMEOUT,
       runtime: EXECUTION_RUNTIME,
@@ -325,6 +319,7 @@ export class RagPipelineStack extends NestedStack {
         BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
         OPSS_HOST: cfnCollection.attrCollectionEndpoint,
         OPSS_COLLECTION_ARN: cfnCollection.attrArn,
+        KB_STAGING_BUCKET: kbStagingBucket.bucketName,
       },
       bundling: {
         minify: true,
@@ -336,6 +331,7 @@ export class RagPipelineStack extends NestedStack {
     });
 
     //TODO add permissions for bedrock & opensearch
+    //TODO add PassRole permission - is not authorized to perform: iam:PassRole on resource: arn:aws:iam::089689156629:role/AmazonBedrockExecutionRoleForKnowledgeBase_1"
 
     this.documentProcessor.addEventSource(new SqsEventSource(eventQueue, {
       batchSize: 10,
@@ -350,32 +346,5 @@ export class RagPipelineStack extends NestedStack {
       value: this.artifactsUploadBucket.bucketName,
     });
 
-  }
-
-  /**
-   * @param id the VPC identifier.
-   * @returns a new VPC with a public, private and isolated
-   * subnets for the pipeline.
-   */
-  private createVpc(id: string): ec2.IVpc {
-    return (new ec2.Vpc(this, id, {
-      enableDnsSupport: true,
-      enableDnsHostnames: true,
-      ipAddresses: ec2.IpAddresses.cidr('10.0.0.0/20'),
-      maxAzs: 1,
-      subnetConfiguration: [{
-        name: 'public',
-        subnetType: ec2.SubnetType.PUBLIC,
-        cidrMask: 28,
-      }, {
-        name: 'private',
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
-        cidrMask: 24,
-      }, {
-        name: 'isolated',
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-        cidrMask: 24,
-      }],
-    }));
   }
 }

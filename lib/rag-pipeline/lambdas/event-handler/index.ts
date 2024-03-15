@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-import { randomUUID } from 'crypto';
 import { getDocument } from './get-document';
 import { InvalidDocumentObjectException, ObjectNotFoundException } from './exceptions';
 import { LambdaInterface } from '@aws-lambda-powertools/commons';
-import { next } from '@project-lakechain/sdk/decorators';
 import { Context, S3Event, S3EventRecord, SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
-import { CloudEvent, DataEnvelope, EventType as DocumentEvent } from '@project-lakechain/sdk/models';
+import { EventType as DocumentEvent } from '@project-lakechain/sdk/models';
 import { BatchProcessor, EventType, processPartialResponse } from '@aws-lambda-powertools/batch';
 import { Metrics } from '@aws-lambda-powertools/metrics';
 import { Tracer } from '@aws-lambda-powertools/tracer';
@@ -28,11 +26,21 @@ import { Logger } from '@aws-lambda-powertools/logger';
 import { defaultProvider } from '@aws-sdk/credential-provider-node';
 import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
 import {
-  BedrockAgentClient, CreateKnowledgeBaseCommand, CreateKnowledgeBaseRequest, CreateKnowledgeBaseResponse,
+  BedrockAgentClient,
+  CreateDataSourceCommand,
+  CreateDataSourceResponse,
+  CreateKnowledgeBaseCommand,
+  CreateKnowledgeBaseCommandInput,
+  CreateKnowledgeBaseResponse,
   KnowledgeBaseSummary,
+  ListDataSourcesCommand,
+  ListDataSourcesResponse,
   ListKnowledgeBasesCommand,
   ListKnowledgeBasesResponse,
+  StartIngestionJobCommand,
+  StartIngestionJobCommandOutput,
 } from '@aws-sdk/client-bedrock-agent';
+import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
 
 import { Client } from '@opensearch-project/opensearch';
 
@@ -97,9 +105,11 @@ const unquote = (event: S3EventRecord): S3EventRecord => {
 
 const bedrockAgentClient = new BedrockAgentClient();
 
-function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string): KnowledgeBaseSummary {
-  return knowledgeBaseSummaries.find((kbSummary) => kbSummary.name == kbName);
+function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string): KnowledgeBaseSummary | undefined {
+  return knowledgeBaseSummaries.find((kbSummary) => kbSummary.name === kbName);
 }
+
+const s3Client = new S3Client();
 
 /**
  * The lambda class definition containing the lambda handler.
@@ -115,8 +125,7 @@ class Lambda implements LambdaInterface {
    * returned cloud event to the next middlewares
    */
   //TODO Add idempotency
-  @next()
-  async s3RecordHandler(s3Event: S3EventRecord): Promise<CloudEvent> {
+  async s3RecordHandler(s3Event: S3EventRecord): Promise<StartIngestionJobCommandOutput> {
     const event = unquote(s3Event);
     const objectKey = s3Event.s3.object.key;
 
@@ -139,6 +148,7 @@ class Lambda implements LambdaInterface {
       throw new Error("Unable to process files at bucket root");
     }
     const kbName = keyPaths[0]; //the prefix of objects corresponds to the Knowledge Base name
+    let kbDataSourceName = `${kbName}-datasource`;
     //TODO- sanitise and hash input + store in DB for better lookup
 
     const listKnowledgeBasesCommand = new ListKnowledgeBasesCommand({
@@ -170,7 +180,24 @@ class Lambda implements LambdaInterface {
 
     // const client = new OpenSearchServerlessClient
     // if the knowledge base does not exist, go and create one
-    if (!(response.knowledgeBaseSummaries && kbExist(response.knowledgeBaseSummaries, kbName))) {
+    let knowledgeBaseSummary, knowledgeBaseId, dataSourceId;
+    if (response.knowledgeBaseSummaries !== undefined && response.knowledgeBaseSummaries > 0) {
+      knowledgeBaseSummary = kbExist(response.knowledgeBaseSummaries, kbName);
+      knowledgeBaseId = knowledgeBaseSummary?.knowledgeBaseId;
+      let listDataSourcesCommand = new ListDataSourcesCommand({ knowledgeBaseId: knowledgeBaseId, maxResults: 1000 });
+      // noinspection TypeScriptValidateTypes
+      const listDataSourcesResponse: ListDataSourcesResponse = await bedrockAgentClient.send(listDataSourcesCommand);
+      logger.info(listDataSourcesResponse as any);
+
+      let dataSourceSummaries = listDataSourcesResponse.dataSourceSummaries;
+      if (dataSourceSummaries) {
+        let dataSourceSummary = dataSourceSummaries.find((summary) => summary.name === kbDataSourceName);
+        dataSourceId = dataSourceSummary ? dataSourceSummary.dataSourceId : undefined;
+      }
+    }
+    //TODO save all the Knowledgebase / Opensearch index configuration in a database
+
+    if (!(knowledgeBaseSummary)) {
       logger.info(`KnowledgeBase: ${kbName} does not exist, creating`);
       // Create OpenSearchServerless Index
       const settings = {
@@ -193,7 +220,9 @@ class Lambda implements LambdaInterface {
         },
       };
 
-      if (await opssClient.indices.exists({ index: kbName })) {
+      let apiResponse = await opssClient.indices.exists({ index: kbName });
+      logger.info(apiResponse as any);
+      if (apiResponse.statusCode == 200) {
         logger.info(`${kbName} exists`);
       } else {
         const indexCreationResponse = await opssClient.indices.create({
@@ -229,62 +258,65 @@ class Lambda implements LambdaInterface {
       // noinspection TypeScriptValidateTypes
       logger.info("KB creating", { request: createKbRequest });
 
-      const createKbResponse = await bedrockAgentClient.send<CreateKnowledgeBaseResponse>(createKbRequest);
+      // noinspection TypeScriptValidateTypes
+      const createKbResponse: CreateKnowledgeBaseResponse = await bedrockAgentClient.send<CreateKnowledgeBaseCommandInput, CreateKnowledgeBaseResponse>(createKbRequest);
 
       // noinspection TypeScriptValidateTypes
       logger.info("KB Created", { response: createKbResponse });
 
-    }
-    /*
+      knowledgeBaseId = createKbResponse.knowledgeBase?.knowledgeBaseId;
 
-      let host;
-      var client = new Client({
-        node: host,
-        Connection: class extends Connection {
-          buildRequestObject(params) {
-            const request = super.buildRequestObject(params)
-            request.service = 'aoss';
-            request.region = process.env.AWS_REGION; // e.g. us-east-1
-            var body = request.body;
-            request.body = undefined;
-            delete request.headers['content-length'];
-            request.headers['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD';
-            request = aws4.sign(request, AWS.config.credentials);
-            request.body = body;
-
-            return request;
-          }
-        }
+      //Create datasource
+      const createDataSourceCommand = new CreateDataSourceCommand({
+        dataSourceConfiguration: {
+          type: "S3",
+          s3Configuration: {
+            bucketArn: `arn:aws:s3:::${process.env.KB_STAGING_BUCKET}`,
+            inclusionPrefixes: [kbName],
+          },
+        },
+        vectorIngestionConfiguration: {
+          chunkingConfiguration: {
+            chunkingStrategy: "FIXED_SIZE",
+            fixedSizeChunkingConfiguration: {
+              "maxTokens": 512,
+              "overlapPercentage": 20,
+            },
+          },
+        },
+        knowledgeBaseId: knowledgeBaseId,
+        name: kbDataSourceName,
       });
 
-      // Create an index
-      try {
-        var index_name = "sitcoms-eighties";
+      // noinspection TypeScriptValidateTypes
+      let createDSResponse: CreateDataSourceResponse = await bedrockAgentClient.send(createDataSourceCommand);
+      logger.info("DataSource created", createDSResponse as any);
+      dataSourceId = createDSResponse.dataSource?.dataSourceId;
+    }
 
-        var response = await client.indices.create({
-          index: index_name
-        });
-*/
-    // Create Bedrock knowledge base
-
-
-    //Check prefix
-    //if new prefix - create Opensearch Index, Create KB
     //Upload file to destination S3 bucket
+    const copyObjectCommand = new CopyObjectCommand({
+      CopySource: `${s3Event.s3.bucket.name}/${objectKey}`,
+      Bucket: process.env.KB_STAGING_BUCKET,
+      Key: objectKey,
+    });
+    const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
+
+    // noinspection TypeScriptValidateTypes
+    logger.info("CopyObject result", { data: copyObjectOutput });
+
     //Start ingestion into KB
+    const startIngestionJobCommand = new StartIngestionJobCommand({
+      dataSourceId: dataSourceId,
+      knowledgeBaseId: knowledgeBaseId,
+    });
 
-
+    // noinspection TypeScriptValidateTypes
+    const startIngestionResponse: StartIngestionJobCommandOutput = bedrockAgentClient.send(startIngestionJobCommand);
+    logger.info(startIngestionResponse as any);
     // Construct the initial event that will be consumed
     // by the next middlewares.
-    return (new CloudEvent.Builder()
-      .withType(eventType)
-      .withData(new DataEnvelope.Builder()
-        .withChainId(randomUUID())
-        .withSourceDocument(document)
-        .withDocument(document)
-        .withMetadata({})
-        .build())
-      .build());
+    return startIngestionResponse;
   }
 
   /**

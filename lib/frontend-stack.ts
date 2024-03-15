@@ -98,7 +98,7 @@ export class FrontendStack extends NestedStack {
     distribution.addBehavior('/graphql', new HttpOrigin(Fn.select(2, Fn.split('/', graphqlUrl))), {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
       allowedMethods: AllowedMethods.ALLOW_ALL, // allow POST for graphql
-      responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, 'APIResponsePolicy', {
+      responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, `APIResponsePolicy${this.node.addr}`, {
         securityHeadersBehavior: {
           strictTransportSecurity: { accessControlMaxAge: Duration.seconds(47304000), includeSubdomains: true, preload: true, override: true },
           contentTypeOptions: { override: true },
