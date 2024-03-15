@@ -20,3 +20,15 @@ export const getSettings = /* GraphQL */ `query GetSettings {
   APITypes.GetSettingsQueryVariables,
   APITypes.GetSettingsQuery
 >;
+export const listCoarses = /* GraphQL */ `query ListCoarses {
+  listCoarses {
+    id
+    name
+    description
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListCoarsesQueryVariables,
+  APITypes.ListCoarsesQuery
+>;

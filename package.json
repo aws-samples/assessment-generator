@@ -25,6 +25,7 @@
   "dependencies": {
     "@aws-appsync/utils": "^1.7.0",
     "@aws-sdk/client-bedrock-agent": "^3.533.0",
+    "@aws-cdk/aws-cognito-identitypool-alpha": "2.132.0-alpha.0",
     "@aws-sdk/client-bedrock-runtime": "^3.529.1",
     "@aws-sdk/client-opensearchserverless": "^3.533.0",
     "@cloudscape-design/components": "^3.0.558",

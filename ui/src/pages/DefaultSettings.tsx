@@ -48,21 +48,19 @@ export default () => {
         header={<Header variant="h1">Default Settings</Header>}
       >
         <Container>
-          <SpaceBetween size="l" alignItems="center">
-            <Box padding="xxxl">
-              <SpaceBetween direction="horizontal" size="l">
-                <FormField label="UI Language">
-                  <Select options={langs} selectedOption={uiLang} onChange={({ detail }) => setUiLang(detail.selectedOption)} />
-                </FormField>
-                <FormField label="Document Language">
-                  <Select options={langs} selectedOption={docLang} onChange={({ detail }) => setDocLang(detail.selectedOption)} />
-                </FormField>
-                <FormField label="Default Assessment Type">
-                  <Select options={assessTypes} selectedOption={assessType} onChange={({ detail }) => setAssessType(detail.selectedOption)} />
-                </FormField>
-              </SpaceBetween>
-            </Box>
-          </SpaceBetween>
+          <Box padding="xxxl">
+            <SpaceBetween direction="horizontal" size="l">
+              <FormField label="UI Language">
+                <Select options={langs} selectedOption={uiLang} onChange={({ detail }) => setUiLang(detail.selectedOption)} />
+              </FormField>
+              <FormField label="Document Language">
+                <Select options={langs} selectedOption={docLang} onChange={({ detail }) => setDocLang(detail.selectedOption)} />
+              </FormField>
+              <FormField label="Default Assessment Type">
+                <Select options={assessTypes} selectedOption={assessType} onChange={({ detail }) => setAssessType(detail.selectedOption)} />
+              </FormField>
+            </SpaceBetween>
+          </Box>
         </Container>
       </Form>
     </form>

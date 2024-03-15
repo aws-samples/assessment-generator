@@ -1,17 +1,56 @@
-import React, { useState } from 'react';
-import { FileUpload, FormField, SpaceBetween, Box, Header, ContentLayout, Container, Form, Button } from '@cloudscape-design/components';
+import React, { useState, useEffect } from 'react';
+import {
+  Select,
+  FileUpload,
+  FormField,
+  SpaceBetween,
+  Box,
+  Header,
+  ContentLayout,
+  Container,
+  Form,
+  Button,
+  SelectProps,
+} from '@cloudscape-design/components';
+import { uploadData } from 'aws-amplify/storage';
+import { generateClient } from 'aws-amplify/api';
+import { listCoarses } from '../graphql/queries';
+import { optionise } from '../helpers';
+
+const client = generateClient();
 
 export default () => {
-  const [file, setFile] = React.useState<File[]>([]);
+  const [files, setFiles] = React.useState<File[]>([]);
+  const [coarses, setCoarses] = useState<SelectProps.Option[]>([]);
+  const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const list = (await client.graphql({ query: listCoarses })).data.listCoarses;
+      if (!list) return;
+      const options = list.map((coarse) => optionise(coarse!.name!));
+      setCoarses(options);
+    })();
+  }, []);
+
   return (
-    <form onSubmit={(e) => e.preventDefault()}>
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        const [file] = files;
+        const { result } = await uploadData({
+          key: `${coarse?.value}-${file.name}`,
+          data: file,
+        });
+      }}
+    >
       <Form
         actions={
           <SpaceBetween direction="horizontal" size="xs">
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary" disabled={!file.length}>
+            <Button variant="primary" disabled={!coarse || !files.length}>
               Submit
             </Button>
           </SpaceBetween>
@@ -27,11 +66,14 @@ export default () => {
             }
           >
             <Box padding="xxxl">
-              <SpaceBetween size="l" alignItems="start">
+              <SpaceBetween size="l" direction="horizontal" alignItems="end">
+                <FormField label="Choose Coarse:">
+                  <Select options={coarses} selectedOption={coarse} onChange={({ detail }) => setCoarse(detail.selectedOption)} />
+                </FormField>
                 <FormField>
                   <FileUpload
-                    onChange={({ detail }) => setFile(detail.value)}
-                    value={file}
+                    onChange={({ detail }) => setFiles(detail.value)}
+                    value={files}
                     i18nStrings={{
                       uploadButtonText: (e) => (e ? 'Choose files' : 'Choose file'),
                       dropzoneText: (e) => (e ? 'Drop files to upload' : 'Drop file to upload'),

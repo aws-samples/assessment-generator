@@ -15,7 +15,7 @@ export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
 
 interface DataStackProps extends NestedStackProps {
-  userpool: aws_cognito.UserPool;
+  userPool: aws_cognito.UserPool;
 }
 
 export class DataStack extends NestedStack {
@@ -23,7 +23,7 @@ export class DataStack extends NestedStack {
 
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
-    const { userpool } = props;
+    const { userPool } = props;
 
     const api = new aws_appsync.GraphqlApi(this, 'Api', {
       name: 'Api',
@@ -31,7 +31,7 @@ export class DataStack extends NestedStack {
       authorizationConfig: {
         defaultAuthorization: {
           authorizationType: aws_appsync.AuthorizationType.USER_POOL,
-          userPoolConfig: { userPool: userpool },
+          userPoolConfig: { userPool },
         },
       },
       logConfig: { retention: aws_logs.RetentionDays.ONE_WEEK, fieldLogLevel: aws_appsync.FieldLogLevel.ALL },
@@ -41,6 +41,7 @@ export class DataStack extends NestedStack {
       partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
       removalPolicy: RemovalPolicy.DESTROY,
     });
+
     const settingsDs = api.addDynamoDbDataSource('SettingsDataSource', settingsTable);
 
     settingsDs.createResolver('QueryGetSettingsResolver', {
@@ -55,6 +56,20 @@ export class DataStack extends NestedStack {
       fieldName: 'upsertSettings',
       code: aws_appsync.Code.fromAsset('lib/resolvers/upsertSettings.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
+    const coarsesTable = new aws_dynamodb.TableV2(this, 'CoarsesTable', {
+      partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
+    const coarsesDs = api.addDynamoDbDataSource('CoarsesDataSource', coarsesTable);
+
+    coarsesDs.createResolver('QueryListCoarsesResolver', {
+      typeName: 'Query',
+      fieldName: 'listCoarses',
+      requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
+      responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
     });
 
     this.api = api;

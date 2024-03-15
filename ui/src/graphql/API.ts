@@ -29,6 +29,13 @@ export type Settings = {
   assessType?: AssessType | null,
 };
 
+export type Coarse = {
+  __typename: "Coarse",
+  id: string,
+  name?: string | null,
+  description?: string | null,
+};
+
 export type UpsertSettingsMutationVariables = {
   input?: UpsertSettingsInput | null,
 };
@@ -52,4 +59,16 @@ export type GetSettingsQuery = {
     docLang?: Lang | null,
     assessType?: AssessType | null,
   } | null,
+};
+
+export type ListCoarsesQueryVariables = {
+};
+
+export type ListCoarsesQuery = {
+  listCoarses?:  Array< {
+    __typename: "Coarse",
+    id: string,
+    name?: string | null,
+    description?: string | null,
+  } | null > | null,
 };

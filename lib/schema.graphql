@@ -16,6 +16,12 @@ type Settings {
   assessType: AssessType
 }
 
+type Coarse {
+  id: ID!
+  name: String
+  description: String
+}
+
 input UpsertSettingsInput {
   uiLang: Lang!
   docLang: Lang!
@@ -28,4 +34,5 @@ type Mutation {
 
 type Query {
   getSettings: Settings
+  listCoarses: [Coarse]
 }
