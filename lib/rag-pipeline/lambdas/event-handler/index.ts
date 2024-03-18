@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import { getDocument } from './get-document';
 import { InvalidDocumentObjectException, ObjectNotFoundException } from './exceptions';
-import { LambdaInterface } from '@aws-lambda-powertools/commons';
+import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
 import { Context, S3Event, S3EventRecord, SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
-import { EventType as DocumentEvent } from '@project-lakechain/sdk/models';
 import { BatchProcessor, EventType, processPartialResponse } from '@aws-lambda-powertools/batch';
 import { Metrics } from '@aws-lambda-powertools/metrics';
 import { Tracer } from '@aws-lambda-powertools/tracer';
@@ -43,6 +41,7 @@ import {
 import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
 
 import { Client } from '@opensearch-project/opensearch';
+import { DocumentEvent } from "./s3/documentEvent";
 
 /**
  * Creating a global instance for the Powertools logger
@@ -132,13 +131,6 @@ class Lambda implements LambdaInterface {
     // noinspection TypeScriptValidateTypes
     logger.info("Normalised event", { data: { original: objectKey, normalised: event.s3.object.key } });
     const eventType = getEventType(event.eventName);
-
-    // Construct a document from the S3 object.
-    const document = await getDocument(
-      event.s3.bucket,
-      event.s3.object,
-      eventType,
-    );
 
     //Get file path
     const keyPaths = objectKey.split("/");
@@ -362,7 +354,6 @@ class Lambda implements LambdaInterface {
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: SQSEvent, _: Context): Promise<SQSBatchResponse> {
-    logger.info("HelloWorld");
     return (await processPartialResponse(
       event, this.sqsRecordHandler.bind(this), processor,
     ));
