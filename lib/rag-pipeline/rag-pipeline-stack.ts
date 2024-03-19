@@ -244,6 +244,16 @@ export class RagPipelineStack extends NestedStack {
       ],
     }));
 
+    lambdaRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "actions": [
+        "iam:PassRole",
+      ],
+      "resources": [
+        bedrockExecutionRole.roleArn,
+      ],
+    }));
+
 
     // Display the OpenSearch endpoint.
     new CfnOutput(this, 'OpenSearchEndpoint', {
@@ -329,6 +339,8 @@ export class RagPipelineStack extends NestedStack {
         ],
       },
     });
+    this.artifactsUploadBucket.grantRead(this.documentProcessor);
+    kbStagingBucket.grantReadWrite(this.documentProcessor);
 
     //TODO add permissions for bedrock & opensearch
     //TODO add PassRole permission - is not authorized to perform: iam:PassRole on resource: arn:aws:iam::089689156629:role/AmazonBedrockExecutionRoleForKnowledgeBase_1"

@@ -77,13 +77,14 @@ class Lambda implements LambdaInterface {
 
 
     //Upload file to destination S3 bucket
-    const copyObjectCommand = new CopyObjectCommand({
+    const copyObjectRequest = {
       CopySource: `${event.s3.bucket.name}/${objectKey}`,
       Bucket: process.env.KB_STAGING_BUCKET,
       Key: objectKey,
-    });
+    };
+    logger.info("Copy object to target bucket", copyObjectRequest as any);
+    const copyObjectCommand = new CopyObjectCommand(copyObjectRequest);
     const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
-
     logger.info("CopyObject result", { data: copyObjectOutput } as any);
 
     const knowledgeBase = await BedrockKnowledgeBase.getKnowledgeBase(prefix);
