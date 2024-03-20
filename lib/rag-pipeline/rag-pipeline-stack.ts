@@ -28,15 +28,14 @@ const EXECUTION_RUNTIME = Runtime.NODEJS_18_X;
 /**
  * The default memory size to allocate for the compute.
  */
-const DEFAULT_MEMORY_SIZE = 128;
+const DEFAULT_MEMORY_SIZE = 512;
 
-const NAMESPACE = "genassess";
+const NAMESPACE = "genassess-rag";
 
 const DOCUMENT_PROCESSOR_NAME = 'DocumentProcessor';
 
 export class RagPipelineStack extends NestedStack {
   public artifactsUploadBucket: Bucket;
-  private DEFAULT_MEMORY_SIZE: number = 512;
   private documentProcessor: NodejsFunction;
 
   constructor(scope: Construct, id: string, props?: NestedStackProps) {
@@ -96,7 +95,8 @@ export class RagPipelineStack extends NestedStack {
     });
     cfnCollection.addDependency(cfnNetworkSecurityPolicy);
     cfnCollection.addDependency(cfnEncryptionSecurityPolicy);
-    // AmazonBedrockExecutionRoleForKnowledgeBase_
+
+    //TODO scope it down to what's required
     const bedrockExecutionRole = new aws_iam.Role(this, 'AmazonBedrockExecutionRoleForKnowledgeBase_1', {
       assumedBy: new aws_iam.ServicePrincipal('bedrock.amazonaws.com').withConditions({
         "StringEquals": {
@@ -135,6 +135,7 @@ export class RagPipelineStack extends NestedStack {
     }));
 
 
+    //TODO scope it down to what's required
     const lambdaRole = new aws_iam.Role(this, 'OpssAdminRole', {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [
@@ -177,7 +178,7 @@ export class RagPipelineStack extends NestedStack {
         "Principal": [
           `${lambdaRole.roleArn}`,
           `${bedrockExecutionRole.roleArn}`,
-          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard",
+          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard", //TODO remove before publishing
         ],
         "Description": "data-access-rule",
       },
@@ -224,7 +225,7 @@ export class RagPipelineStack extends NestedStack {
           region: cdk.Aws.REGION,
           account: cdk.Aws.ACCOUNT_ID,
           arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
-          resourceName: "*",
+          resourceName: "*", //TODO restrict to specific resource
         }),
       ],
       "actions": [
@@ -316,7 +317,7 @@ export class RagPipelineStack extends NestedStack {
     this.documentProcessor = new NodejsFunction(this, DOCUMENT_PROCESSOR_NAME, {
       description: 'Processes uploaded S3 documents and adds to the KB.',
       entry: path.resolve(__dirname, 'lambdas', 'event-handler', 'index.ts'),
-      memorySize: this.DEFAULT_MEMORY_SIZE,
+      memorySize: DEFAULT_MEMORY_SIZE,
       role: lambdaRole,
       timeout: PROCESSING_TIMEOUT,
       runtime: EXECUTION_RUNTIME,
@@ -341,9 +342,6 @@ export class RagPipelineStack extends NestedStack {
     });
     this.artifactsUploadBucket.grantRead(this.documentProcessor);
     kbStagingBucket.grantReadWrite(this.documentProcessor);
-
-    //TODO add permissions for bedrock & opensearch
-    //TODO add PassRole permission - is not authorized to perform: iam:PassRole on resource: arn:aws:iam::089689156629:role/AmazonBedrockExecutionRoleForKnowledgeBase_1"
 
     this.documentProcessor.addEventSource(new SqsEventSource(eventQueue, {
       batchSize: 10,
