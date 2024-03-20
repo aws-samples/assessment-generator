@@ -10,16 +10,16 @@ enum AssessType {
   Type3
 }
 
+enum AssessmentStatus {
+  Start
+  InProgress
+  Completed
+}
+
 type Settings {
   uiLang: Lang
   docLang: Lang
   assessType: AssessType
-}
-
-type Coarse {
-  id: ID!
-  name: String
-  description: String
 }
 
 input UpsertSettingsInput {
@@ -28,11 +28,106 @@ input UpsertSettingsInput {
   assessType: AssessType!
 }
 
+type Coarse {
+  id: ID!
+  name: String
+  description: String
+}
+
+type Class {
+  id: ID!
+  name: String
+  students: [String]
+}
+
+type Student {
+  id: ID!
+  firstName: String
+  lastName: String
+}
+
+type AssessTemplate {
+  id: ID!
+  docLang: Lang
+  assessType: AssessType
+  totalQuestions: Int
+  easyQuestions: Int
+  mediumQuestions: Int
+  hardQuestions: Int
+  createdAt: AWSDateTime
+}
+
+input AssessTemplateInput {
+  docLang: Lang!
+  assessType: AssessType!
+  totalQuestions: Int!
+  easyQuestions: Int!
+  mediumQuestions: Int!
+  hardQuestions: Int!
+}
+
+type QandA {
+  title: String!
+  question: String!
+  answers: [String!]!
+}
+
+input QandAInput {
+  title: String
+  question: String
+  answers: [String]
+}
+
+type Assessment {
+  id: ID!
+  name: String
+  coarse: String
+  lecture: String
+  lectureDate: String
+  version: String
+  deadline: AWSDateTime
+  updatedAt: AWSDateTime
+  questions: [QandA!]!
+}
+
+input AssessmentInput {
+  name: String!
+  coarse: String!
+  lecture: String!
+  lectureDate: String!
+  version: String!
+  deadline: AWSDateTime!
+  questions: [QandAInput]!
+}
+
+type StudentAssessment {
+  parentAssessId: ID!
+  assessment: Assessment
+  answers: [Int]
+  status: AssessmentStatus
+  createdAt: AWSDateTime
+}
+
+input StudentAssessmentInput {
+  parentAssessId: ID!
+  answers: [Int]
+  status: AssessmentStatus
+}
+
 type Mutation {
   upsertSettings(input: UpsertSettingsInput): Settings
+  createAssessTemplate(input: AssessTemplateInput): AssessTemplate
+  upsertAssessment(input: AssessmentInput): Assessment
+  upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
 }
 
 type Query {
   getSettings: Settings
   listCoarses: [Coarse]
+  listClasses: [Class]
+  listStudents: [Student]
+  getAssessment(id: ID!): Assessment
+  listAssessments: [Assessment]
+  getStudentAssessment(parentAssessId: ID!): StudentAssessment
+  listStudentAssessments: [StudentAssessment]
 }

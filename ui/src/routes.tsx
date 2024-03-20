@@ -5,7 +5,7 @@ import HomePage from './pages/HomePage';
 import CreateKowledgeBase from './pages/CreateKnowledgeBase';
 import ModifyKnowledgeBase from './pages/ModifyKnowledgeBase';
 import CreateAssessmentTemplate from './pages/CreateAssessmentTemplate';
-import FindExistingAssessments from './pages/FindExistingAssessments';
+import FindAssessments from './pages/FindAssessments';
 import StudentAssessments from './pages/StudentAssessments';
 import GenerateAssessments from './pages/GenerateAssessments';
 import EditAssessments from './pages/EditAssessments';
@@ -48,8 +48,8 @@ export const routes = [
           element: <Section id={1} />,
           children: [
             {
-              path: 'find-existing-assessments',
-              element: <FindExistingAssessments />,
+              path: 'find-assessments',
+              element: <FindAssessments />,
             },
             {
               path: 'generate-assessments',

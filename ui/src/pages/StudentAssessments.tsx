@@ -1,13 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
+import { generateClient } from 'aws-amplify/api';
+import { listStudentAssessments } from '../graphql/queries';
+import { StudentAssessment, AssessmentStatus } from '../graphql/API';
 
-const assessments = [
-  { id: '111', coarse: 'Refrigeration', subject: 'Chemistry', status: 'Start' },
-  { id: '111', coarse: 'Cardiology', subject: 'Biology', status: 'Resume' },
-  { id: '111', coarse: 'Probabilities', subject: 'Maths', status: 'Completed' },
-];
+const client = generateClient();
 
 export default () => {
+  const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const list: any = (await client.graphql({ query: listStudentAssessments })).data.listStudentAssessments || [];
+      setAssessments(list);
+    })();
+  }, []);
+
   return (
     <ContentLayout>
       <Container
@@ -20,32 +28,21 @@ export default () => {
         <Table
           columnDefinitions={[
             {
-              id: 'id',
-              header: 'Id',
-              cell: (item) => item.id,
+              id: 'parentAssessId',
+              header: 'Assessment Id',
+              cell: (item) => item.parentAssessId,
               sortingField: 'id',
               isRowHeader: true,
             },
             {
-              id: 'subject',
-              header: 'Subject',
-              cell: (item) => item.subject,
-            },
-            {
-              id: 'coarse',
-              header: 'Coarse',
-              cell: (item) => item.coarse,
-            },
-            {
               id: 'status',
               header: 'Status',
-              cell: (item) => (item.status === 'Completed' ? item.status : <Link href={`/assessment/${item.id}`}>{item.status}</Link>),
+              cell: (item) =>
+                item.status === AssessmentStatus.Completed ? item.status : <Link href={`/assessment/${item.parentAssessId}`}>{item.status}</Link>,
             },
           ]}
           columnDisplay={[
-            { id: 'id', visible: true },
-            { id: 'subject', visible: true },
-            { id: 'type', visible: true },
+            { id: 'parentAssessId', visible: true },
             { id: 'status', visible: true },
           ]}
           items={assessments}

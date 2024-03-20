@@ -1,53 +1,138 @@
-import React, { useState, useReducer } from 'react';
+import React, { useState, useReducer, useEffect } from 'react';
 import { Wizard, Container, Link, Header, SpaceBetween, FormField, Input, Button, Box, Textarea, Tiles } from '@cloudscape-design/components';
+import { useParams } from 'react-router-dom';
+import { generateClient } from 'aws-amplify/api';
+import { Assessment } from '../graphql/API';
+import { getAssessment } from '../graphql/queries';
+import { upsertAssessment } from '../graphql/mutations';
 
-const fixtures = [
-  { title: 'Algebra', question: 'Solve for x in the equation 3x + 4 = 19', answers: ['5', '4', '3', '6'] },
-  {
-    title: 'Geometry',
-    question: 'A rectangle has a length of 8 cm and a width of 3 cm. What is the area of the rectangle?',
-    answers: ['11 cm2', '24 cm2', '22 cm2', '14 cm2'],
-  },
-  {
-    title: 'Statistics',
-    question: 'A dataset contains the following five numbers: 2, 4, 6, 8, 10. What is the mean (average) of this dataset?',
-    answers: ['5', '6', '7', '8'],
-  },
-];
+const client = generateClient();
 
 enum ActionTypes {
   Delete,
   Update,
+  Put,
 }
 
-const reducer = (state: typeof fixtures, actions: { type: ActionTypes; stepIndex: number; key?: string; content?: string }) => {
+const reducer = (state: Assessment, actions: { type: ActionTypes; stepIndex?: number; key?: string; content?: any }) => {
   const { type, stepIndex, key, content } = actions;
-  let newState;
   switch (type) {
-    case ActionTypes.Delete:
-      newState = state.toSpliced(stepIndex, 1);
-      break;
-    case ActionTypes.Update:
-      newState = state.map((section, i) => {
+    case ActionTypes.Put:
+      return content;
+    case ActionTypes.Delete: {
+      const newQuestions = state.questions?.toSpliced(stepIndex!, 1);
+      return { ...state, questions: newQuestions };
+    }
+    case ActionTypes.Update: {
+      const newQuestions = state.questions?.map((section, i) => {
         if (stepIndex !== i) return section;
         const newSection: any = { ...section };
         newSection[key!] = content;
         return newSection;
       });
-      break;
+      return { ...state, questions: newQuestions };
+    }
     default:
       throw Error('Unknown Action');
   }
-  return newState;
 };
 
 export default () => {
-  const [assessments, updateAssessment] = useReducer(reducer, fixtures);
+  const params = useParams();
+
+  const [assessment, updateAssessment] = useReducer(reducer, {} as never);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [tile, setTile] = useState('');
+
+  useEffect(() => {
+    client
+      .graphql({ query: getAssessment, variables: { id: params.id! } })
+      .then(({ data }) => {
+        const assessment = data.getAssessment;
+        if (!assessment) throw new Error();
+        updateAssessment({ type: ActionTypes.Put, content: assessment });
+      })
+      .catch(() => {});
+  }, []);
+
+  const steps =
+    (assessment as Assessment).questions?.map(({ title, question, answers }) => ({
+      title,
+      content: (
+        <SpaceBetween size="l">
+          <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
+            <Textarea
+              onChange={({ detail }) =>
+                updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'question', content: detail.value })
+              }
+              value={question}
+            />
+          </Container>
+          <Container header={<Header variant="h2">Answer</Header>}>
+            <SpaceBetween size="l" direction="horizontal" alignItems="center">
+              {answers.map((answer, answerIndex) => (
+                <Container
+                  key={`answer-${answerIndex}`}
+                  header={
+                    <Header
+                      variant="h2"
+                      actions={
+                        <Button
+                          iconName="close"
+                          variant="icon"
+                          onClick={() =>
+                            updateAssessment({
+                              type: ActionTypes.Update,
+                              stepIndex: activeStepIndex,
+                              key: 'answers',
+                              content: answers.filter((a, i) => answerIndex !== i),
+                            })
+                          }
+                        />
+                      }
+                    />
+                  }
+                >
+                  <Input
+                    onChange={({ detail }) =>
+                      updateAssessment({
+                        type: ActionTypes.Update,
+                        stepIndex: activeStepIndex,
+                        key: 'answers',
+                        content: answers.map((answer: string, i: number) => (answerIndex === i ? detail.value : answer)),
+                      })
+                    }
+                    value={answer}
+                  />
+                </Container>
+              ))}
+              <Container>
+                <Button
+                  iconName="add-plus"
+                  variant="icon"
+                  onClick={() =>
+                    updateAssessment({
+                      type: ActionTypes.Update,
+                      stepIndex: activeStepIndex,
+                      key: 'answers',
+                      content: [...answers, ''],
+                    })
+                  }
+                />
+              </Container>
+            </SpaceBetween>
+          </Container>
+        </SpaceBetween>
+      ),
+    })) || [];
 
   return (
     <Wizard
+      onSubmit={() => {
+        client
+          .graphql({ query: upsertAssessment, variables: { input: assessment } })
+          .then(() => {})
+          .catch(() => {});
+      }}
       i18nStrings={{
         stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
         collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
@@ -62,40 +147,7 @@ export default () => {
       onNavigate={({ detail }) => setActiveStepIndex(detail.requestedStepIndex)}
       activeStepIndex={activeStepIndex}
       allowSkipTo
-      steps={assessments.map(({ title, question, answers }) => ({
-        title,
-        content: (
-          <SpaceBetween size="l">
-            <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
-              <Textarea
-                onChange={({ detail }) =>
-                  updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'question', content: detail.value })
-                }
-                value={question}
-              />
-            </Container>
-            <Container header={<Header variant="h2">Answer</Header>}>
-              <SpaceBetween size="l" direction="horizontal">
-                {answers.map((answer: string, answerIndex: number) => (
-                  <Container key={`answer-${answerIndex}`} header={<Header variant="h2" actions={<Button iconName="close" variant="icon" />} />}>
-                    <Input
-                      onChange={({ detail }) =>
-                        updateAssessment({
-                          type: ActionTypes.Update,
-                          stepIndex: activeStepIndex,
-                          key: 'answers',
-                          content: answers.map((answer: string, i: number) => (answerIndex === i ? detail.value : answer)),
-                        })
-                      }
-                      value={answer}
-                    />
-                  </Container>
-                ))}
-              </SpaceBetween>
-            </Container>
-          </SpaceBetween>
-        ),
-      }))}
+      steps={steps}
     />
   );
 };

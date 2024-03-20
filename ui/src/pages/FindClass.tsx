@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Button, Box, TextFilter, Modal } from '@cloudscape-design/components';
 import Dashboard from '../components/Dashboard';
+import { generateClient } from 'aws-amplify/api';
+import { listClasses } from '../graphql/queries';
+import { Class } from '../graphql/API';
 
-const classes = [
-  { id: '111', name: 'classA', subject: 'chemistry', students: 5 },
-  { id: '222', name: 'classB', subject: 'biology', students: 9 },
-  { id: '333', name: 'classC', subject: 'maths', students: 3 },
-];
+const client = generateClient();
 
 export default () => {
   const [showDashboard, setShowDashboard] = React.useState(false);
+  const [classes, setClasses] = useState<Class[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const list: any = (await client.graphql({ query: listClasses })).data.listClasses || [];
+      setClasses(list);
+    })();
+  }, []);
 
   return (
     <>
@@ -27,26 +34,14 @@ export default () => {
           <Table
             columnDefinitions={[
               {
-                id: 'id',
-                header: 'Id',
-                cell: (item) => item.id,
-                sortingField: 'id',
-                isRowHeader: true,
-              },
-              {
                 id: 'name',
                 header: 'Name',
                 cell: (item) => item.name,
               },
               {
-                id: 'subject',
-                header: 'Subject',
-                cell: (item) => item.subject,
-              },
-              {
                 id: 'students',
                 header: 'Students',
-                cell: (item) => item.students,
+                cell: (item) => item.students!.length,
               },
               {
                 id: 'dashboards',
@@ -60,9 +55,7 @@ export default () => {
               },
             ]}
             columnDisplay={[
-              { id: 'id', visible: true },
               { id: 'name', visible: true },
-              { id: 'subject', visible: true },
               { id: 'students', visible: true },
               { id: 'dashboards', visible: true },
               { id: 'download', visible: true },

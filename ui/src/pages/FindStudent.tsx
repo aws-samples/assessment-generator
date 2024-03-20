@@ -1,15 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Button, Box, TextFilter, Modal } from '@cloudscape-design/components';
 import Dashboard from '../components/Dashboard';
+import { generateClient } from 'aws-amplify/api';
+import { listStudents } from '../graphql/queries';
+import { Student } from '../graphql/API';
 
-const classes = [
-  { id: '111', firstName: 'John', lastName: 'Johnson', grade: 'A' },
-  { id: '222', firstName: 'Mike', lastName: 'Jordan', grade: 'B' },
-  { id: '333', firstName: 'Ahmed', lastName: 'Elsenousi', grade: 'C' },
-];
+const client = generateClient();
 
 export default () => {
   const [showDashboard, setShowDashboard] = React.useState(false);
+  const [students, setStudents] = useState<Student[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const list: any = (await client.graphql({ query: listStudents })).data.listStudents || [];
+      setStudents(list);
+    })();
+  }, []);
 
   return (
     <>
@@ -44,11 +51,6 @@ export default () => {
                 cell: (item) => item.lastName,
               },
               {
-                id: 'grade',
-                header: 'Grade',
-                cell: (item) => item.grade,
-              },
-              {
                 id: 'dashboards',
                 header: 'Dashboards',
                 cell: (item) => <Button onClick={() => setShowDashboard(true)}>Generate Dashboard</Button>,
@@ -63,11 +65,10 @@ export default () => {
               { id: 'id', visible: true },
               { id: 'firstName', visible: true },
               { id: 'lastName', visible: true },
-              { id: 'grade', visible: true },
               { id: 'dashboards', visible: true },
               { id: 'download', visible: true },
             ]}
-            items={classes}
+            items={students}
             loadingText="Loading list"
             trackBy="id"
             empty={
