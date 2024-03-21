@@ -1,15 +1,21 @@
 import { Construct } from 'constructs';
+import * as cdk from 'aws-cdk-lib';
 import {
+  aws_appsync,
+  aws_cognito,
+  aws_dynamodb,
+  aws_iam,
+  aws_logs,
   NestedStack,
   NestedStackProps,
-  aws_dynamodb,
-  aws_appsync,
   RemovalPolicy,
-  aws_cognito,
-  aws_logs,
-  aws_rds,
-  custom_resources,
 } from 'aws-cdk-lib';
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import path from "path";
+import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
+import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -193,6 +199,66 @@ export class DataStack extends NestedStack {
     //   code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.js'),
     //   runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     // });
+
+
+    const NAMESPACE = "genassess-rag";
+    const QUESTIONS_GENERATOR_NAME = "QuestionsGenerator";
+    const questionGeneratorRole = new aws_iam.Role(this, `${QUESTIONS_GENERATOR_NAME}Role`, {
+      assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
+      managedPolicies: [
+        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
+      ],
+    });
+
+    //Add Bedrock permissions on the Lambda function
+    //TODO scope it down to what's required
+    questionGeneratorRole.addToPolicy(new PolicyStatement({
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [
+        "*",
+      ],
+      "actions": [
+        "bedrock:*",
+      ],
+    }));
+
+    // Creating the log group.
+    const logGroup = new LogGroup(this, 'LogGroup', {
+      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
+      retention: RetentionDays.ONE_WEEK,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    const questionsGenerator = new NodejsFunction(this, QUESTIONS_GENERATOR_NAME, {
+      description: 'Generates questions',
+      entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'event-handler', 'index.ts'),
+      memorySize: 512,
+      role: questionGeneratorRole,
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      tracing: Tracing.ACTIVE,
+      logGroup: logGroup,
+      environment: {
+        POWERTOOLS_SERVICE_NAME: "questions-generator",
+        POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
+        // BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
+        // OPSS_HOST: cfnCollection.attrCollectionEndpoint,
+        // OPSS_COLLECTION_ARN: cfnCollection.attrArn,
+        // KB_STAGING_BUCKET: kbStagingBucket.bucketName,
+      },
+      bundling: {
+        minify: true,
+        externalModules: [
+          '@aws-sdk/client-s3',
+          '@aws-sdk/client-sns',
+        ],
+      },
+    });
+
+    let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
+      handler: questionsGenerator,
+    });
+
 
     this.api = api;
   }
