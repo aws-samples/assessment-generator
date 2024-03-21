@@ -14,73 +14,23 @@
  * limitations under the License.
  */
 
-import { randomUUID } from 'crypto';
-import { getDocument } from './get-document';
 import { InvalidDocumentObjectException, ObjectNotFoundException } from './exceptions';
-import { LambdaInterface } from '@aws-lambda-powertools/commons';
-import { next } from '@project-lakechain/sdk/decorators';
+import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
 import { Context, S3Event, S3EventRecord, SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
-import { CloudEvent, DataEnvelope, EventType as DocumentEvent } from '@project-lakechain/sdk/models';
 import { BatchProcessor, EventType, processPartialResponse } from '@aws-lambda-powertools/batch';
-import { Metrics } from '@aws-lambda-powertools/metrics';
-import { Tracer } from '@aws-lambda-powertools/tracer';
-import { Logger } from '@aws-lambda-powertools/logger';
-import { defaultProvider } from '@aws-sdk/credential-provider-node';
-import { AwsSigv4Signer } from '@opensearch-project/opensearch/aws';
-import {
-  BedrockAgentClient, CreateKnowledgeBaseCommand, CreateKnowledgeBaseRequest, CreateKnowledgeBaseResponse,
-  KnowledgeBaseSummary,
-  ListKnowledgeBasesCommand,
-  ListKnowledgeBasesResponse,
-} from '@aws-sdk/client-bedrock-agent';
-
-import { Client } from '@opensearch-project/opensearch';
-
-/**
- * Creating a global instance for the Powertools logger
- * to be used across the different applications.
- */
-export const logger = new Logger({
-  serviceName: process.env.POWERTOOLS_SERVICE_NAME,
-});
-
-/**
- * Creating a global instance for the Powertools metrics
- * to be used across the different applications.
- */
-export const metrics = new Metrics({
-  defaultDimensions: {
-    region: process.env.AWS_REGION ?? 'N/A',
-    executionEnv: process.env.AWS_EXECUTION_ENV ?? 'N/A',
-  },
-});
-
-/**
- * Creating a global instance for the Powertools tracer
- * to be used across the different applications.
- */
-export const tracer = new Tracer();
+import { StartIngestionJobCommandOutput } from '@aws-sdk/client-bedrock-agent';
+import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
+import { DocumentEvent } from "./s3/documentEvent";
+import { extractPrefix } from "./utils/extractPrefix";
+import { logger, tracer } from "./utils/pt";
+import { getEventType } from "./s3/getEventType";
+import { BedrockKnowledgeBase } from "./kb/bedrockKnowledgeBase";
 
 /**
  * The async batch processor processes the received
  * events from SQS in parallel.
  */
 const processor = new BatchProcessor(EventType.SQS);
-
-/**
- * @param type the S3 event type.
- * @returns the corresponding event type in the context of
- * the cloud event specification.
- */
-const getEventType = (type: string): DocumentEvent => {
-  if (type.startsWith('ObjectCreated')) {
-    return (DocumentEvent.DOCUMENT_CREATED);
-  } else if (type.startsWith('ObjectRemoved')) {
-    return (DocumentEvent.DOCUMENT_DELETED);
-  } else {
-    throw new Error(`Unsupported S3 event type: ${type}`);
-  }
-};
 
 /**
  * When S3 emits an event, it will encode the object key
@@ -95,11 +45,8 @@ const unquote = (event: S3EventRecord): S3EventRecord => {
   return (event);
 };
 
-const bedrockAgentClient = new BedrockAgentClient();
 
-function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string): KnowledgeBaseSummary {
-  return knowledgeBaseSummaries.find((kbSummary) => kbSummary.name == kbName);
-}
+const s3Client = new S3Client();
 
 /**
  * The lambda class definition containing the lambda handler.
@@ -110,181 +57,38 @@ function kbExist(knowledgeBaseSummaries: KnowledgeBaseSummary[], kbName: string)
 class Lambda implements LambdaInterface {
 
   /**
-   * @param event the S3 event record.
+   * @param s3Event the S3 event record.
    * @note the `next` decorator will automatically forward the
    * returned cloud event to the next middlewares
    */
   //TODO Add idempotency
-  @next()
-  async s3RecordHandler(s3Event: S3EventRecord): Promise<CloudEvent> {
+  async s3RecordHandler(s3Event: S3EventRecord): Promise<StartIngestionJobCommandOutput> {
     const event = unquote(s3Event);
-    const objectKey = s3Event.s3.object.key;
+    const objectKey = event.s3.object.key;
 
-    // noinspection TypeScriptValidateTypes
-    logger.info("Normalised event", { data: { original: objectKey, normalised: event.s3.object.key } });
+    logger.info("Normalised event", { data: { original: objectKey, normalised: event.s3.object.key } } as any);
+
+    //TODO validate object types
     const eventType = getEventType(event.eventName);
-
-    // Construct a document from the S3 object.
-    const document = await getDocument(
-      event.s3.bucket,
-      event.s3.object,
-      eventType,
-    );
-
-    //Get file path
-    const keyPaths = objectKey.split("/");
-    if (keyPaths.length <= 1) {
-      // noinspection TypeScriptValidateTypes
-      logger.error("Object key has no prefix", { data: s3Event.s3.object });
-      throw new Error("Unable to process files at bucket root");
+    if (eventType === DocumentEvent.DOCUMENT_DELETED) {
+      return;
     }
-    const kbName = keyPaths[0]; //the prefix of objects corresponds to the Knowledge Base name
-    //TODO- sanitise and hash input + store in DB for better lookup
-
-    const listKnowledgeBasesCommand = new ListKnowledgeBasesCommand({
-      maxResults: 1000,
-    });
-
-    // noinspection TypeScriptValidateTypes
-    const response: ListKnowledgeBasesResponse = await bedrockAgentClient.send(listKnowledgeBasesCommand);
-    // noinspection TypeScriptValidateTypes
-    logger.info("KB output:", { data: response });
-
-    const opssHost = process.env.OPSS_HOST;
-    let awsSigv4SignerResponse = AwsSigv4Signer({
-      region: process.env.AWS_REGION,
-      service: "aoss",
-      getCredentials: () => {
-        const credentialsProvicer = defaultProvider();
-        return credentialsProvicer();
-      },
-    });
+    const prefix = extractPrefix(objectKey);
 
 
-    const opssClient = new Client({
-      requestTimeout: 60000,
-      node: opssHost,
-      Connection: awsSigv4SignerResponse.Connection,
-      Transport: awsSigv4SignerResponse.Transport,
-    });
-
-    // const client = new OpenSearchServerlessClient
-    // if the knowledge base does not exist, go and create one
-    if (!(response.knowledgeBaseSummaries && kbExist(response.knowledgeBaseSummaries, kbName))) {
-      logger.info(`KnowledgeBase: ${kbName} does not exist, creating`);
-      // Create OpenSearchServerless Index
-      const settings = {
-        "settings": {
-          "index.knn": "true",
-        },
-        "mappings": {
-          "properties": {
-            "vector": {
-              "type": "knn_vector",
-              "dimension": 1536,
-            },
-            "text": {
-              "type": "text",
-            },
-            "text-metadata": {
-              "type": "text",
-            },
-          },
-        },
-      };
-
-      if (await opssClient.indices.exists({ index: kbName })) {
-        logger.info(`${kbName} exists`);
-      } else {
-        const indexCreationResponse = await opssClient.indices.create({
-          index: kbName,
-          body: settings,
-        });
-        // noinspection TypeScriptValidateTypes
-        logger.info("Index Created", { index: indexCreationResponse });
-      }
-
-      const createKbRequest = new CreateKnowledgeBaseCommand({
-        name: kbName,
-        knowledgeBaseConfiguration: {
-          type: "VECTOR",
-          vectorKnowledgeBaseConfiguration: {
-            embeddingModelArn: `arn:aws:bedrock:${process.env.AWS_REGION}::foundation-model/amazon.titan-embed-text-v1`,
-          },
-        },
-        roleArn: process.env.BEDROCK_ROLE_ARN,
-        storageConfiguration: {
-          "type": "OPENSEARCH_SERVERLESS",
-          "opensearchServerlessConfiguration": {
-            "collectionArn": process.env.OPSS_COLLECTION_ARN,
-            "vectorIndexName": kbName,
-            "fieldMapping": {
-              "vectorField": "vector",
-              "textField": "text",
-              "metadataField": "text-metadata",
-            },
-          },
-        },
-      });
-      // noinspection TypeScriptValidateTypes
-      logger.info("KB creating", { request: createKbRequest });
-
-      const createKbResponse = await bedrockAgentClient.send<CreateKnowledgeBaseResponse>(createKbRequest);
-
-      // noinspection TypeScriptValidateTypes
-      logger.info("KB Created", { response: createKbResponse });
-
-    }
-    /*
-
-      let host;
-      var client = new Client({
-        node: host,
-        Connection: class extends Connection {
-          buildRequestObject(params) {
-            const request = super.buildRequestObject(params)
-            request.service = 'aoss';
-            request.region = process.env.AWS_REGION; // e.g. us-east-1
-            var body = request.body;
-            request.body = undefined;
-            delete request.headers['content-length'];
-            request.headers['x-amz-content-sha256'] = 'UNSIGNED-PAYLOAD';
-            request = aws4.sign(request, AWS.config.credentials);
-            request.body = body;
-
-            return request;
-          }
-        }
-      });
-
-      // Create an index
-      try {
-        var index_name = "sitcoms-eighties";
-
-        var response = await client.indices.create({
-          index: index_name
-        });
-*/
-    // Create Bedrock knowledge base
-
-
-    //Check prefix
-    //if new prefix - create Opensearch Index, Create KB
     //Upload file to destination S3 bucket
-    //Start ingestion into KB
+    const copyObjectRequest = {
+      CopySource: `${event.s3.bucket.name}/${objectKey}`,
+      Bucket: process.env.KB_STAGING_BUCKET,
+      Key: objectKey,
+    };
+    logger.info("Copy object to target bucket", copyObjectRequest as any);
+    const copyObjectCommand = new CopyObjectCommand(copyObjectRequest);
+    const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
+    logger.info("CopyObject result", { data: copyObjectOutput } as any);
 
-
-    // Construct the initial event that will be consumed
-    // by the next middlewares.
-    return (new CloudEvent.Builder()
-      .withType(eventType)
-      .withData(new DataEnvelope.Builder()
-        .withChainId(randomUUID())
-        .withSourceDocument(document)
-        .withDocument(document)
-        .withMetadata({})
-        .build())
-      .build());
+    const knowledgeBase = await BedrockKnowledgeBase.getKnowledgeBase(prefix);
+    return await knowledgeBase.ingestDocuments();
   }
 
   /**
@@ -323,14 +127,14 @@ class Lambda implements LambdaInterface {
   /**
    * @param event the received SQS records, each wrapping
    * a collection of S3 events.
+   * @param lambdaContext the Context provided by Lambda
    * @note the input looks as follows:
    *  SQSEvent { Records: [SqsRecord<S3Event>, ...] }
    */
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: SQSEvent, _: Context): Promise<SQSBatchResponse> {
-    logger.info("HelloWorld");
+  async handler(event: SQSEvent, lambdaContext: Context): Promise<SQSBatchResponse> {
     return (await processPartialResponse(
       event, this.sqsRecordHandler.bind(this), processor,
     ));
