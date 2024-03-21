@@ -1,10 +1,11 @@
-import React, { useState, useReducer, useEffect } from 'react';
+import React, { useState, useReducer, useEffect, useContext } from 'react';
 import { Wizard, Container, Link, Header, SpaceBetween, FormField, Input, Button, Box, Textarea, Tiles } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { Assessment } from '../graphql/API';
 import { getAssessment } from '../graphql/queries';
 import { upsertAssessment } from '../graphql/mutations';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
@@ -39,6 +40,7 @@ const reducer = (state: Assessment, actions: { type: ActionTypes; stepIndex?: nu
 
 export default () => {
   const params = useParams();
+  const dispatchAlert = useContext(DispatchAlertContext);
 
   const [assessment, updateAssessment] = useReducer(reducer, {} as never);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -47,9 +49,14 @@ export default () => {
     client
       .graphql({ query: getAssessment, variables: { id: params.id! } })
       .then(({ data }) => {
-        const assessment = data.getAssessment;
-        if (!assessment) throw new Error();
-        updateAssessment({ type: ActionTypes.Put, content: assessment });
+        const result = data.getAssessment;
+        if (!result) throw new Error();
+        const { __typename, updatedAt, ...content } = result;
+        content.questions = content.questions.map((section: any) => {
+          const { __typename, ...newSection } = section;
+          return newSection;
+        });
+        updateAssessment({ type: ActionTypes.Put, content });
       })
       .catch(() => {});
   }, []);
@@ -130,8 +137,8 @@ export default () => {
       onSubmit={() => {
         client
           .graphql({ query: upsertAssessment, variables: { input: assessment } })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment updated successfully' }))
+          .catch(() => dispatchAlert({ type: AlertType.ERROR }));
       }}
       i18nStrings={{
         stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
@@ -146,7 +153,6 @@ export default () => {
       onCancel={() => updateAssessment({ type: ActionTypes.Delete, stepIndex: activeStepIndex })}
       onNavigate={({ detail }) => setActiveStepIndex(detail.requestedStepIndex)}
       activeStepIndex={activeStepIndex}
-      allowSkipTo
       steps={steps}
     />
   );

@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Box, Select, SelectProps } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { Lang, AssessType } from '../graphql/API';
 import { getSettings } from '../graphql/queries';
 import { upsertSettings } from '../graphql/mutations';
 import { optionise } from '../helpers';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
@@ -12,28 +13,33 @@ const langs = Object.values(Lang).map(optionise);
 const assessTypes = Object.values(AssessType).map(optionise);
 
 export default () => {
+  const dispatchAlert = useContext(DispatchAlertContext);
+
   const [uiLang, setUiLang] = useState<SelectProps.Option | null>(null);
   const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
   const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
 
   useEffect(() => {
-    (async () => {
-      const settings = (await client.graphql({ query: getSettings })).data.getSettings;
+    client.graphql({ query: getSettings }).then(({ data }) => {
+      const settings = data.getSettings;
       if (!settings) return;
       setUiLang(optionise(settings.uiLang!));
       setDocLang(optionise(settings.docLang!));
       setAssessType(optionise(settings.assessType!));
-    })();
+    });
   }, []);
 
   return (
     <form
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         e.preventDefault();
-        await client.graphql({
-          query: upsertSettings,
-          variables: { input: { uiLang: uiLang?.value as Lang, docLang: docLang?.value as Lang, assessType: assessType?.value as AssessType } },
-        });
+        client
+          .graphql({
+            query: upsertSettings,
+            variables: { input: { uiLang: uiLang?.value as Lang, docLang: docLang?.value as Lang, assessType: assessType?.value as AssessType } },
+          })
+          .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Settings updated successfully' }))
+          .catch(() => dispatchAlert({ type: AlertType.ERROR }));
       }}
     >
       <Form

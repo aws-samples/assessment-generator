@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Input, Select, SelectProps, Box } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { Lang, AssessType } from '../graphql/API';
 import { createAssessTemplate } from '../graphql/mutations';
 import { optionise } from '../helpers';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
@@ -11,6 +12,9 @@ const langs = Object.values(Lang).map(optionise);
 const assessTypes = Object.values(AssessType).map(optionise);
 
 export default () => {
+  const dispatchAlert = useContext(DispatchAlertContext);
+
+  const [name, setName] = useState('');
   const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
   const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
   const [totalQuestions, setTotalQuestions] = useState('');
@@ -20,21 +24,25 @@ export default () => {
 
   return (
     <form
-      onSubmit={async (e) => {
+      onSubmit={(e) => {
         e.preventDefault();
-        await client.graphql({
-          query: createAssessTemplate,
-          variables: {
-            input: {
-              docLang: docLang?.value as Lang,
-              assessType: assessType?.value as AssessType,
-              totalQuestions: +totalQuestions,
-              easyQuestions: +easyQuestions,
-              mediumQuestions: +mediumQuestions,
-              hardQuestions: +hardQuestions,
+        client
+          .graphql({
+            query: createAssessTemplate,
+            variables: {
+              input: {
+                name,
+                docLang: docLang?.value as Lang,
+                assessType: assessType?.value as AssessType,
+                totalQuestions: +totalQuestions,
+                easyQuestions: +easyQuestions,
+                mediumQuestions: +mediumQuestions,
+                hardQuestions: +hardQuestions,
+              },
             },
-          },
-        });
+          })
+          .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Templated created successfully' }))
+          .catch(() => dispatchAlert({ type: AlertType.ERROR }));
       }}
     >
       <Form
@@ -54,6 +62,9 @@ export default () => {
           <SpaceBetween size="l" alignItems="center">
             <Box padding="xxxl">
               <SpaceBetween direction="horizontal" size="l">
+                <FormField label="Name of Template">
+                  <Input value={name} onChange={({ detail }) => setName(detail.value)} />
+                </FormField>
                 <FormField label="Document Language">
                   <Select options={langs} selectedOption={docLang} onChange={({ detail }) => setDocLang(detail.selectedOption)} />
                 </FormField>

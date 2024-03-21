@@ -23,6 +23,7 @@ export const upsertSettings = /* GraphQL */ `mutation UpsertSettings($input: Ups
 export const createAssessTemplate = /* GraphQL */ `mutation CreateAssessTemplate($input: AssessTemplateInput) {
   createAssessTemplate(input: $input) {
     id
+    name
     docLang
     assessType
     totalQuestions
@@ -44,7 +45,6 @@ export const upsertAssessment = /* GraphQL */ `mutation UpsertAssessment($input:
     coarse
     lecture
     lectureDate
-    version
     deadline
     updatedAt
     questions {
@@ -69,7 +69,6 @@ export const upsertStudentAssessment = /* GraphQL */ `mutation UpsertStudentAsse
       coarse
       lecture
       lectureDate
-      version
       deadline
       updatedAt
       __typename

@@ -48,6 +48,7 @@ type Student {
 
 type AssessTemplate {
   id: ID!
+  name: String
   docLang: Lang
   assessType: AssessType
   totalQuestions: Int
@@ -58,6 +59,7 @@ type AssessTemplate {
 }
 
 input AssessTemplateInput {
+  name: String
   docLang: Lang!
   assessType: AssessType!
   totalQuestions: Int!
@@ -84,18 +86,17 @@ type Assessment {
   coarse: String
   lecture: String
   lectureDate: String
-  version: String
   deadline: AWSDateTime
   updatedAt: AWSDateTime
   questions: [QandA!]!
 }
 
 input AssessmentInput {
+  id: ID!
   name: String!
   coarse: String!
   lecture: String!
   lectureDate: String!
-  version: String!
   deadline: AWSDateTime!
   questions: [QandAInput]!
 }

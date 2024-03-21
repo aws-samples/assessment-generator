@@ -48,11 +48,6 @@ export default () => {
               cell: (item) => item.lectureDate,
             },
             {
-              id: 'version',
-              header: 'Version',
-              cell: (item) => item.version,
-            },
-            {
               id: 'deadline',
               header: 'Deadline',
               cell: (item) => item.deadline,
@@ -73,7 +68,6 @@ export default () => {
             { id: 'coarse', visible: true },
             { id: 'lecture', visible: true },
             { id: 'lectureDate', visible: true },
-            { id: 'version', visible: true },
             { id: 'deadline', visible: true },
             { id: 'updatedAt', visible: true },
             { id: 'edit', visible: true },

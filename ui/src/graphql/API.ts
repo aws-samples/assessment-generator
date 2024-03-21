@@ -30,6 +30,7 @@ export type Settings = {
 };
 
 export type AssessTemplateInput = {
+  name?: string | null,
   docLang: Lang,
   assessType: AssessType,
   totalQuestions: number,
@@ -41,6 +42,7 @@ export type AssessTemplateInput = {
 export type AssessTemplate = {
   __typename: "AssessTemplate",
   id: string,
+  name?: string | null,
   docLang?: Lang | null,
   assessType?: AssessType | null,
   totalQuestions?: number | null,
@@ -51,11 +53,11 @@ export type AssessTemplate = {
 };
 
 export type AssessmentInput = {
+  id: string,
   name: string,
   coarse: string,
   lecture: string,
   lectureDate: string,
-  version: string,
   deadline: string,
   questions: Array< QandAInput | null >,
 };
@@ -73,7 +75,6 @@ export type Assessment = {
   coarse?: string | null,
   lecture?: string | null,
   lectureDate?: string | null,
-  version?: string | null,
   deadline?: string | null,
   updatedAt?: string | null,
   questions:  Array<QandA >,
@@ -150,6 +151,7 @@ export type CreateAssessTemplateMutation = {
   createAssessTemplate?:  {
     __typename: "AssessTemplate",
     id: string,
+    name?: string | null,
     docLang?: Lang | null,
     assessType?: AssessType | null,
     totalQuestions?: number | null,
@@ -172,7 +174,6 @@ export type UpsertAssessmentMutation = {
     coarse?: string | null,
     lecture?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -199,7 +200,6 @@ export type UpsertStudentAssessmentMutation = {
       coarse?: string | null,
       lecture?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
     } | null,
@@ -269,7 +269,6 @@ export type GetAssessmentQuery = {
     coarse?: string | null,
     lecture?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -292,7 +291,6 @@ export type ListAssessmentsQuery = {
     coarse?: string | null,
     lecture?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -319,7 +317,6 @@ export type GetStudentAssessmentQuery = {
       coarse?: string | null,
       lecture?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
     } | null,
@@ -343,7 +340,6 @@ export type ListStudentAssessmentsQuery = {
       coarse?: string | null,
       lecture?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
     } | null,
