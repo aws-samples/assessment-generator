@@ -134,8 +134,14 @@ export class DataStack extends NestedStack {
     /////////// Assessments
 
     const assessmentsTable = new aws_dynamodb.TableV2(this, 'AssessmentsTable', {
-      partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
-      sortKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
+      globalSecondaryIndexes: [
+        {
+          indexName: 'id-only',
+          partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+        },
+      ],
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
@@ -193,12 +199,12 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
-    // assessmentsDs.createResolver('ParentAssessmentResolver', {
-    //   typeName: 'StudentAssessment',
-    //   fieldName: 'assessment',
-    //   code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.js'),
-    //   runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
-    // });
+    assessmentsDs.createResolver('ParentAssessmentResolver', {
+      typeName: 'StudentAssessment',
+      fieldName: 'assessment',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
 
 
     const NAMESPACE = "genassess-rag";

@@ -43,7 +43,6 @@ export const upsertAssessment = /* GraphQL */ `mutation UpsertAssessment($input:
     id
     name
     coarse
-    lecture
     lectureDate
     deadline
     updatedAt
@@ -51,6 +50,7 @@ export const upsertAssessment = /* GraphQL */ `mutation UpsertAssessment($input:
       title
       question
       answers
+      correctAnswer
       __typename
     }
     __typename
@@ -67,14 +67,21 @@ export const upsertStudentAssessment = /* GraphQL */ `mutation UpsertStudentAsse
       id
       name
       coarse
-      lecture
       lectureDate
       deadline
       updatedAt
+      questions {
+        title
+        question
+        answers
+        correctAnswer
+        __typename
+      }
       __typename
     }
     answers
     status
+    score
     createdAt
     __typename
   }

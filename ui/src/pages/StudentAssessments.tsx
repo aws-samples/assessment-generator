@@ -10,10 +10,13 @@ export default () => {
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const list: any = (await client.graphql({ query: listStudentAssessments })).data.listStudentAssessments || [];
-      setAssessments(list);
-    })();
+    client
+      .graphql({ query: listStudentAssessments })
+      .then(({ data }) => {
+        const list: any = data.listStudentAssessments || [];
+        setAssessments(list);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -40,10 +43,16 @@ export default () => {
               cell: (item) =>
                 item.status === AssessmentStatus.Completed ? item.status : <Link href={`/assessment/${item.parentAssessId}`}>{item.status}</Link>,
             },
+            {
+              id: 'score',
+              header: 'Score',
+              cell: (item) => (item.status === AssessmentStatus.Completed ? item.score + '%' : ''),
+            },
           ]}
           columnDisplay={[
             { id: 'parentAssessId', visible: true },
             { id: 'status', visible: true },
+            { id: 'score', visible: true },
           ]}
           items={assessments}
           loadingText="Loading list"

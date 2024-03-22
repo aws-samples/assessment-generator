@@ -72,20 +72,21 @@ type QandA {
   title: String!
   question: String!
   answers: [String!]!
+  correctAnswer: Int!
 }
 
 input QandAInput {
   title: String
   question: String
   answers: [String]
+  correctAnswer: Int!
 }
 
 type Assessment {
   id: ID!
   name: String
   coarse: String
-  lecture: String
-  lectureDate: String
+  lectureDate: AWSDateTime
   deadline: AWSDateTime
   updatedAt: AWSDateTime
   questions: [QandA!]!
@@ -95,8 +96,7 @@ input AssessmentInput {
   id: ID!
   name: String!
   coarse: String!
-  lecture: String!
-  lectureDate: String!
+  lectureDate: AWSDateTime!
   deadline: AWSDateTime!
   questions: [QandAInput]!
 }
@@ -106,12 +106,14 @@ type StudentAssessment {
   assessment: Assessment
   answers: [Int]
   status: AssessmentStatus
+  score: Int
   createdAt: AWSDateTime
 }
 
 input StudentAssessmentInput {
   parentAssessId: ID!
   answers: [Int]
+  score: Int
   status: AssessmentStatus
 }
 

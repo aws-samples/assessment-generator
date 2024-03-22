@@ -61,7 +61,6 @@ export const getAssessment = /* GraphQL */ `query GetAssessment($id: ID!) {
     id
     name
     coarse
-    lecture
     lectureDate
     deadline
     updatedAt
@@ -69,6 +68,7 @@ export const getAssessment = /* GraphQL */ `query GetAssessment($id: ID!) {
       title
       question
       answers
+      correctAnswer
       __typename
     }
     __typename
@@ -83,7 +83,6 @@ export const listAssessments = /* GraphQL */ `query ListAssessments {
     id
     name
     coarse
-    lecture
     lectureDate
     deadline
     updatedAt
@@ -91,6 +90,7 @@ export const listAssessments = /* GraphQL */ `query ListAssessments {
       title
       question
       answers
+      correctAnswer
       __typename
     }
     __typename
@@ -107,14 +107,21 @@ export const getStudentAssessment = /* GraphQL */ `query GetStudentAssessment($p
       id
       name
       coarse
-      lecture
       lectureDate
       deadline
       updatedAt
+      questions {
+        title
+        question
+        answers
+        correctAnswer
+        __typename
+      }
       __typename
     }
     answers
     status
+    score
     createdAt
     __typename
   }
@@ -130,14 +137,21 @@ export const listStudentAssessments = /* GraphQL */ `query ListStudentAssessment
       id
       name
       coarse
-      lecture
       lectureDate
       deadline
       updatedAt
+      questions {
+        title
+        question
+        answers
+        correctAnswer
+        __typename
+      }
       __typename
     }
     answers
     status
+    score
     createdAt
     __typename
   }

@@ -1,58 +1,119 @@
-import React, { useState } from 'react';
-import { Wizard, Container, Link, Header, SpaceBetween, FormField, Input, Button, Box, ColumnLayout, Tiles } from '@cloudscape-design/components';
+import React, { useState, useEffect, useContext } from 'react';
+import { Wizard, Container, Header, SpaceBetween, FormField, Button, Box, PieChart, Tiles, Modal } from '@cloudscape-design/components';
+import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { generateClient } from 'aws-amplify/api';
+import { QandA, AssessmentStatus } from '../graphql/API';
+import { getStudentAssessment } from '../graphql/queries';
+import { upsertStudentAssessment } from '../graphql/mutations';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
-const assessments = [
-  { title: 'Algebra', question: 'Solve for x in the equation 3x + 4 = 19', answers: ['5', '4', '3', '6'] },
-  {
-    title: 'Geometry',
-    question: 'A rectangle has a length of 8 cm and a width of 3 cm. What is the area of the rectangle?',
-    answers: ['11 cm2', '24 cm2', '22 cm2', '14 cm2'],
-  },
-  {
-    title: 'Statistics',
-    question: 'A dataset contains the following five numbers: 2, 4, 6, 8, 10. What is the mean (average) of this dataset?',
-    answers: ['5', '6', '7', '8'],
-  },
-];
+const client = generateClient();
 
 export default () => {
+  const params = useParams();
+  const navigate = useNavigate();
+  const dispatchAlert = useContext(DispatchAlertContext);
+
+  const [questions, setQuestions] = useState<QandA[]>([]);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
-  const [tile, setTile] = useState('');
+  const [chosenAnswers, setChosenAnswers] = useState<string[]>([]);
+  const [score, setScore] = useState<number>();
+
+  useEffect(() => {
+    client
+      .graphql({ query: getStudentAssessment, variables: { parentAssessId: params.id! } })
+      .then(({ data }) => {
+        const result = data.getStudentAssessment;
+        if (!result?.assessment?.questions) throw new Error();
+        setQuestions(result.assessment.questions);
+      })
+      .catch(() => {});
+  }, []);
 
   return (
-    <Wizard
-      i18nStrings={{
-        stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
-        collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
-        skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
-        cancelButton: 'Cancel',
-        previousButton: 'Previous',
-        nextButton: 'Next',
-        submitButton: 'Submit',
-        optional: 'optional',
-      }}
-      onNavigate={({ detail }) => setActiveStepIndex(detail.requestedStepIndex)}
-      activeStepIndex={activeStepIndex}
-      allowSkipTo
-      steps={assessments.map(({ title, question, answers }) => ({
-        title,
-        content: (
-          <SpaceBetween size="l">
-            <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
-              <Box variant="p">{question}</Box>
-            </Container>
-            <Container header={<Header variant="h2">Answer</Header>}>
-              <FormField label={'Choose:'}>
-                <Tiles
-                  value={tile}
-                  items={answers.map((answer) => ({ label: answer, value: answer }))}
-                  onChange={({ detail }) => setTile(detail.value)}
-                />
-              </FormField>
-            </Container>
-          </SpaceBetween>
-        ),
-      }))}
-    />
+    <>
+      <Modal
+        visible={score !== undefined}
+        header="Your Score:"
+        footer={
+          <Box float="right">
+            <Button variant="primary" onClick={() => navigate('/assessments')}>
+              Ok
+            </Button>
+          </Box>
+        }
+      >
+        <PieChart
+          hideFilter
+          hideLegend
+          variant="donut"
+          data={[
+            { title: 'Correct', value: score! },
+            { title: 'Incorrect', value: 100 - score! },
+          ]}
+          innerMetricValue={`${score}%`}
+        />
+      </Modal>
+      <Wizard
+        onSubmit={() => {
+          const calculatedScore = Math.round(
+            (questions.reduce((correct, q, i) => (q.correctAnswer === +chosenAnswers[i] ? correct + 1 : correct), 0) * 100) / questions.length
+          );
+          client
+            .graphql({
+              query: upsertStudentAssessment,
+              variables: {
+                input: {
+                  parentAssessId: params.id!,
+                  score: calculatedScore,
+                  answers: chosenAnswers.map(Number),
+                  status: AssessmentStatus.Completed,
+                },
+              },
+            })
+            .then(() => setScore(calculatedScore))
+            .catch(() => dispatchAlert({ type: AlertType.ERROR }));
+        }}
+        i18nStrings={{
+          stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
+          collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
+          skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
+          cancelButton: 'Cancel',
+          previousButton: 'Previous',
+          nextButton: 'Next',
+          submitButton: 'Submit',
+          optional: 'optional',
+        }}
+        onNavigate={({ detail }) => {
+          setActiveStepIndex(detail.requestedStepIndex);
+        }}
+        activeStepIndex={activeStepIndex}
+        allowSkipTo
+        steps={questions.map(({ title, question, answers }) => ({
+          title,
+          content: (
+            <SpaceBetween size="l">
+              <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
+                <Box variant="p">{question}</Box>
+              </Container>
+              <Container header={<Header variant="h2">Answer</Header>}>
+                <FormField label={'Choose:'}>
+                  <Tiles
+                    value={chosenAnswers[activeStepIndex]}
+                    items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
+                    onChange={({ detail }) => {
+                      const newAnswers = [...chosenAnswers];
+                      newAnswers[activeStepIndex] = detail.value;
+                      setChosenAnswers(newAnswers);
+                    }}
+                  />
+                </FormField>
+              </Container>
+            </SpaceBetween>
+          ),
+        }))}
+      />
+    </>
   );
 };

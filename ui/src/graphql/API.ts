@@ -56,7 +56,6 @@ export type AssessmentInput = {
   id: string,
   name: string,
   coarse: string,
-  lecture: string,
   lectureDate: string,
   deadline: string,
   questions: Array< QandAInput | null >,
@@ -66,6 +65,7 @@ export type QandAInput = {
   title?: string | null,
   question?: string | null,
   answers?: Array< string | null > | null,
+  correctAnswer: number,
 };
 
 export type Assessment = {
@@ -73,7 +73,6 @@ export type Assessment = {
   id: string,
   name?: string | null,
   coarse?: string | null,
-  lecture?: string | null,
   lectureDate?: string | null,
   deadline?: string | null,
   updatedAt?: string | null,
@@ -85,11 +84,13 @@ export type QandA = {
   title: string,
   question: string,
   answers: Array< string >,
+  correctAnswer: number,
 };
 
 export type StudentAssessmentInput = {
   parentAssessId: string,
   answers?: Array< number | null > | null,
+  score?: number | null,
   status?: AssessmentStatus | null,
 };
 
@@ -106,6 +107,7 @@ export type StudentAssessment = {
   assessment?: Assessment | null,
   answers?: Array< number | null > | null,
   status?: AssessmentStatus | null,
+  score?: number | null,
   createdAt?: string | null,
 };
 
@@ -172,7 +174,6 @@ export type UpsertAssessmentMutation = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -181,6 +182,7 @@ export type UpsertAssessmentMutation = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
   } | null,
 };
@@ -198,13 +200,20 @@ export type UpsertStudentAssessmentMutation = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
     } | null,
     answers?: Array< number | null > | null,
     status?: AssessmentStatus | null,
+    score?: number | null,
     createdAt?: string | null,
   } | null,
 };
@@ -267,7 +276,6 @@ export type GetAssessmentQuery = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -276,6 +284,7 @@ export type GetAssessmentQuery = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
   } | null,
 };
@@ -289,7 +298,6 @@ export type ListAssessmentsQuery = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -298,6 +306,7 @@ export type ListAssessmentsQuery = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
   } | null > | null,
 };
@@ -315,13 +324,20 @@ export type GetStudentAssessmentQuery = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
     } | null,
     answers?: Array< number | null > | null,
     status?: AssessmentStatus | null,
+    score?: number | null,
     createdAt?: string | null,
   } | null,
 };
@@ -338,13 +354,20 @@ export type ListStudentAssessmentsQuery = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
     } | null,
     answers?: Array< number | null > | null,
     status?: AssessmentStatus | null,
+    score?: number | null,
     createdAt?: string | null,
   } | null > | null,
 };
