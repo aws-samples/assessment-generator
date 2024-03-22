@@ -86,16 +86,19 @@ type Assessment {
   id: ID!
   name: String
   coarse: String
+  class: String
   lectureDate: AWSDateTime
   deadline: AWSDateTime
   updatedAt: AWSDateTime
   questions: [QandA!]!
+  published: Boolean
 }
 
 input AssessmentInput {
   id: ID!
   name: String!
   coarse: String!
+  class: String!
   lectureDate: AWSDateTime!
   deadline: AWSDateTime!
   questions: [QandAInput]!
@@ -133,4 +136,5 @@ type Query {
   listAssessments: [Assessment]
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
+  publishAssessment(assessmentId: ID!, class: String!): Boolean
 }

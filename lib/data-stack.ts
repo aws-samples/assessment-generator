@@ -9,13 +9,14 @@ import {
   NestedStack,
   NestedStackProps,
   RemovalPolicy,
+  aws_lambda_nodejs,
 } from 'aws-cdk-lib';
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import path from "path";
-import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import path from 'path';
+import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -206,27 +207,22 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
-
-    const NAMESPACE = "genassess-rag";
-    const QUESTIONS_GENERATOR_NAME = "QuestionsGenerator";
+    const NAMESPACE = 'genassess-rag';
+    const QUESTIONS_GENERATOR_NAME = 'QuestionsGenerator';
     const questionGeneratorRole = new aws_iam.Role(this, `${QUESTIONS_GENERATOR_NAME}Role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-      managedPolicies: [
-        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
-      ],
+      managedPolicies: [ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
     });
 
     //Add Bedrock permissions on the Lambda function
     //TODO scope it down to what's required
-    questionGeneratorRole.addToPolicy(new PolicyStatement({
-      "effect": aws_iam.Effect.ALLOW,
-      "resources": [
-        "*",
-      ],
-      "actions": [
-        "bedrock:*",
-      ],
-    }));
+    questionGeneratorRole.addToPolicy(
+      new PolicyStatement({
+        effect: aws_iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: ['bedrock:*'],
+      })
+    );
 
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
@@ -245,7 +241,7 @@ export class DataStack extends NestedStack {
       tracing: Tracing.ACTIVE,
       logGroup: logGroup,
       environment: {
-        POWERTOOLS_SERVICE_NAME: "questions-generator",
+        POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         // BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
         // OPSS_HOST: cfnCollection.attrCollectionEndpoint,
@@ -254,10 +250,7 @@ export class DataStack extends NestedStack {
       },
       bundling: {
         minify: true,
-        externalModules: [
-          '@aws-sdk/client-s3',
-          '@aws-sdk/client-sns',
-        ],
+        externalModules: ['@aws-sdk/client-s3', '@aws-sdk/client-sns'],
       },
     });
 
@@ -265,6 +258,21 @@ export class DataStack extends NestedStack {
       handler: questionsGenerator,
     });
 
+    /////////// Publish Assessment
+
+    const publishFn = new aws_lambda_nodejs.NodejsFunction(this, 'PublishFn', {
+      entry: 'lib/lambdas/publishAssessment.ts',
+    });
+    classesTable.grantReadData(publishFn);
+    studentAssessmentsTable.grantReadWriteData(publishFn);
+    const publishAssessmentDs = api.addLambdaDataSource('PublishAssessmentDataSource', publishFn);
+
+    publishAssessmentDs.createResolver('PublishAssessmentResolver', {
+      typeName: 'Query',
+      fieldName: 'publishAssessment',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/publishAssessment.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
 
     this.api = api;
   }

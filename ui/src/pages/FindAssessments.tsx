@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
-import { generateClient } from 'aws-amplify/api';
-import { listAssessments } from '../graphql/queries';
+import React, { useState, useEffect, useContext } from 'react';
+import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter, Button } from '@cloudscape-design/components';
+import { GraphQLQuery, generateClient } from 'aws-amplify/api';
+import { listAssessments, publishAssessment } from '../graphql/queries';
 import { Assessment } from '../graphql/API';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
 export default () => {
+  const dispatchAlert = useContext(DispatchAlertContext);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const list: any = (await client.graphql({ query: listAssessments })).data.listAssessments || [];
-      setAssessments(list);
-    })();
+    (client.graphql({ query: listAssessments }) as any)
+      .then(({ data }: any) => setAssessments((data.listAssessments as any) || []))
+      .catch(() => dispatchAlert({ type: AlertType.ERROR }));
   }, []);
 
   return (
@@ -57,6 +58,26 @@ export default () => {
               header: '',
               cell: (item) => <Link href={`/edit-assessment/${item.id}`}>edit</Link>,
             },
+            {
+              id: 'publish',
+              header: '',
+              cell: (item) => (
+                <Button
+                // onClick={() =>
+                //   client
+                //     .graphql({ query: publishAssessment, variables: { assessmentId: item.id, class: item.class } })
+                //     .then(({ data }) => {
+                //       const result = data.getStudentAssessment;
+                //       if (!result?.assessment?.questions) throw new Error();
+                //       setQuestions(result.assessment.questions);
+                //     })
+                //     .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                // }
+                >
+                  publish
+                </Button>
+              ),
+            },
           ]}
           columnDisplay={[
             { id: 'name', visible: true },
@@ -65,6 +86,7 @@ export default () => {
             { id: 'deadline', visible: true },
             { id: 'updatedAt', visible: true },
             { id: 'edit', visible: true },
+            { id: 'publish', visible: true },
           ]}
           items={assessments}
           loadingText="Loading list"
