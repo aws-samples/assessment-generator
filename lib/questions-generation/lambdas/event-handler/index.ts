@@ -16,8 +16,9 @@
 
 
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { APIGatewayProxyEventV2, Context, SQSBatchResponse } from 'aws-lambda';
+import { APIGatewayProxyEventV2, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
+import { ReferenceDocuments } from "./models/referenceDocuments";
 
 
 class Lambda implements LambdaInterface {
@@ -25,6 +26,22 @@ class Lambda implements LambdaInterface {
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: APIGatewayProxyEventV2, lambdaContext: Context): Promise<string> {
+
+    if (!event.body) {
+      throw new Error("Unable to process the request");
+    }
+    const referenceDocuments = await ReferenceDocuments.fromJSON(event.body);
+
+    logger.info("Documents", referenceDocuments as any);
+
+    // Extract topics from the Transcript document
+
+
+    // Generate questions with given values
+
+    // Query knowledge base for relevant documents
+
+    // Refine questions/answers and include relevant documents
 
     return "Success";
   }

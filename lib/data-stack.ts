@@ -16,6 +16,7 @@ import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import * as s3 from "aws-cdk-lib/aws-s3";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -222,6 +223,14 @@ export class DataStack extends NestedStack {
       ],
     }));
 
+    const bucket = new s3.Bucket(this, 'QGenerationBucket', {
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      enforceSSL: true,
+    });
+
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
       logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
@@ -241,10 +250,8 @@ export class DataStack extends NestedStack {
       environment: {
         POWERTOOLS_SERVICE_NAME: "questions-generator",
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
-        // BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
-        // OPSS_HOST: cfnCollection.attrCollectionEndpoint,
-        // OPSS_COLLECTION_ARN: cfnCollection.attrArn,
-        // KB_STAGING_BUCKET: kbStagingBucket.bucketName,
+        Q_GENERATION_BUCKET: bucket.bucketName,
+        ASSESSMENT_TABLE: assessmentsTable.tableName
       },
       bundling: {
         minify: true,
@@ -254,6 +261,8 @@ export class DataStack extends NestedStack {
         ],
       },
     });
+    bucket.grantRead(questionsGenerator);
+    assessmentsTable.grantReadData(questionsGenerator);
 
     let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
       handler: questionsGenerator,
