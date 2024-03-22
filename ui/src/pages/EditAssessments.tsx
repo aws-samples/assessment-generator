@@ -1,5 +1,5 @@
-import React, { useState, useReducer, useEffect, useContext } from 'react';
-import { Wizard, Container, Link, Header, SpaceBetween, FormField, Input, Button, Box, Textarea, Tiles } from '@cloudscape-design/components';
+import { useState, useReducer, useEffect, useContext } from 'react';
+import { Wizard, Container, Header, SpaceBetween, Input, Button, Textarea } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { Assessment } from '../graphql/API';
@@ -21,6 +21,7 @@ const reducer = (state: Assessment, actions: { type: ActionTypes; stepIndex?: nu
     case ActionTypes.Put:
       return content;
     case ActionTypes.Delete: {
+      // @ts-ignore
       const newQuestions = state.questions?.toSpliced(stepIndex!, 1);
       return { ...state, questions: newQuestions };
     }
@@ -47,7 +48,7 @@ export default () => {
 
   useEffect(() => {
     client
-      .graphql({ query: getAssessment, variables: { id: params.id! } })
+      .graphql<any>({ query: getAssessment, variables: { id: params.id! } })
       .then(({ data }) => {
         const result = data.getAssessment;
         if (!result) throw new Error();
@@ -91,7 +92,7 @@ export default () => {
                               type: ActionTypes.Update,
                               stepIndex: activeStepIndex,
                               key: 'answers',
-                              content: answers.filter((a, i) => answerIndex !== i),
+                              content: answers.filter((_a, i) => answerIndex !== i),
                             })
                           }
                         />
@@ -136,14 +137,14 @@ export default () => {
     <Wizard
       onSubmit={() => {
         client
-          .graphql({ query: upsertAssessment, variables: { input: assessment } })
+          .graphql<any>({ query: upsertAssessment, variables: { input: assessment } })
           .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment updated successfully' }))
           .catch(() => dispatchAlert({ type: AlertType.ERROR }));
       }}
       i18nStrings={{
         stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
         collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
-        skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
+        skipToButtonLabel: (step, _stepNumber) => `Skip to ${step.title}`,
         cancelButton: 'Delete this Question',
         previousButton: 'Previous',
         nextButton: 'Next',

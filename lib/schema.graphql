@@ -86,7 +86,7 @@ type Assessment {
   id: ID!
   name: String
   coarse: String
-  class: String
+  classId: String
   lectureDate: AWSDateTime
   deadline: AWSDateTime
   updatedAt: AWSDateTime
@@ -98,7 +98,7 @@ input AssessmentInput {
   id: ID!
   name: String!
   coarse: String!
-  class: String!
+  classId: String!
   lectureDate: AWSDateTime!
   deadline: AWSDateTime!
   questions: [QandAInput]!

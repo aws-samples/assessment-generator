@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Select,
   FileUpload,
@@ -15,23 +15,24 @@ import {
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
 import { listCoarses } from '../graphql/queries';
+import { Coarse } from '../graphql/API';
 import { optionise } from '../helpers';
-import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+// import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
 export default () => {
-  const dispatchAlert = React.useContext(DispatchAlertContext);
+  // const dispatchAlert = useContext(DispatchAlertContext);
 
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   const [coarses, setCoarses] = useState<SelectProps.Option[]>([]);
   const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
 
   useEffect(() => {
-    client.graphql({ query: listCoarses }).then(({ data }) => {
+    client.graphql<any>({ query: listCoarses }).then(({ data }) => {
       const list = data.listCoarses;
       if (!list) return;
-      const options = list.map((coarse) => optionise(coarse!.name!));
+      const options = list.map((coarse: Coarse) => optionise(coarse!.name!));
       setCoarses(options);
     });
   }, []);
@@ -41,7 +42,7 @@ export default () => {
       onSubmit={(e) => {
         e.preventDefault();
         const [file] = files;
-        const { result } = uploadData({
+        uploadData({
           key: `${coarse?.value}-${file.name}`,
           data: file,
         });

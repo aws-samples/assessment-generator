@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Wizard, Container, Header, SpaceBetween, FormField, Button, Box, PieChart, Tiles, Modal } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
@@ -22,7 +22,7 @@ export default () => {
 
   useEffect(() => {
     client
-      .graphql({ query: getStudentAssessment, variables: { parentAssessId: params.id! } })
+      .graphql<any>({ query: getStudentAssessment, variables: { parentAssessId: params.id! } })
       .then(({ data }) => {
         const result = data.getStudentAssessment;
         if (!result?.assessment?.questions) throw new Error();
@@ -61,7 +61,7 @@ export default () => {
             (questions.reduce((correct, q, i) => (q.correctAnswer === +chosenAnswers[i] ? correct + 1 : correct), 0) * 100) / questions.length
           );
           client
-            .graphql({
+            .graphql<any>({
               query: upsertStudentAssessment,
               variables: {
                 input: {
@@ -78,7 +78,7 @@ export default () => {
         i18nStrings={{
           stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
           collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
-          skipToButtonLabel: (step, stepNumber) => `Skip to ${step.title}`,
+          skipToButtonLabel: (step, _stepNumber) => `Skip to ${step.title}`,
           cancelButton: 'Cancel',
           previousButton: 'Previous',
           nextButton: 'Next',

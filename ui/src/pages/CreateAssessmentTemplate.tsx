@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Input, Select, SelectProps, Box } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { Lang, AssessType } from '../graphql/API';
@@ -27,7 +27,7 @@ export default () => {
       onSubmit={(e) => {
         e.preventDefault();
         client
-          .graphql({
+          .graphql<any>({
             query: createAssessTemplate,
             variables: {
               input: {

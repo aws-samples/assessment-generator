@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { AppLayout, BreadcrumbGroup, Flashbar, HelpPanel, SideNavigation, FlashbarProps } from '@cloudscape-design/components';
 import { I18nProvider } from '@cloudscape-design/components/i18n';
 import messages from '@cloudscape-design/components/i18n/messages/all.en';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
+// import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import { routes } from './routes';
 import { titlise } from './helpers';
@@ -15,7 +15,8 @@ const currentRoutes = routes[0];
 const router = createBrowserRouter(currentRoutes);
 const [sideNavRoutes] = currentRoutes;
 
-export function App({ signOut, user }: WithAuthenticatorProps) {
+// export function App({ signOut, user }: WithAuthenticatorProps) {
+export function App() {
   const [alerts, setAlerts] = useState<FlashbarProps.MessageDefinition[]>([]);
 
   const dispatchAlert = (newAlert: FlashbarProps.MessageDefinition) => {
@@ -52,7 +53,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
                 href: '/',
                 text: 'Gen Assess',
               }}
-              onFollow={(e) => {
+              onFollow={(_e) => {
                 // e.preventDefault();
               }}
               items={sideNavRoutes.children.map(({ path, children }: any) => {

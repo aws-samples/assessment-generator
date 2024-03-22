@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Box, Select, SelectProps } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { Lang, AssessType } from '../graphql/API';
@@ -20,7 +20,7 @@ export default () => {
   const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
 
   useEffect(() => {
-    client.graphql({ query: getSettings }).then(({ data }) => {
+    client.graphql<any>({ query: getSettings }).then(({ data }) => {
       const settings = data.getSettings;
       if (!settings) return;
       setUiLang(optionise(settings.uiLang!));
@@ -34,7 +34,7 @@ export default () => {
       onSubmit={(e) => {
         e.preventDefault();
         client
-          .graphql({
+          .graphql<any>({
             query: upsertSettings,
             variables: { input: { uiLang: uiLang?.value as Lang, docLang: docLang?.value as Lang, assessType: assessType?.value as AssessType } },
           })

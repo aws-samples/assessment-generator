@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Box, Select, SelectProps } from '@cloudscape-design/components';
-import { setConstantValue } from 'typescript';
 
 const assessments = ['assessment1', 'assessment2', 'assessment3'].map((value) => ({ value }));
 const classes = ['class1', 'class2', 'class3'].map((value) => ({ value }));

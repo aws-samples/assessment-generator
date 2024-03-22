@@ -44,7 +44,7 @@ export const getAssessment = /* GraphQL */ `
       id
       name
       coarse
-      class
+      classId
       lectureDate
       deadline
       updatedAt
@@ -64,7 +64,7 @@ export const listAssessments = /* GraphQL */ `
       id
       name
       coarse
-      class
+      classId
       lectureDate
       deadline
       updatedAt
@@ -86,7 +86,7 @@ export const getStudentAssessment = /* GraphQL */ `
         id
         name
         coarse
-        class
+        classId
         lectureDate
         deadline
         updatedAt
@@ -113,7 +113,7 @@ export const listStudentAssessments = /* GraphQL */ `
         id
         name
         coarse
-        class
+        classId
         lectureDate
         deadline
         updatedAt

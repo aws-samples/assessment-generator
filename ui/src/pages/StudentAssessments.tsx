@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { listStudentAssessments } from '../graphql/queries';
@@ -11,9 +11,9 @@ export default () => {
 
   useEffect(() => {
     client
-      .graphql({ query: listStudentAssessments })
+      .graphql<any>({ query: listStudentAssessments })
       .then(({ data }) => {
-        const list: any = data.listStudentAssessments || [];
+        const list = data.listStudentAssessments || [];
         setAssessments(list);
       })
       .catch(() => {});

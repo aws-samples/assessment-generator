@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Container,
   Header,
@@ -22,7 +22,7 @@ export default () => {
   const [useDefault, setUseDefault] = useState(true);
   const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
   const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
 
   return (
     <form onSubmit={(e) => e.preventDefault()}>

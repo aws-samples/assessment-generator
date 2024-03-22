@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FileUpload, FormField, SpaceBetween, Box, Header, ContentLayout, Container, Form, Button } from '@cloudscape-design/components';
 
 export default () => {
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>([]);
   return (
     <form onSubmit={(e) => e.preventDefault()}>
       <Form

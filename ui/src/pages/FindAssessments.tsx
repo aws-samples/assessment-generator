@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter, Button } from '@cloudscape-design/components';
-import { GraphQLQuery, generateClient } from 'aws-amplify/api';
+import { generateClient } from 'aws-amplify/api';
 import { listAssessments, publishAssessment } from '../graphql/queries';
 import { Assessment } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
@@ -12,8 +12,9 @@ export default () => {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
   useEffect(() => {
-    (client.graphql({ query: listAssessments }) as any)
-      .then(({ data }: any) => setAssessments((data.listAssessments as any) || []))
+    client
+      .graphql<any>({ query: listAssessments })
+      .then(({ data }) => setAssessments(data.listAssessments || []))
       .catch(() => dispatchAlert({ type: AlertType.ERROR }));
   }, []);
 
@@ -63,16 +64,12 @@ export default () => {
               header: '',
               cell: (item) => (
                 <Button
-                // onClick={() =>
-                //   client
-                //     .graphql({ query: publishAssessment, variables: { assessmentId: item.id, class: item.class } })
-                //     .then(({ data }) => {
-                //       const result = data.getStudentAssessment;
-                //       if (!result?.assessment?.questions) throw new Error();
-                //       setQuestions(result.assessment.questions);
-                //     })
-                //     .catch(() => dispatchAlert({ type: AlertType.ERROR }))
-                // }
+                  onClick={() =>
+                    client
+                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id, class: item.class } })
+                      .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                      .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                  }
                 >
                   publish
                 </Button>
