@@ -2,7 +2,7 @@ import React, { useState, useReducer, useEffect } from 'react';
 import { Wizard, Container, Link, Header, SpaceBetween, FormField, Input, Button, Box, Textarea, Tiles } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { Assessment, QandA } from '../graphql/API';
+import { Assessment } from '../graphql/API';
 import { getAssessment } from '../graphql/queries';
 import { upsertAssessment } from '../graphql/mutations';
 
@@ -20,7 +20,7 @@ const reducer = (state: Assessment, actions: { type: ActionTypes; stepIndex?: nu
     case ActionTypes.Put:
       return content;
     case ActionTypes.Delete: {
-      const newQuestions = [] as Array<QandA>; //state.questions?.toSpliced(stepIndex!, 1);
+      const newQuestions = state.questions?.toSpliced(stepIndex!, 1);
       return { ...state, questions: newQuestions };
     }
     case ActionTypes.Update: {
