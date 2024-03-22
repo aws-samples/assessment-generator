@@ -5,7 +5,7 @@ import {
   aws_cognito,
   aws_dynamodb,
   aws_iam,
-  aws_logs,
+  aws_logs, Duration,
   NestedStack,
   NestedStackProps,
   RemovalPolicy,
@@ -246,6 +246,7 @@ export class DataStack extends NestedStack {
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
       tracing: Tracing.ACTIVE,
+      timeout: Duration.minutes(15),
       logGroup: logGroup,
       environment: {
         POWERTOOLS_SERVICE_NAME: "questions-generator",

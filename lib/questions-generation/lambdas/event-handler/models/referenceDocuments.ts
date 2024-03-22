@@ -7,7 +7,7 @@ const s3Client = new S3Client();
 
 export class ReferenceDocuments {
   private static SOURCE_BUCKET = process.env.Q_GENERATION_BUCKET;
-  private documentsContent: string[];
+  documentsContent: string[];
   private assessmentTemplate: AssessmentTemplate;
 
   constructor(documentsContent: string[], assessmentTemplate: AssessmentTemplate) {
