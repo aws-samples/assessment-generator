@@ -66,7 +66,7 @@ export default () => {
                 <Button
                   onClick={() =>
                     client
-                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id, class: item.class } })
+                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id, classId: item.classId } })
                       .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
                       .catch(() => dispatchAlert({ type: AlertType.ERROR }))
                   }

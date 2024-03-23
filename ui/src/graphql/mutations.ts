@@ -67,9 +67,9 @@ export const upsertStudentAssessment = /* GraphQL */ `
         published
       }
       answers
-      status
+      completed
       score
-      createdAt
+      updatedAt
     }
   }
 `;

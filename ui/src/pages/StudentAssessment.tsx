@@ -3,7 +3,7 @@ import { Wizard, Container, Header, SpaceBetween, FormField, Button, Box, PieCha
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { QandA, AssessmentStatus } from '../graphql/API';
+import { QandA } from '../graphql/API';
 import { getStudentAssessment } from '../graphql/queries';
 import { upsertStudentAssessment } from '../graphql/mutations';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';

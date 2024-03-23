@@ -262,6 +262,11 @@ export class DataStack extends NestedStack {
 
     const publishFn = new aws_lambda_nodejs.NodejsFunction(this, 'PublishFn', {
       entry: 'lib/lambdas/publishAssessment.ts',
+      environment: {
+        region: this.region,
+        classesTable: classesTable.tableName,
+        studentAssessmentsTable: studentAssessmentsTable.tableName,
+      },
     });
     classesTable.grantReadData(publishFn);
     studentAssessmentsTable.grantReadWriteData(publishFn);

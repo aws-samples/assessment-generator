@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { listStudentAssessments } from '../graphql/queries';
-import { StudentAssessment, AssessmentStatus } from '../graphql/API';
+import { StudentAssessment } from '../graphql/API';
 
 const client = generateClient();
 
@@ -40,13 +40,12 @@ export default () => {
             {
               id: 'status',
               header: 'Status',
-              cell: (item) =>
-                item.status === AssessmentStatus.Completed ? item.status : <Link href={`/assessment/${item.parentAssessId}`}>{item.status}</Link>,
+              cell: (item) => (item.completed ? 'Completed' : <Link href={`/assessment/${item.parentAssessId}`}>Start</Link>),
             },
             {
               id: 'score',
               header: 'Score',
-              cell: (item) => (item.status === AssessmentStatus.Completed ? item.score + '%' : ''),
+              cell: (item) => (item.completed ? item.score + '%' : ''),
             },
           ]}
           columnDisplay={[

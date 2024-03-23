@@ -94,24 +94,17 @@ export type StudentAssessmentInput = {
   parentAssessId: string,
   answers?: Array< number | null > | null,
   score?: number | null,
-  status?: AssessmentStatus | null,
+  completed?: boolean | null,
 };
-
-export enum AssessmentStatus {
-  Start = "Start",
-  InProgress = "InProgress",
-  Completed = "Completed",
-}
-
 
 export type StudentAssessment = {
   __typename: "StudentAssessment",
   parentAssessId: string,
   assessment?: Assessment | null,
   answers?: Array< number | null > | null,
-  status?: AssessmentStatus | null,
+  completed?: boolean | null,
   score?: number | null,
-  createdAt?: string | null,
+  updatedAt?: string | null,
 };
 
 export type Coarse = {
@@ -219,9 +212,9 @@ export type UpsertStudentAssessmentMutation = {
       published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
+    completed?: boolean | null,
     score?: number | null,
-    createdAt?: string | null,
+    updatedAt?: string | null,
   } | null,
 };
 
@@ -334,9 +327,9 @@ export type GetStudentAssessmentQuery = {
       published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
+    completed?: boolean | null,
     score?: number | null,
-    createdAt?: string | null,
+    updatedAt?: string | null,
   } | null,
 };
 
@@ -363,15 +356,15 @@ export type ListStudentAssessmentsQuery = {
       published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
+    completed?: boolean | null,
     score?: number | null,
-    createdAt?: string | null,
+    updatedAt?: string | null,
   } | null > | null,
 };
 
 export type PublishAssessmentQueryVariables = {
   assessmentId: string,
-  class: string,
+  classId: string,
 };
 
 export type PublishAssessmentQuery = {

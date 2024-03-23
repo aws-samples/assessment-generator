@@ -99,9 +99,9 @@ export const getStudentAssessment = /* GraphQL */ `
         published
       }
       answers
-      status
+      completed
       score
-      createdAt
+      updatedAt
     }
   }
 `;
@@ -126,14 +126,14 @@ export const listStudentAssessments = /* GraphQL */ `
         published
       }
       answers
-      status
+      completed
       score
-      createdAt
+      updatedAt
     }
   }
 `;
 export const publishAssessment = /* GraphQL */ `
-  query PublishAssessment($assessmentId: ID!, $class: String!) {
-    publishAssessment(assessmentId: $assessmentId, class: $class)
+  query PublishAssessment($assessmentId: ID!, $classId: String!) {
+    publishAssessment(assessmentId: $assessmentId, classId: $classId)
   }
 `;

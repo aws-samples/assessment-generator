@@ -10,12 +10,6 @@ enum AssessType {
   Type3
 }
 
-enum AssessmentStatus {
-  Start
-  InProgress
-  Completed
-}
-
 type Settings {
   uiLang: Lang
   docLang: Lang
@@ -108,16 +102,16 @@ type StudentAssessment {
   parentAssessId: ID!
   assessment: Assessment
   answers: [Int]
-  status: AssessmentStatus
+  completed: Boolean
   score: Int
-  createdAt: AWSDateTime
+  updatedAt: AWSDateTime
 }
 
 input StudentAssessmentInput {
   parentAssessId: ID!
   answers: [Int]
   score: Int
-  status: AssessmentStatus
+  completed: Boolean
 }
 
 type Mutation {
@@ -136,5 +130,5 @@ type Query {
   listAssessments: [Assessment]
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
-  publishAssessment(assessmentId: ID!, class: String!): Boolean
+  publishAssessment(assessmentId: ID!, classId: String!): Boolean
 }

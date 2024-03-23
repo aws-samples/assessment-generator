@@ -11,7 +11,7 @@ import { AlertType, DispatchAlertContext } from './contexts/alerts';
 
 const LOCALE = 'en';
 
-const currentRoutes = routes[0];
+const currentRoutes = routes[1];
 const router = createBrowserRouter(currentRoutes);
 const [sideNavRoutes] = currentRoutes;
 
