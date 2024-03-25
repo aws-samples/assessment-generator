@@ -19,11 +19,28 @@ import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
 import { APIGatewayProxyEventV2, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { ReferenceDocuments } from "./models/referenceDocuments";
-import { BedrockRuntime, InvokeModelCommandOutput, InvokeModelResponse } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntime } from "@aws-sdk/client-bedrock-runtime";
 import { AssessmentTemplate } from "./models/assessmentTemplate";
+import { XMLParser } from "fast-xml-parser";
 
 
 const CLAUDE_3_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0";
+
+class Answer {
+  answerText: string;
+}
+
+class Question {
+  questionText: string;
+  answers: Answer[];
+
+}
+
+class GeneratedQuestions {
+  questions: Question[];
+  correctAnswer: string;
+  explanation: string;
+}
 
 class Lambda implements LambdaInterface {
   @tracer.captureLambdaHandler()
@@ -60,20 +77,20 @@ Tell me the topics of the subject covered, do not include examples used to expla
 For each topic, include a brief description of what was covered.
     `;
 
-    for(let i=0; i<referenceDocuments.documentsContent.length; i++){
+    for (let i = 0; i < referenceDocuments.documentsContent.length; i++) {
       const document = referenceDocuments.documentsContent[i];
-      prompt+=`Document ${i}:\n`;
-      prompt+= document;
+      prompt += `Document ${i}:\n`;
+      prompt += document;
     }
     logger.info(prompt);
-    let llmResponse  = await callLLM(CLAUDE_3_HAIKU, prompt);
+    let llmResponse = await callLLM(CLAUDE_3_HAIKU, prompt);
     logger.info(llmResponse);
     return llmResponse;
   }
 
   private async generateInitialQuestions(topicsExtractionOutput: string, assessmentTemplate: AssessmentTemplate) {
 
-    let prompt =`
+    let prompt = `
 Craft a multiple-choice questionnaire (${assessmentTemplate.totalQuestions} questions)  for a university student based on the Provided Summarised Transcript.
 Build ${assessmentTemplate.easyQuestions} easy, ${assessmentTemplate.mediumQuestions} medium, and ${assessmentTemplate.hardQuestions} hard questions.
 The questionnaire should be in the ISO 639-2 Code: ${assessmentTemplate.docLang}
@@ -111,23 +128,42 @@ Structure your response in this format:
             </answer>
         </answers>
         <correctAnswer>[Correct Answer Letter]</correctAnswer>
-        <explaination>[Explanation for Correctness]</explaination>
+        <explanation>[Explanation for Correctness]</explanation>
     </question>
     <!-- all other questions below   -->
 </questions>
 \`\`\`
-    `
-    prompt+= `Provided Summarised Transcript: \n ${topicsExtractionOutput}`;
+    `;
+    prompt += `Provided Summarised Transcript: \n ${topicsExtractionOutput}`;
 
     logger.info(prompt);
-    let llmResponse  = await callLLM(CLAUDE_3_HAIKU, prompt);
+    let llmResponse = await callLLM(CLAUDE_3_HAIKU, prompt);
     logger.info(llmResponse);
     return llmResponse;
   }
 
-  private async improveQuestions(generatedQuestions: string) {
+  private async getRelevantDocuments(question: string) {
     // TODO
-    return Promise.resolve(generatedQuestions)
+    return;
+  }
+
+
+  private async improveQuestions(generatedQuestions: string) {
+
+    const parser = new XMLParser();
+    let parsedQuestions: GeneratedQuestions = parser.parse(generatedQuestions);
+
+    logger.info(parsedQuestions as any);
+
+    for (const question in parsedQuestions.questions) {
+      const relevantDocs = await this.getRelevantDocuments(question);
+      const improvedQuestion = await this.improveQuestion(question, relevantDocs);
+    }
+    return Promise.resolve(generatedQuestions);
+  }
+
+  private async improveQuestion(question: string, relevantDocs: void) {
+    return question;
   }
 }
 
@@ -135,18 +171,18 @@ const bedrock = new BedrockRuntime();
 
 async function callLLM(modelId, prompt) {
   logger.debug(prompt);
-  const body= JSON.stringify( {
+  const body = JSON.stringify({
     "anthropic_version": "bedrock-2023-05-31",
     "max_tokens": 4096,
     "messages": [
       {
         "role": "user",
         "content": [
-          {"type": "text", "text": prompt},
+          { "type": "text", "text": prompt },
         ],
-      }
+      },
     ],
-  })
+  });
   const response = await bedrock.invokeModel({
     body: body,
     modelId: modelId,
