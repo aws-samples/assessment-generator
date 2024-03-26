@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Button, Box, TextFilter, Modal } from '@cloudscape-design/components';
 import Dashboard from '../components/Dashboard';
 import { generateClient } from 'aws-amplify/api';
@@ -8,14 +8,14 @@ import { Student } from '../graphql/API';
 const client = generateClient();
 
 export default () => {
-  const [showDashboard, setShowDashboard] = React.useState(false);
+  const [showDashboard, setShowDashboard] = useState(false);
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const list: any = (await client.graphql({ query: listStudents })).data.listStudents || [];
-      setStudents(list);
-    })();
+    client
+      .graphql<any>({ query: listStudents })
+      .then(({ data }) => setStudents(data.listStudents || []))
+      .catch(() => {});
   }, []);
 
   return (
@@ -53,12 +53,12 @@ export default () => {
               {
                 id: 'dashboards',
                 header: 'Dashboards',
-                cell: (item) => <Button onClick={() => setShowDashboard(true)}>Generate Dashboard</Button>,
+                cell: (_item) => <Button onClick={() => setShowDashboard(true)}>Generate Dashboard</Button>,
               },
               {
                 id: 'download',
                 header: 'Downloads',
-                cell: (item) => <Button iconName="download">Download Data</Button>,
+                cell: (_item) => <Button iconName="download">Download Data</Button>,
               },
             ]}
             columnDisplay={[

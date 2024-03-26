@@ -1,4 +1,3 @@
-import React from 'react';
 import { ContentLayout, Container, Header, Box, SpaceBetween } from '@cloudscape-design/components';
 import Dashboard from '../components/Dashboard';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import DefaultSettings from './pages/DefaultSettings';
 import Section from './pages/Section';
 import HomePage from './pages/HomePage';

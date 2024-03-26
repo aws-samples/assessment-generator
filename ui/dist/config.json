@@ -1,0 +1,17 @@
+{
+  "Auth": {
+    "Cognito": {
+      "userPoolId": "eu-west-1_GyCkh0KyX",
+      "userPoolClientId": "q8oi550s298g825gehiudplp1",
+      "identityPoolId": "eu-west-1:d40e3f99-3cdb-4069-97a1-7a117d7ac9b0"
+    }
+  },
+  "API": {
+    "GraphQL": {
+      "endpoint": "https://ohnpg44l4jhwnh7rk7inzt62i4.appsync-api.eu-west-1.amazonaws.com/graphql",
+      "region": "eu-west-1",
+      "defaultAuthMode": "iam"
+    }
+  },
+  "Storage": { "S3": { "region": "eu-west-1", "bucket": "genassessstack-storagebucket19db2ff8-l0z1xnjnq7o6" } }
+}

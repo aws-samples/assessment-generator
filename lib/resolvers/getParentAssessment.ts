@@ -1,9 +1,17 @@
-// import { Context } from '@aws-appsync/utils';
-import * as ddb from '@aws-appsync/utils/dynamodb';
+import { util } from '@aws-appsync/utils';
 
 export function request(ctx) {
-  const userId = ctx.identity.sub;
-  return ddb.get({ key: { userId, id: ctx.args.input.id } });
+  return {
+    index: 'id-only',
+    operation: 'Query',
+    query: {
+      expression: 'id = :id',
+      expressionValues: util.dynamodb.toMapValues({ ':id': ctx.source.parentAssessId }),
+    },
+  };
 }
 
-export const response = (ctx) => ctx.result;
+export const response = (ctx) => {
+  console.log(ctx);
+  return ctx.result.items.pop();
+};

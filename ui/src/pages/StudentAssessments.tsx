@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
 import { listStudentAssessments } from '../graphql/queries';
-import { StudentAssessment, AssessmentStatus } from '../graphql/API';
+import { StudentAssessment } from '../graphql/API';
 
 const client = generateClient();
 
@@ -10,10 +10,13 @@ export default () => {
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const list: any = (await client.graphql({ query: listStudentAssessments })).data.listStudentAssessments || [];
-      setAssessments(list);
-    })();
+    client
+      .graphql<any>({ query: listStudentAssessments })
+      .then(({ data }) => {
+        const list = data.listStudentAssessments || [];
+        setAssessments(list);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -37,13 +40,18 @@ export default () => {
             {
               id: 'status',
               header: 'Status',
-              cell: (item) =>
-                item.status === AssessmentStatus.Completed ? item.status : <Link href={`/assessment/${item.parentAssessId}`}>{item.status}</Link>,
+              cell: (item) => (item.completed ? 'Completed' : <Link href={`/assessment/${item.parentAssessId}`}>Start</Link>),
+            },
+            {
+              id: 'score',
+              header: 'Score',
+              cell: (item) => (item.completed ? item.score + '%' : ''),
             },
           ]}
           columnDisplay={[
             { id: 'parentAssessId', visible: true },
             { id: 'status', visible: true },
+            { id: 'score', visible: true },
           ]}
           items={assessments}
           loadingText="Loading list"

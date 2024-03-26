@@ -30,6 +30,7 @@ export type Settings = {
 };
 
 export type AssessTemplateInput = {
+  name?: string | null,
   docLang: Lang,
   assessType: AssessType,
   totalQuestions: number,
@@ -41,6 +42,7 @@ export type AssessTemplateInput = {
 export type AssessTemplate = {
   __typename: "AssessTemplate",
   id: string,
+  name?: string | null,
   docLang?: Lang | null,
   assessType?: AssessType | null,
   totalQuestions?: number | null,
@@ -51,11 +53,11 @@ export type AssessTemplate = {
 };
 
 export type AssessmentInput = {
+  id: string,
   name: string,
   coarse: string,
-  lecture: string,
+  classId: string,
   lectureDate: string,
-  version: string,
   deadline: string,
   questions: Array< QandAInput | null >,
 };
@@ -64,6 +66,7 @@ export type QandAInput = {
   title?: string | null,
   question?: string | null,
   answers?: Array< string | null > | null,
+  correctAnswer: number,
 };
 
 export type Assessment = {
@@ -71,12 +74,12 @@ export type Assessment = {
   id: string,
   name?: string | null,
   coarse?: string | null,
-  lecture?: string | null,
+  classId?: string | null,
   lectureDate?: string | null,
-  version?: string | null,
   deadline?: string | null,
   updatedAt?: string | null,
   questions:  Array<QandA >,
+  published?: boolean | null,
 };
 
 export type QandA = {
@@ -84,28 +87,24 @@ export type QandA = {
   title: string,
   question: string,
   answers: Array< string >,
+  correctAnswer: number,
 };
 
 export type StudentAssessmentInput = {
   parentAssessId: string,
   answers?: Array< number | null > | null,
-  status?: AssessmentStatus | null,
+  score?: number | null,
+  completed?: boolean | null,
 };
-
-export enum AssessmentStatus {
-  Start = "Start",
-  InProgress = "InProgress",
-  Completed = "Completed",
-}
-
 
 export type StudentAssessment = {
   __typename: "StudentAssessment",
   parentAssessId: string,
   assessment?: Assessment | null,
   answers?: Array< number | null > | null,
-  status?: AssessmentStatus | null,
-  createdAt?: string | null,
+  completed?: boolean | null,
+  score?: number | null,
+  updatedAt?: string | null,
 };
 
 export type Coarse = {
@@ -150,6 +149,7 @@ export type CreateAssessTemplateMutation = {
   createAssessTemplate?:  {
     __typename: "AssessTemplate",
     id: string,
+    name?: string | null,
     docLang?: Lang | null,
     assessType?: AssessType | null,
     totalQuestions?: number | null,
@@ -170,9 +170,8 @@ export type UpsertAssessmentMutation = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
+    classId?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -180,7 +179,9 @@ export type UpsertAssessmentMutation = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
+    published?: boolean | null,
   } | null,
 };
 
@@ -197,19 +198,24 @@ export type UpsertStudentAssessmentMutation = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
+      classId?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
+      published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
-    createdAt?: string | null,
+    completed?: boolean | null,
+    score?: number | null,
+    updatedAt?: string | null,
   } | null,
-};
-
-export type GetSettingsQueryVariables = {
 };
 
 export type GetSettingsQuery = {
@@ -221,9 +227,6 @@ export type GetSettingsQuery = {
   } | null,
 };
 
-export type ListCoarsesQueryVariables = {
-};
-
 export type ListCoarsesQuery = {
   listCoarses?:  Array< {
     __typename: "Coarse",
@@ -233,9 +236,6 @@ export type ListCoarsesQuery = {
   } | null > | null,
 };
 
-export type ListClassesQueryVariables = {
-};
-
 export type ListClassesQuery = {
   listClasses?:  Array< {
     __typename: "Class",
@@ -243,9 +243,6 @@ export type ListClassesQuery = {
     name?: string | null,
     students?: Array< string | null > | null,
   } | null > | null,
-};
-
-export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -267,9 +264,8 @@ export type GetAssessmentQuery = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
+    classId?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -277,11 +273,10 @@ export type GetAssessmentQuery = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
+    published?: boolean | null,
   } | null,
-};
-
-export type ListAssessmentsQueryVariables = {
 };
 
 export type ListAssessmentsQuery = {
@@ -290,9 +285,8 @@ export type ListAssessmentsQuery = {
     id: string,
     name?: string | null,
     coarse?: string | null,
-    lecture?: string | null,
+    classId?: string | null,
     lectureDate?: string | null,
-    version?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
     questions:  Array< {
@@ -300,7 +294,9 @@ export type ListAssessmentsQuery = {
       title: string,
       question: string,
       answers: Array< string >,
+      correctAnswer: number,
     } >,
+    published?: boolean | null,
   } | null > | null,
 };
 
@@ -317,19 +313,24 @@ export type GetStudentAssessmentQuery = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
+      classId?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
+      published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
-    createdAt?: string | null,
+    completed?: boolean | null,
+    score?: number | null,
+    updatedAt?: string | null,
   } | null,
-};
-
-export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
@@ -341,14 +342,31 @@ export type ListStudentAssessmentsQuery = {
       id: string,
       name?: string | null,
       coarse?: string | null,
-      lecture?: string | null,
+      classId?: string | null,
       lectureDate?: string | null,
-      version?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+      } >,
+      published?: boolean | null,
     } | null,
     answers?: Array< number | null > | null,
-    status?: AssessmentStatus | null,
-    createdAt?: string | null,
+    completed?: boolean | null,
+    score?: number | null,
+    updatedAt?: string | null,
   } | null > | null,
+};
+
+export type PublishAssessmentQueryVariables = {
+  assessmentId: string,
+  classId: string,
+};
+
+export type PublishAssessmentQuery = {
+  publishAssessment?: boolean | null,
 };

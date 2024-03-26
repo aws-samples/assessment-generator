@@ -9,13 +9,14 @@ import {
   NestedStack,
   NestedStackProps,
   RemovalPolicy,
+  aws_lambda_nodejs,
 } from 'aws-cdk-lib';
-import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import path from "path";
-import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
-import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
-import { LambdaRestApi } from "aws-cdk-lib/aws-apigateway";
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import path from 'path';
+import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
+import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from "aws-cdk-lib/aws-s3";
 
 export const feedbacksDbName = 'feedbacks';
@@ -135,8 +136,14 @@ export class DataStack extends NestedStack {
     /////////// Assessments
 
     const assessmentsTable = new aws_dynamodb.TableV2(this, 'AssessmentsTable', {
-      partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
-      sortKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
+      globalSecondaryIndexes: [
+        {
+          indexName: 'id-only',
+          partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
+        },
+      ],
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
@@ -194,34 +201,29 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
-    // assessmentsDs.createResolver('ParentAssessmentResolver', {
-    //   typeName: 'StudentAssessment',
-    //   fieldName: 'assessment',
-    //   code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.js'),
-    //   runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
-    // });
+    assessmentsDs.createResolver('ParentAssessmentResolver', {
+      typeName: 'StudentAssessment',
+      fieldName: 'assessment',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
 
-
-    const NAMESPACE = "genassess-rag";
-    const QUESTIONS_GENERATOR_NAME = "QuestionsGenerator";
+    const NAMESPACE = 'genassess-rag';
+    const QUESTIONS_GENERATOR_NAME = 'QuestionsGenerator';
     const questionGeneratorRole = new aws_iam.Role(this, `${QUESTIONS_GENERATOR_NAME}Role`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
-      managedPolicies: [
-        ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"),
-      ],
+      managedPolicies: [ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
     });
 
     //Add Bedrock permissions on the Lambda function
     //TODO scope it down to what's required
-    questionGeneratorRole.addToPolicy(new PolicyStatement({
-      "effect": aws_iam.Effect.ALLOW,
-      "resources": [
-        "*",
-      ],
-      "actions": [
-        "bedrock:*",
-      ],
-    }));
+    questionGeneratorRole.addToPolicy(
+      new PolicyStatement({
+        effect: aws_iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: ['bedrock:*'],
+      })
+    );
 
     const bucket = new s3.Bucket(this, 'QGenerationBucket', {
       encryption: s3.BucketEncryption.S3_MANAGED,
@@ -249,17 +251,14 @@ export class DataStack extends NestedStack {
       timeout: Duration.minutes(15),
       logGroup: logGroup,
       environment: {
-        POWERTOOLS_SERVICE_NAME: "questions-generator",
+        POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         Q_GENERATION_BUCKET: bucket.bucketName,
         ASSESSMENT_TABLE: assessmentsTable.tableName
       },
       bundling: {
         minify: true,
-        externalModules: [
-          '@aws-sdk/client-s3',
-          '@aws-sdk/client-sns',
-        ],
+        externalModules: ['@aws-sdk/client-s3', '@aws-sdk/client-sns'],
       },
     });
     bucket.grantRead(questionsGenerator);
@@ -269,6 +268,26 @@ export class DataStack extends NestedStack {
       handler: questionsGenerator,
     });
 
+    /////////// Publish Assessment
+
+    const publishFn = new aws_lambda_nodejs.NodejsFunction(this, 'PublishFn', {
+      entry: 'lib/lambdas/publishAssessment.ts',
+      environment: {
+        region: this.region,
+        classesTable: classesTable.tableName,
+        studentAssessmentsTable: studentAssessmentsTable.tableName,
+      },
+    });
+    classesTable.grantReadData(publishFn);
+    studentAssessmentsTable.grantReadWriteData(publishFn);
+    const publishAssessmentDs = api.addLambdaDataSource('PublishAssessmentDataSource', publishFn);
+
+    publishAssessmentDs.createResolver('PublishAssessmentResolver', {
+      typeName: 'Query',
+      fieldName: 'publishAssessment',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/publishAssessment.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
 
     this.api = api;
   }

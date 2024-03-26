@@ -1,4 +1,3 @@
-import React from 'react';
 import { LineChart, Box, Button } from '@cloudscape-design/components';
 
 export default () => {

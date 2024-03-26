@@ -10,12 +10,6 @@ enum AssessType {
   Type3
 }
 
-enum AssessmentStatus {
-  Start
-  InProgress
-  Completed
-}
-
 type Settings {
   uiLang: Lang
   docLang: Lang
@@ -48,6 +42,7 @@ type Student {
 
 type AssessTemplate {
   id: ID!
+  name: String
   docLang: Lang
   assessType: AssessType
   totalQuestions: Int
@@ -58,6 +53,7 @@ type AssessTemplate {
 }
 
 input AssessTemplateInput {
+  name: String
   docLang: Lang!
   assessType: AssessType!
   totalQuestions: Int!
@@ -70,32 +66,34 @@ type QandA {
   title: String!
   question: String!
   answers: [String!]!
+  correctAnswer: Int!
 }
 
 input QandAInput {
   title: String
   question: String
   answers: [String]
+  correctAnswer: Int!
 }
 
 type Assessment {
   id: ID!
   name: String
   coarse: String
-  lecture: String
-  lectureDate: String
-  version: String
+  classId: String
+  lectureDate: AWSDateTime
   deadline: AWSDateTime
   updatedAt: AWSDateTime
   questions: [QandA!]!
+  published: Boolean
 }
 
 input AssessmentInput {
+  id: ID!
   name: String!
   coarse: String!
-  lecture: String!
-  lectureDate: String!
-  version: String!
+  classId: String!
+  lectureDate: AWSDateTime!
   deadline: AWSDateTime!
   questions: [QandAInput]!
 }
@@ -104,14 +102,16 @@ type StudentAssessment {
   parentAssessId: ID!
   assessment: Assessment
   answers: [Int]
-  status: AssessmentStatus
-  createdAt: AWSDateTime
+  completed: Boolean
+  score: Int
+  updatedAt: AWSDateTime
 }
 
 input StudentAssessmentInput {
   parentAssessId: ID!
   answers: [Int]
-  status: AssessmentStatus
+  score: Int
+  completed: Boolean
 }
 
 type Mutation {
@@ -130,4 +130,5 @@ type Query {
   listAssessments: [Assessment]
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
+  publishAssessment(assessmentId: ID!, classId: String!): Boolean
 }

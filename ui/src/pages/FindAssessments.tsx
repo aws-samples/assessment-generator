@@ -1,19 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
+import { useState, useEffect, useContext } from 'react';
+import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter, Button } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
-import { listAssessments } from '../graphql/queries';
+import { listAssessments, publishAssessment } from '../graphql/queries';
 import { Assessment } from '../graphql/API';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
 
 export default () => {
+  const dispatchAlert = useContext(DispatchAlertContext);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
   useEffect(() => {
-    (async () => {
-      const list: any = (await client.graphql({ query: listAssessments })).data.listAssessments || [];
-      setAssessments(list);
-    })();
+    client
+      .graphql<any>({ query: listAssessments })
+      .then(({ data }) => setAssessments(data.listAssessments || []))
+      .catch(() => dispatchAlert({ type: AlertType.ERROR }));
   }, []);
 
   return (
@@ -38,19 +40,9 @@ export default () => {
               cell: (item) => item.coarse,
             },
             {
-              id: 'lecture',
-              header: 'Lecture',
-              cell: (item) => item.lecture,
-            },
-            {
               id: 'lectureDate',
               header: 'Lecture Date',
               cell: (item) => item.lectureDate,
-            },
-            {
-              id: 'version',
-              header: 'Version',
-              cell: (item) => item.version,
             },
             {
               id: 'deadline',
@@ -67,16 +59,31 @@ export default () => {
               header: '',
               cell: (item) => <Link href={`/edit-assessment/${item.id}`}>edit</Link>,
             },
+            {
+              id: 'publish',
+              header: '',
+              cell: (item) => (
+                <Button
+                  onClick={() =>
+                    client
+                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id, classId: item.classId } })
+                      .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                      .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                  }
+                >
+                  publish
+                </Button>
+              ),
+            },
           ]}
           columnDisplay={[
             { id: 'name', visible: true },
             { id: 'coarse', visible: true },
-            { id: 'lecture', visible: true },
             { id: 'lectureDate', visible: true },
-            { id: 'version', visible: true },
             { id: 'deadline', visible: true },
             { id: 'updatedAt', visible: true },
             { id: 'edit', visible: true },
+            { id: 'publish', visible: true },
           ]}
           items={assessments}
           loadingText="Loading list"
