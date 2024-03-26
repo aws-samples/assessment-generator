@@ -3,11 +3,13 @@ import { AppLayout, BreadcrumbGroup, Flashbar, HelpPanel, SideNavigation, Flashb
 import { I18nProvider } from '@cloudscape-design/components/i18n';
 import messages from '@cloudscape-design/components/i18n/messages/all.en';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-// import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
+import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { withAuthenticator } from '@aws-amplify/ui-react';
 import { routes } from './routes';
 import { titlise } from './helpers';
 import { AlertType, DispatchAlertContext } from './contexts/alerts';
+import { UserProfileContext, UserProfile } from './contexts/userProfile';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const LOCALE = 'en';
 
@@ -15,9 +17,13 @@ const currentRoutes = routes[0];
 const router = createBrowserRouter(currentRoutes);
 const [sideNavRoutes] = currentRoutes;
 
-// export function App({ signOut, user }: WithAuthenticatorProps) {
-export function App() {
+export function App({ user }: WithAuthenticatorProps) {
   const [alerts, setAlerts] = useState<FlashbarProps.MessageDefinition[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | undefined>(user);
+
+  fetchAuthSession().then((session) =>
+    setUserProfile({ ...user, group: (session.tokens?.accessToken.payload as any)['cognito:groups'][0] } as UserProfile)
+  );
 
   const dispatchAlert = (newAlert: FlashbarProps.MessageDefinition) => {
     const id = Date.now().toString();
@@ -35,48 +41,50 @@ export function App() {
 
   return (
     <DispatchAlertContext.Provider value={dispatchAlert}>
-      <I18nProvider locale={LOCALE} messages={[messages]}>
-        <AppLayout
-          breadcrumbs={
-            <BreadcrumbGroup
-              items={[
-                { text: 'Home', href: '#' },
-                { text: 'Service', href: '#' },
-              ]}
-            />
-          }
-          navigationOpen={true}
-          navigation={
-            <SideNavigation
-              activeHref={window.location.pathname}
-              header={{
-                href: '/',
-                text: 'Gen Assess',
-              }}
-              onFollow={(_e) => {
-                // e.preventDefault();
-              }}
-              items={sideNavRoutes.children.map(({ path, children }: any) => {
-                if (children) {
-                  return {
-                    type: 'expandable-link-group',
-                    text: titlise(path),
-                    href: `/${path}`,
-                    // href: path,
-                    items: children.map(({ path: childPath }: any) => ({ type: 'link', text: titlise(childPath), href: `/${path}/${childPath}` })),
-                  };
-                } else {
-                  return { type: 'link', text: titlise(path), href: `/${path}` };
-                }
-              })}
-            />
-          }
-          notifications={<Flashbar items={alerts} />}
-          toolsOpen={false}
-          tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
-          content={<RouterProvider router={router} />}
-        />
-      </I18nProvider>
+      <UserProfileContext.Provider value={userProfile}>
+        <I18nProvider locale={LOCALE} messages={[messages]}>
+          <AppLayout
+            breadcrumbs={
+              <BreadcrumbGroup
+                items={[
+                  { text: 'Home', href: '#' },
+                  { text: 'Service', href: '#' },
+                ]}
+              />
+            }
+            navigationOpen={true}
+            navigation={
+              <SideNavigation
+                activeHref={window.location.pathname}
+                header={{
+                  href: '/',
+                  text: 'Gen Assess',
+                }}
+                onFollow={(_e) => {
+                  // e.preventDefault();
+                }}
+                items={sideNavRoutes.children.map(({ path, children }: any) => {
+                  if (children) {
+                    return {
+                      type: 'expandable-link-group',
+                      text: titlise(path),
+                      href: `/${path}`,
+                      // href: path,
+                      items: children.map(({ path: childPath }: any) => ({ type: 'link', text: titlise(childPath), href: `/${path}/${childPath}` })),
+                    };
+                  } else {
+                    return { type: 'link', text: titlise(path), href: `/${path}` };
+                  }
+                })}
+              />
+            }
+            notifications={<Flashbar items={alerts} />}
+            toolsOpen={false}
+            tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
+            content={<RouterProvider router={router} />}
+          />
+        </I18nProvider>
+      </UserProfileContext.Provider>
     </DispatchAlertContext.Provider>
   );
 }

@@ -17,15 +17,21 @@ export class GenAssessStack extends Stack {
 
     const { api } = new DataStack(this, 'DataStack', { userPool: authStack.userPool });
 
-    // api.grantQuery(authStack.identityPool.authenticatedRole);
+    const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
 
-    // const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
-
-    // const storageBucket = new aws_s3.Bucket(this, 'StorageBucket', {
-    //   autoDeleteObjects: true,
-    //   removalPolicy: RemovalPolicy.DESTROY,
-    // });
-    // storageBucket.grantReadWrite(authStack.identityPool.authenticatedRole);
+    const storageBucket = new aws_s3.Bucket(this, 'StorageBucket', {
+      autoDeleteObjects: true,
+      removalPolicy: RemovalPolicy.DESTROY,
+      cors: [
+        {
+          allowedMethods: [aws_s3.HttpMethods.HEAD, aws_s3.HttpMethods.GET, aws_s3.HttpMethods.POST, aws_s3.HttpMethods.PUT],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+        },
+      ],
+    });
+    storageBucket.grantReadWrite(authStack.identityPool.authenticatedRole);
 
     const config = {
       Auth: {
@@ -42,46 +48,41 @@ export class GenAssessStack extends Stack {
           defaultAuthMode: 'userPool',
         },
       },
-      // Storage: {
-      //   S3: {
-      //     region: this.region,
-      //     bucket: storageBucket.bucketName,
-      //   },
-      // },
+      Storage: {
+        S3: {
+          region: this.region,
+          bucket: storageBucket.bucketName,
+        },
+      },
     };
 
-    // new StringParameter(this, 'ConfigParameter', {
-    //   parameterName: 'GenAssessConfig',
-    //   stringValue: JSON.stringify(config),
-    // });
+    const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
+      onUpdate: {
+        service: 'S3',
+        action: 'putObject',
+        parameters: {
+          Bucket: frontendStack.bucket.bucketName,
+          Key: 'config.json',
+          Body: JSON.stringify(config),
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('NO_DELETE_REQUIRED'),
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [frontendStack.bucket.bucketArn, `${frontendStack.bucket.bucketArn}/*`],
+      }),
+      installLatestAwsSdk: false,
+    });
 
-    // const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
-    //   onUpdate: {
-    //     service: 'S3',
-    //     action: 'putObject',
-    //     parameters: {
-    //       Bucket: frontendStack.bucket.bucketName,
-    //       Key: 'config.json',
-    //       Body: JSON.stringify(config),
-    //     },
-    //     physicalResourceId: cr.PhysicalResourceId.of('NO_DELETE_REQUIRED'),
-    //   },
-    //   policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-    //     resources: [frontendStack.bucket.bucketArn, `${frontendStack.bucket.bucketArn}/*`],
-    //   }),
-    //   installLatestAwsSdk: false,
-    // });
-
-    // putConfig.node.addDependency(frontendStack.assetDeployment);
-    // putConfig.node.addDependency(authStack);
+    putConfig.node.addDependency(frontendStack.assetDeployment);
+    putConfig.node.addDependency(authStack);
 
     new CfnOutput(this, 'UiConfing', {
       value: JSON.stringify(config),
     });
 
-    // new CfnOutput(this, 'ApplicationUrl', {
-    //   value: frontendStack.applicationURL,
-    // });
+    new CfnOutput(this, 'ApplicationUrl', {
+      value: frontendStack.applicationURL,
+    });
 
     // new CfnOutput(this, 'RAGBucketSource', {
     //   value: ragPipipelineStack.artifactsUploadBucket.bucketName,

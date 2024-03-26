@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import {
   Select,
   FileUpload,
@@ -17,12 +17,14 @@ import { generateClient } from 'aws-amplify/api';
 import { listCoarses } from '../graphql/queries';
 import { Coarse } from '../graphql/API';
 import { optionise } from '../helpers';
-// import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+import { UserProfileContext } from '../contexts/userProfile';
 
 const client = generateClient();
 
 export default () => {
-  // const dispatchAlert = useContext(DispatchAlertContext);
+  const dispatchAlert = useContext(DispatchAlertContext);
+  const userProfile = useContext(UserProfileContext);
 
   const [files, setFiles] = useState<File[]>([]);
   const [coarses, setCoarses] = useState<SelectProps.Option[]>([]);
@@ -43,9 +45,11 @@ export default () => {
         e.preventDefault();
         const [file] = files;
         uploadData({
-          key: `${coarse?.value}-${file.name}`,
+          key: `${userProfile?.userId}/${coarse?.value}/${file.name}`,
           data: file,
-        });
+        })
+          .result.then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' }))
+          .catch(() => dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' }));
       }}
     >
       <Form
