@@ -254,7 +254,7 @@ export class DataStack extends NestedStack {
         POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         Q_GENERATION_BUCKET: bucket.bucketName,
-        ASSESSMENT_TABLE: assessmentsTable.tableName
+        ASSESSMENTS_TABLE: assessmentsTable.tableName
       },
       bundling: {
         minify: true,
@@ -276,6 +276,10 @@ export class DataStack extends NestedStack {
         region: this.region,
         classesTable: classesTable.tableName,
         studentAssessmentsTable: studentAssessmentsTable.tableName,
+      },
+      bundling: {
+        minify: true,
+        externalModules: ['@aws-sdk/client-dynamodb'],
       },
     });
     classesTable.grantReadData(publishFn);

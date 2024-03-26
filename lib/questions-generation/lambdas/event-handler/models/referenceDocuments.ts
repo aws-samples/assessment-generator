@@ -9,10 +9,12 @@ export class ReferenceDocuments {
   private static SOURCE_BUCKET = process.env.Q_GENERATION_BUCKET;
   documentsContent: string[];
   assessmentTemplate: AssessmentTemplate;
+  knowledgeBaseId: string;
 
-  constructor(documentsContent: string[], assessmentTemplate: AssessmentTemplate) {
+  constructor(documentsContent: string[], assessmentTemplate: AssessmentTemplate, knowledgeBaseId) {
     this.documentsContent = documentsContent;
     this.assessmentTemplate = assessmentTemplate;
+    this.knowledgeBaseId = knowledgeBaseId;
   }
 
 
@@ -36,6 +38,6 @@ export class ReferenceDocuments {
     }
 
     const assessmentTemplate = await AssessmentTemplate.fromId(parsedBody.assessmentTemplateId);
-    return new ReferenceDocuments(documentsContent, assessmentTemplate);
+    return new ReferenceDocuments(documentsContent, assessmentTemplate, parsedBody.knowledgeBaseId);
   }
 }
