@@ -13,7 +13,7 @@ export class GenAssessStack extends Stack {
 
     const authStack = new AuthStack(this, 'AuthStack');
 
-    // const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
+    const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
 
     const { api } = new DataStack(this, 'DataStack', { userPool: authStack.userPool });
 
@@ -84,8 +84,8 @@ export class GenAssessStack extends Stack {
       value: frontendStack.applicationURL,
     });
 
-    // new CfnOutput(this, 'RAGBucketSource', {
-    //   value: ragPipipelineStack.artifactsUploadBucket.bucketName,
-    // });
+    new CfnOutput(this, 'RAGBucketSource', {
+      value: ragPipipelineStack.artifactsUploadBucket.bucketName,
+    });
   }
 }
