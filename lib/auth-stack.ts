@@ -1,5 +1,5 @@
 import { Construct } from 'constructs';
-import { NestedStack, NestedStackProps, aws_cognito, CfnOutput, aws_dynamodb } from 'aws-cdk-lib';
+import { NestedStack, NestedStackProps, aws_cognito } from 'aws-cdk-lib';
 import { IdentityPool, UserPoolAuthenticationProvider } from '@aws-cdk/aws-cognito-identitypool-alpha';
 
 export class AuthStack extends NestedStack {

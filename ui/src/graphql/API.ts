@@ -55,17 +55,18 @@ export type AssessTemplate = {
 export type AssessmentInput = {
   id: string,
   name: string,
-  coarse: string,
+  course: string,
   classId: string,
   lectureDate: string,
   deadline: string,
   questions: Array< QandAInput | null >,
+  published?: boolean | null,
 };
 
 export type QandAInput = {
-  title?: string | null,
-  question?: string | null,
-  answers?: Array< string | null > | null,
+  title: string,
+  question: string,
+  answers: Array< string | null >,
   correctAnswer: number,
 };
 
@@ -73,7 +74,7 @@ export type Assessment = {
   __typename: "Assessment",
   id: string,
   name?: string | null,
-  coarse?: string | null,
+  course?: string | null,
   classId?: string | null,
   lectureDate?: string | null,
   deadline?: string | null,
@@ -107,8 +108,8 @@ export type StudentAssessment = {
   updatedAt?: string | null,
 };
 
-export type Coarse = {
-  __typename: "Coarse",
+export type Course = {
+  __typename: "Course",
   id: string,
   name?: string | null,
   description?: string | null,
@@ -169,7 +170,7 @@ export type UpsertAssessmentMutation = {
     __typename: "Assessment",
     id: string,
     name?: string | null,
-    coarse?: string | null,
+    course?: string | null,
     classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
@@ -197,7 +198,7 @@ export type UpsertStudentAssessmentMutation = {
       __typename: "Assessment",
       id: string,
       name?: string | null,
-      coarse?: string | null,
+      course?: string | null,
       classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
@@ -227,9 +228,9 @@ export type GetSettingsQuery = {
   } | null,
 };
 
-export type ListCoarsesQuery = {
-  listCoarses?:  Array< {
-    __typename: "Coarse",
+export type ListCoursesQuery = {
+  listCourses?:  Array< {
+    __typename: "Course",
     id: string,
     name?: string | null,
     description?: string | null,
@@ -263,7 +264,7 @@ export type GetAssessmentQuery = {
     __typename: "Assessment",
     id: string,
     name?: string | null,
-    coarse?: string | null,
+    course?: string | null,
     classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
@@ -284,7 +285,7 @@ export type ListAssessmentsQuery = {
     __typename: "Assessment",
     id: string,
     name?: string | null,
-    coarse?: string | null,
+    course?: string | null,
     classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
@@ -312,7 +313,7 @@ export type GetStudentAssessmentQuery = {
       __typename: "Assessment",
       id: string,
       name?: string | null,
-      coarse?: string | null,
+      course?: string | null,
       classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
@@ -341,7 +342,7 @@ export type ListStudentAssessmentsQuery = {
       __typename: "Assessment",
       id: string,
       name?: string | null,
-      coarse?: string | null,
+      course?: string | null,
       classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,

@@ -15,13 +15,13 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 const assessTemplates = ['template1', 'template2', 'template3'].map((temp) => ({ value: temp }));
-const coarses = ['biology', 'chemistry', 'maths'].map((temp) => ({ value: temp }));
+const courses = ['biology', 'chemistry', 'maths'].map((temp) => ({ value: temp }));
 
 export default () => {
   const navigate = useNavigate();
   const [useDefault, setUseDefault] = useState(true);
   const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
-  const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
+  const [course, setCourse] = useState<SelectProps.Option | null>(null);
   const [files, setFiles] = useState<File[]>([]);
 
   return (
@@ -56,8 +56,8 @@ export default () => {
                     />
                   </SpaceBetween>
                 </FormField>
-                <FormField label="Select Coarse">
-                  <Select options={coarses} selectedOption={coarse} onChange={({ detail }) => setCoarse(detail.selectedOption)} />
+                <FormField label="Select Course">
+                  <Select options={courses} selectedOption={course} onChange={({ detail }) => setCourse(detail.selectedOption)} />
                 </FormField>
                 <FormField label="Add Lecture Notes">
                   <FileUpload

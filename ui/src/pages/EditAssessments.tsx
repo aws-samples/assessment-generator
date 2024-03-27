@@ -1,5 +1,5 @@
 import { useState, useReducer, useEffect, useContext } from 'react';
-import { Wizard, Container, Header, SpaceBetween, Input, Button, Textarea } from '@cloudscape-design/components';
+import { Wizard, Container, Header, SpaceBetween, Input, Button, Textarea, Tiles } from '@cloudscape-design/components';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { Assessment } from '../graphql/API';
@@ -63,11 +63,11 @@ export default () => {
   }, []);
 
   const steps =
-    (assessment as Assessment).questions?.map(({ title, question, answers }) => ({
+    (assessment as Assessment).questions?.map(({ title, question, answers, correctAnswer }) => ({
       title,
       content: (
         <SpaceBetween size="l">
-          <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
+          <Container header={<Header variant="h2">Edit Question {activeStepIndex + 1}</Header>}>
             <Textarea
               onChange={({ detail }) =>
                 updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'question', content: detail.value })
@@ -75,7 +75,7 @@ export default () => {
               value={question}
             />
           </Container>
-          <Container header={<Header variant="h2">Answer</Header>}>
+          <Container header={<Header variant="h2">Edit Answers</Header>}>
             <SpaceBetween size="l" direction="horizontal" alignItems="center">
               {answers.map((answer, answerIndex) => (
                 <Container
@@ -128,6 +128,20 @@ export default () => {
                 />
               </Container>
             </SpaceBetween>
+          </Container>
+          <Container header={<Header variant="h2">Choose Correct Answer</Header>}>
+            <Tiles
+              value={correctAnswer.toString()}
+              items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
+              onChange={({ detail }) =>
+                updateAssessment({
+                  type: ActionTypes.Update,
+                  stepIndex: activeStepIndex,
+                  key: 'correctAnswer',
+                  content: +detail.value,
+                })
+              }
+            />
           </Container>
         </SpaceBetween>
       ),

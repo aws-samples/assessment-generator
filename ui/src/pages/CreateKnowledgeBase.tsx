@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import {
   Select,
   FileUpload,
@@ -14,26 +14,28 @@ import {
 } from '@cloudscape-design/components';
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
-import { listCoarses } from '../graphql/queries';
-import { Coarse } from '../graphql/API';
+import { listCourses } from '../graphql/queries';
+import { Course } from '../graphql/API';
 import { optionise } from '../helpers';
-// import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+import { UserProfileContext } from '../contexts/userProfile';
 
 const client = generateClient();
 
 export default () => {
-  // const dispatchAlert = useContext(DispatchAlertContext);
+  const dispatchAlert = useContext(DispatchAlertContext);
+  const userProfile = useContext(UserProfileContext);
 
   const [files, setFiles] = useState<File[]>([]);
-  const [coarses, setCoarses] = useState<SelectProps.Option[]>([]);
-  const [coarse, setCoarse] = useState<SelectProps.Option | null>(null);
+  const [courses, setCourses] = useState<SelectProps.Option[]>([]);
+  const [course, setCourse] = useState<SelectProps.Option | null>(null);
 
   useEffect(() => {
-    client.graphql<any>({ query: listCoarses }).then(({ data }) => {
-      const list = data.listCoarses;
+    client.graphql<any>({ query: listCourses }).then(({ data }) => {
+      const list = data.listCourses;
       if (!list) return;
-      const options = list.map((coarse: Coarse) => optionise(coarse!.name!));
-      setCoarses(options);
+      const options = list.map((course: Course) => optionise(course!.name!));
+      setCourses(options);
     });
   }, []);
 
@@ -43,9 +45,11 @@ export default () => {
         e.preventDefault();
         const [file] = files;
         uploadData({
-          key: `${coarse?.value}-${file.name}`,
+          key: `${userProfile?.userId}/${course?.value}/${file.name}`,
           data: file,
-        });
+        })
+          .result.then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' }))
+          .catch(() => dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' }));
       }}
     >
       <Form
@@ -54,7 +58,7 @@ export default () => {
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary" disabled={!coarse || !files.length}>
+            <Button variant="primary" disabled={!course || !files.length}>
               Submit
             </Button>
           </SpaceBetween>
@@ -71,8 +75,8 @@ export default () => {
           >
             <Box padding="xxxl">
               <SpaceBetween size="l" direction="horizontal" alignItems="end">
-                <FormField label="Choose Coarse:">
-                  <Select options={coarses} selectedOption={coarse} onChange={({ detail }) => setCoarse(detail.selectedOption)} />
+                <FormField label="Choose Course:">
+                  <Select options={courses} selectedOption={course} onChange={({ detail }) => setCourse(detail.selectedOption)} />
                 </FormField>
                 <FormField>
                   <FileUpload

@@ -13,7 +13,7 @@ export class GenAssessStack extends Stack {
 
     const authStack = new AuthStack(this, 'AuthStack');
 
-    const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
+    // const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
 
     const { api } = new DataStack(this, 'DataStack', { userPool: authStack.userPool });
 
@@ -22,6 +22,14 @@ export class GenAssessStack extends Stack {
     const storageBucket = new aws_s3.Bucket(this, 'StorageBucket', {
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
+      cors: [
+        {
+          allowedMethods: [aws_s3.HttpMethods.HEAD, aws_s3.HttpMethods.GET, aws_s3.HttpMethods.POST, aws_s3.HttpMethods.PUT],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+        },
+      ],
     });
     storageBucket.grantReadWrite(authStack.identityPool.authenticatedRole);
 
@@ -47,11 +55,6 @@ export class GenAssessStack extends Stack {
         },
       },
     };
-
-    new StringParameter(this, 'ConfigParameter', {
-      parameterName: 'GenAssessConfig',
-      stringValue: JSON.stringify(config),
-    });
 
     const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
       onUpdate: {
@@ -81,8 +84,8 @@ export class GenAssessStack extends Stack {
       value: frontendStack.applicationURL,
     });
 
-    new CfnOutput(this, 'RAGBucketSource', {
-      value: ragPipipelineStack.artifactsUploadBucket.bucketName,
-    });
+    // new CfnOutput(this, 'RAGBucketSource', {
+    //   value: ragPipipelineStack.artifactsUploadBucket.bucketName,
+    // });
   }
 }

@@ -35,9 +35,9 @@ export default () => {
               cell: (item) => item.name,
             },
             {
-              id: 'coarse',
-              header: 'Coarse',
-              cell: (item) => item.coarse,
+              id: 'course',
+              header: 'Course',
+              cell: (item) => item.course,
             },
             {
               id: 'lectureDate',
@@ -78,7 +78,7 @@ export default () => {
           ]}
           columnDisplay={[
             { id: 'name', visible: true },
-            { id: 'coarse', visible: true },
+            { id: 'course', visible: true },
             { id: 'lectureDate', visible: true },
             { id: 'deadline', visible: true },
             { id: 'updatedAt', visible: true },

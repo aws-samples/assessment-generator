@@ -68,7 +68,7 @@ export default () => {
                   parentAssessId: params.id!,
                   score: calculatedScore,
                   answers: chosenAnswers.map(Number),
-                  status: AssessmentStatus.Completed,
+                  completed: true,
                 },
               },
             })

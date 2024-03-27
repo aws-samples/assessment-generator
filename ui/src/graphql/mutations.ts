@@ -31,7 +31,7 @@ export const upsertAssessment = /* GraphQL */ `
     upsertAssessment(input: $input) {
       id
       name
-      coarse
+      course
       classId
       lectureDate
       deadline
@@ -53,7 +53,7 @@ export const upsertStudentAssessment = /* GraphQL */ `
       assessment {
         id
         name
-        coarse
+        course
         classId
         lectureDate
         deadline

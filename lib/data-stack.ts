@@ -68,18 +68,18 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
-    /////////// Coarses
+    /////////// Courses
 
-    const coarsesTable = new aws_dynamodb.TableV2(this, 'CoarsesTable', {
+    const coursesTable = new aws_dynamodb.TableV2(this, 'CoursesTable', {
       partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
       removalPolicy: RemovalPolicy.DESTROY,
     });
 
-    const coarsesDs = api.addDynamoDbDataSource('CoarsesDataSource', coarsesTable);
+    const coursesDs = api.addDynamoDbDataSource('CoursesDataSource', coursesTable);
 
-    coarsesDs.createResolver('QueryListCoarsesResolver', {
+    coursesDs.createResolver('QueryListCoursesResolver', {
       typeName: 'Query',
-      fieldName: 'listCoarses',
+      fieldName: 'listCourses',
       requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
       responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
     });
