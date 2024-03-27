@@ -22,7 +22,10 @@ import { ReferenceDocuments } from "./models/referenceDocuments";
 import { BedrockRuntime } from "@aws-sdk/client-bedrock-runtime";
 import { BedrockAgentRuntime, KnowledgeBaseRetrievalResult } from "@aws-sdk/client-bedrock-agent-runtime";
 import { AssessmentTemplate } from "./models/assessmentTemplate";
-import { XMLBuilder, XMLParser, XMLValidator } from "fast-xml-parser";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import { DataService } from "./services/dataService";
+import { Question } from "./models/question";
+import { GeneratedQuestions } from "./models/generatedQuestions";
 
 
 const CLAUDE_3_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0";
@@ -32,25 +35,7 @@ const bedrockAgentRuntime = new BedrockAgentRuntime();
 const parser = new XMLParser();
 const builder = new XMLBuilder();
 
-class Answer {
-  answerText: string;
-}
-
-class Question {
-  questionText: string;
-  answers: Answer[];
-
-}
-
-class Response {
-  questions: Question[]
-}
-
-class GeneratedQuestions {
-  response: Response;
-  correctAnswer: string;
-  explanation: string;
-}
+const dataService = new DataService();
 
 class Lambda implements LambdaInterface {
   knowledgeBaseId: string;
@@ -77,8 +62,11 @@ class Lambda implements LambdaInterface {
     const improvedQuestions = await this.improveQuestions(generatedQuestions);
 
     logger.info(improvedQuestions as any);
-    // await this.storeQuestionnaire(improvedQuestions, )
-    return "Success";
+
+    const userId = "user1";
+    let assessmentId = await dataService.storeAssessment(improvedQuestions, userId);
+    logger.info(`Assessment generated: ${assessmentId}`);
+    return assessmentId;
   }
 
   private async getTopics(referenceDocuments: ReferenceDocuments) {
@@ -128,18 +116,16 @@ Structure your response in this format and do not include any additional text, r
             [Question]
         </questionText>
         <answers>
-            <answer>
-                <answerText>[Option A]</answerText>
-            </answer>
-            <answer>
-                <answerText>[Option B]</answerText>
-            </answer>
-            <answer>
-                <answerText>[Option C]</answerText>
-            </answer>
-            <answer>
-                <answerText>[Option D]</answerText>
-            </answer>
+            <answerText>[Option A]</answerText>
+        </answers>
+        <answers>
+            <answerText>[Option B]</answerText>
+        </answers>
+        <answers>
+            <answerText>[Option C]</answerText>
+        </answers>
+        <answers>
+            <answerText>[Option D]</answerText>
         </answers>
         <correctAnswer>[Correct Answer Letter]</correctAnswer>
         <explanation>[Explanation for Correctness]</explanation>
@@ -177,18 +163,19 @@ Structure your response in this format and do not include any additional text, r
 
     logger.debug(generatedQuestions);
     const parsedQuestions: GeneratedQuestions = parser.parse(generatedQuestions);
+    let improvedQuestions: Question[] = [];
 
-    for (let i=0; i< parsedQuestions.response.questions.length;i++) {
+    for (let i = 0; i < parsedQuestions.response.questions.length; i++) {
       const question = parsedQuestions.response.questions[i];
       const relevantDocs = await this.getRelevantDocuments(question);
       const improvedQuestion = await this.improveQuestion(question, relevantDocs);
-      parsedQuestions.response.questions[i] = improvedQuestion;
+      improvedQuestions.push(improvedQuestion);
     }
-    return Promise.resolve(parsedQuestions.response.questions);
+    return Promise.resolve(improvedQuestions);
   }
 
   private async improveQuestion(originalQuestion: Question, relevantDocs: KnowledgeBaseRetrievalResult[] | undefined) {
-    if (!(relevantDocs && relevantDocs.length>0)){
+    if (!(relevantDocs && relevantDocs.length > 0)) {
       return originalQuestion;
     }
 
@@ -216,18 +203,16 @@ Structure your response in this format and do not include any additional imput. 
         [Question]
     </questionText>
     <answers>
-        <answer>
-            <answerText>[Option A]</answerText>
-        </answer>
-        <answer>
-            <answerText>[Option B]</answerText>
-        </answer>
-        <answer>
-            <answerText>[Option C]</answerText>
-        </answer>
-        <answer>
-            <answerText>[Option D]</answerText>
-        </answer>
+        <answerText>[Option A]</answerText>
+    </answers>
+    <answers>
+        <answerText>[Option B]</answerText>
+    </answers>
+    <answers>
+        <answerText>[Option C]</answerText>
+    </answers>
+    <answers>
+        <answerText>[Option D]</answerText>
     </answers>
     <correctAnswer>[Correct Answer Letter]</correctAnswer>
     <explanation>[Explanation for Correctness]</explanation>
@@ -238,13 +223,13 @@ Structure your response in this format and do not include any additional imput. 
     logger.debug(prompt);
     const llmResponse = await callLLM(CLAUDE_3_HAIKU, prompt);
     logger.debug(llmResponse);
-    const { question }:{question: Question} = parser.parse(llmResponse);
+    const { question }: { question: Question } = parser.parse(llmResponse);
     return question;
   }
 }
 
 
-async function callLLM(modelId, prompt):Promise<string> {
+async function callLLM(modelId, prompt): Promise<string> {
   logger.debug(prompt);
   const body = JSON.stringify({
     "anthropic_version": "bedrock-2023-05-31",
