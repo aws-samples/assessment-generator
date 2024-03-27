@@ -20,12 +20,13 @@ export class DataService {
     const command = new PutCommand({
       TableName: ASSESSMENT_TABLE,
       Item: {
-        /* TODO Data to add
-        "classId": "111",
-        "course": "Maths",
-        "deadline": "2011-10-05T14:48:00.000Z",
-        "lectureDate": "2011-10-05T14:48:00.000Z",
-        "name": "Week 1",*/
+        /* TODO Data to add - will come from the request
+        "classId": "111", // set by user
+        "course": "Maths", // set by user - will define which KB
+        "deadline": "2011-10-05T14:48:00.000Z", // set by user
+        "lectureDate": "2011-10-05T14:48:00.000Z", // set by user
+        "name": "Week 1", // set by user
+        */
         userId,
         id: assessmentId,
         questions: improvedQuestions,
