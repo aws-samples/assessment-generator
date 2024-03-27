@@ -22,7 +22,7 @@ input UpsertSettingsInput {
   assessType: AssessType!
 }
 
-type Coarse {
+type Course {
   id: ID!
   name: String
   description: String
@@ -70,16 +70,16 @@ type QandA {
 }
 
 input QandAInput {
-  title: String
-  question: String
-  answers: [String]
+  title: String!
+  question: String!
+  answers: [String]!
   correctAnswer: Int!
 }
 
 type Assessment {
   id: ID!
   name: String
-  coarse: String
+  course: String
   classId: String
   lectureDate: AWSDateTime
   deadline: AWSDateTime
@@ -91,11 +91,12 @@ type Assessment {
 input AssessmentInput {
   id: ID!
   name: String!
-  coarse: String!
+  course: String!
   classId: String!
   lectureDate: AWSDateTime!
   deadline: AWSDateTime!
   questions: [QandAInput]!
+  published: Boolean
 }
 
 type StudentAssessment {
@@ -123,7 +124,7 @@ type Mutation {
 
 type Query {
   getSettings: Settings
-  listCoarses: [Coarse]
+  listCourses: [Course]
   listClasses: [Class]
   listStudents: [Student]
   getAssessment(id: ID!): Assessment

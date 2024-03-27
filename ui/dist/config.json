@@ -1,9 +1,9 @@
 {
   "Auth": {
     "Cognito": {
-      "userPoolId": "eu-west-1_GyCkh0KyX",
-      "userPoolClientId": "q8oi550s298g825gehiudplp1",
-      "identityPoolId": "eu-west-1:c27192d4-a420-424b-ac2d-cff7258dda07"
+      "userPoolId": "eu-west-1_5ohqjSp8t",
+      "userPoolClientId": "iget8hnhu6ofr4alm5mge2jr2",
+      "identityPoolId": "eu-west-1:3b3a0075-53c4-4042-bb3b-d43b2ea442d6"
     }
   },
   "API": {

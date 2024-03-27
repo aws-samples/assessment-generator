@@ -11,9 +11,9 @@ export const getSettings = /* GraphQL */ `
     }
   }
 `;
-export const listCoarses = /* GraphQL */ `
-  query ListCoarses {
-    listCoarses {
+export const listCourses = /* GraphQL */ `
+  query ListCourses {
+    listCourses {
       id
       name
       description
@@ -43,7 +43,7 @@ export const getAssessment = /* GraphQL */ `
     getAssessment(id: $id) {
       id
       name
-      coarse
+      course
       classId
       lectureDate
       deadline
@@ -63,7 +63,7 @@ export const listAssessments = /* GraphQL */ `
     listAssessments {
       id
       name
-      coarse
+      course
       classId
       lectureDate
       deadline
@@ -85,7 +85,7 @@ export const getStudentAssessment = /* GraphQL */ `
       assessment {
         id
         name
-        coarse
+        course
         classId
         lectureDate
         deadline
@@ -112,7 +112,7 @@ export const listStudentAssessments = /* GraphQL */ `
       assessment {
         id
         name
-        coarse
+        course
         classId
         lectureDate
         deadline
