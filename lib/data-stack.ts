@@ -265,6 +265,34 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
+    /////////// Create KnowledgeBase
+
+    const createKnowledgeBaseFn = new aws_lambda_nodejs.NodejsFunction(this, 'KnowledgeBaseFn', {
+      entry: 'lib/lambdas/dummy.ts',
+    });
+    const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', createKnowledgeBaseFn);
+
+    createKnowledgeBaseDs.createResolver('CreateKnowledgeBaseResolver', {
+      typeName: 'Query',
+      fieldName: 'createKnowledgeBase',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/createKnowledgeBase.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
+    /////////// Generate Assessment
+
+    const generateAssessmentFn = new aws_lambda_nodejs.NodejsFunction(this, 'GenerateAssessmentFn', {
+      entry: 'lib/lambdas/dummy.ts',
+    });
+    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', generateAssessmentFn);
+
+    generateAssessmentDs.createResolver('GenerateAssessmentResolver', {
+      typeName: 'Query',
+      fieldName: 'generateAssessment',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/generateAssessment.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
     this.api = api;
   }
 }

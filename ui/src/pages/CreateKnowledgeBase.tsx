@@ -14,9 +14,8 @@ import {
 } from '@cloudscape-design/components';
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
-import { listCourses } from '../graphql/queries';
+import { createKnowledgeBase, listCourses } from '../graphql/queries';
 import { Course } from '../graphql/API';
-import { optionise } from '../helpers';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { UserProfileContext } from '../contexts/userProfile';
 
@@ -34,22 +33,33 @@ export default () => {
     client.graphql<any>({ query: listCourses }).then(({ data }) => {
       const list = data.listCourses;
       if (!list) return;
-      const options = list.map((course: Course) => optionise(course!.name!));
+      const options = list.map((course: Course) => ({ label: course!.name!, value: course.id }));
       setCourses(options);
     });
   }, []);
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        const [file] = files;
-        uploadData({
-          key: `${userProfile?.userId}/${course?.value}/${file.name}`,
-          data: file,
-        })
-          .result.then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' }))
-          .catch(() => dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' }));
+        const data = files.map((file) => ({
+          key: `KnowledgeBases/${userProfile?.userId}/${course?.value}/${file.name}`,
+          file,
+        }));
+        try {
+          await Promise.all(
+            data.map(({ key, file }) =>
+              uploadData({
+                key,
+                data: file,
+              })
+            )
+          );
+          client.graphql({ query: createKnowledgeBase, variables: { courseId: course?.value, locations: data.map(({ key }) => key) } });
+          dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
+        } catch (_e) {
+          dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' });
+        }
       }}
     >
       <Form

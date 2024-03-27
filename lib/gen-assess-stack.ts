@@ -13,11 +13,11 @@ export class GenAssessStack extends Stack {
 
     const authStack = new AuthStack(this, 'AuthStack');
 
-    // const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
+    const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
 
     const { api } = new DataStack(this, 'DataStack', { userPool: authStack.userPool });
 
-    // const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
+    const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
 
     const storageBucket = new aws_s3.Bucket(this, 'StorageBucket', {
       autoDeleteObjects: true,
@@ -56,36 +56,36 @@ export class GenAssessStack extends Stack {
       },
     };
 
-    // const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
-    //   onUpdate: {
-    //     service: 'S3',
-    //     action: 'putObject',
-    //     parameters: {
-    //       Bucket: frontendStack.bucket.bucketName,
-    //       Key: 'config.json',
-    //       Body: JSON.stringify(config),
-    //     },
-    //     physicalResourceId: cr.PhysicalResourceId.of('NO_DELETE_REQUIRED'),
-    //   },
-    //   policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
-    //     resources: [frontendStack.bucket.bucketArn, `${frontendStack.bucket.bucketArn}/*`],
-    //   }),
-    //   installLatestAwsSdk: false,
-    // });
+    const putConfig = new cr.AwsCustomResource(this, 'PutConfig', {
+      onUpdate: {
+        service: 'S3',
+        action: 'putObject',
+        parameters: {
+          Bucket: frontendStack.bucket.bucketName,
+          Key: 'config.json',
+          Body: JSON.stringify(config),
+        },
+        physicalResourceId: cr.PhysicalResourceId.of('NO_DELETE_REQUIRED'),
+      },
+      policy: cr.AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [frontendStack.bucket.bucketArn, `${frontendStack.bucket.bucketArn}/*`],
+      }),
+      installLatestAwsSdk: false,
+    });
 
-    // putConfig.node.addDependency(frontendStack.assetDeployment);
-    // putConfig.node.addDependency(authStack);
+    putConfig.node.addDependency(frontendStack.assetDeployment);
+    putConfig.node.addDependency(authStack);
 
     new CfnOutput(this, 'UiConfing', {
       value: JSON.stringify(config),
     });
 
-    // new CfnOutput(this, 'ApplicationUrl', {
-    //   value: frontendStack.applicationURL,
-    // });
+    new CfnOutput(this, 'ApplicationUrl', {
+      value: frontendStack.applicationURL,
+    });
 
-    // new CfnOutput(this, 'RAGBucketSource', {
-    //   value: ragPipipelineStack.artifactsUploadBucket.bucketName,
-    // });
+    new CfnOutput(this, 'RAGBucketSource', {
+      value: ragPipipelineStack.artifactsUploadBucket.bucketName,
+    });
   }
 }

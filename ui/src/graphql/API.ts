@@ -120,6 +120,14 @@ export type Student = {
   lastName?: string | null,
 };
 
+export type GenerateAssessmentInput = {
+  name: string,
+  courseId: string,
+  lectureDate: string,
+  deadline: string,
+  locations: Array< string | null >,
+};
+
 export type UpsertSettingsMutationVariables = {
   input?: UpsertSettingsInput | null,
 };
@@ -345,4 +353,21 @@ export type PublishAssessmentQueryVariables = {
 
 export type PublishAssessmentQuery = {
   publishAssessment?: boolean | null,
+};
+
+export type CreateKnowledgeBaseQueryVariables = {
+  courseId?: string | null,
+  locations?: Array< string | null > | null,
+};
+
+export type CreateKnowledgeBaseQuery = {
+  createKnowledgeBase?: string | null,
+};
+
+export type GenerateAssessmentQueryVariables = {
+  input?: GenerateAssessmentInput | null,
+};
+
+export type GenerateAssessmentQuery = {
+  generateAssessment?: string | null,
 };

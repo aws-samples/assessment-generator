@@ -124,3 +124,13 @@ export const publishAssessment = /* GraphQL */ `
     publishAssessment(assessmentId: $assessmentId)
   }
 `;
+export const createKnowledgeBase = /* GraphQL */ `
+  query CreateKnowledgeBase($courseId: ID, $locations: [String]) {
+    createKnowledgeBase(courseId: $courseId, locations: $locations)
+  }
+`;
+export const generateAssessment = /* GraphQL */ `
+  query GenerateAssessment($input: GenerateAssessmentInput) {
+    generateAssessment(input: $input)
+  }
+`;

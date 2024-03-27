@@ -74,8 +74,8 @@ type Assessment {
   id: ID!
   name: String
   course: String
-  lectureDate: AWSDateTime
-  deadline: AWSDateTime
+  lectureDate: AWSDate
+  deadline: AWSDate
   updatedAt: AWSDateTime
   questions: [QandA!]!
   published: Boolean
@@ -85,8 +85,8 @@ input AssessmentInput {
   id: ID!
   name: String!
   course: String!
-  lectureDate: AWSDateTime!
-  deadline: AWSDateTime!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
   questions: [QandAInput]!
   published: Boolean
 }
@@ -107,6 +107,14 @@ input StudentAssessmentInput {
   completed: Boolean
 }
 
+input GenerateAssessmentInput {
+  name: String!
+  courseId: String!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
+  locations: [String]!
+}
+
 type Mutation {
   upsertSettings(input: UpsertSettingsInput): Settings
   createAssessTemplate(input: AssessTemplateInput): AssessTemplate
@@ -123,4 +131,6 @@ type Query {
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
   publishAssessment(assessmentId: ID!): Boolean
+  createKnowledgeBase(courseId: ID, locations: [String]): ID
+  generateAssessment(input: GenerateAssessmentInput): ID
 }
