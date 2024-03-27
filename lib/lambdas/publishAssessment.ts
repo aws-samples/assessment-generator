@@ -1,44 +1,56 @@
-import { DynamoDBClient, GetItemCommand, BatchWriteItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, BatchWriteItemCommand, UpdateItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
 
 const region = process.env.region!;
-const classesTable = process.env.classesTable!;
+const studentsTable = process.env.studentsTable!;
+const assessmentsTable = process.env.assessmentsTable!;
 const studentAssessmentsTable = process.env.studentAssessmentsTable!;
 
 const dynamoClient = new DynamoDBClient({ region });
 
 export const handler: Handler = async (event) => {
-  const { assessmentId, classId } = event.ctx.arguments;
+  const { assessmentId } = event.ctx.arguments;
+  const userId = event.ctx.identity.sub;
 
-  const sourceTableParams = {
-    TableName: classesTable,
-    Key: { id: { S: classId } },
-  };
+  const { Items: students }: any = await dynamoClient.send(new ScanCommand({ TableName: studentsTable }));
+  if (!students || students.length === 0) return;
 
-  const classItem: any = (await dynamoClient.send(new GetItemCommand(sourceTableParams))).Item;
+  console.log('students ==== ', students);
 
-  const targetTableParams = {
-    RequestItems: {
-      [studentAssessmentsTable]: classItem.students.L.map(({ S: student }: any) => ({
-        PutRequest: {
-          Item: {
-            userId: {
-              S: student,
-            },
-            parentAssessId: {
-              S: assessmentId,
-            },
-            answers: {
-              L: [],
-            },
-            updatedAt: {
-              S: new Date().toISOString(),
+  await dynamoClient.send(
+    new BatchWriteItemCommand({
+      RequestItems: {
+        [studentAssessmentsTable]: students.map(({ id }: any) => ({
+          PutRequest: {
+            Item: {
+              userId: {
+                S: id.S,
+              },
+              parentAssessId: {
+                S: assessmentId,
+              },
+              answers: {
+                L: [],
+              },
+              updatedAt: {
+                S: new Date().toISOString(),
+              },
             },
           },
-        },
-      })),
-    },
-  };
+        })),
+      },
+    })
+  );
 
-  await dynamoClient.send(new BatchWriteItemCommand(targetTableParams));
+  await dynamoClient.send(
+    new UpdateItemCommand({
+      TableName: assessmentsTable,
+      Key: { id: { S: assessmentId }, userId: { S: userId } },
+      UpdateExpression: 'set published = :published',
+      ExpressionAttributeValues: {
+        ':published': { BOOL: 'true' },
+      },
+      ReturnValues: 'ALL_NEW',
+    } as any)
+  );
 };

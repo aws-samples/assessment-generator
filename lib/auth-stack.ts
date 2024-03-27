@@ -1,5 +1,5 @@
 import { Construct } from 'constructs';
-import { NestedStack, NestedStackProps, aws_cognito } from 'aws-cdk-lib';
+import { NestedStack, NestedStackProps, aws_cognito, RemovalPolicy } from 'aws-cdk-lib';
 import { IdentityPool, UserPoolAuthenticationProvider } from '@aws-cdk/aws-cognito-identitypool-alpha';
 
 export class AuthStack extends NestedStack {
@@ -14,6 +14,7 @@ export class AuthStack extends NestedStack {
       selfSignUpEnabled: true,
       signInAliases: { username: false, email: true },
       autoVerify: { email: true },
+      removalPolicy: RemovalPolicy.DESTROY,
     });
 
     const teachersUserGroup = new aws_cognito.CfnUserPoolGroup(this, 'TeachersGroup', {

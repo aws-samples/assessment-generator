@@ -11,9 +11,9 @@ export default (props: HomePageProps) => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [{ path: rootPath, children: childRoutes }] = routes[props.route];
+  const [{ path: rootPath, children: childRoutes }] = (routes as any)[props.route];
+  const paths = childRoutes!.map(({ path }: any) => path);
 
-  const paths = childRoutes!.map(({ path }) => path);
   return (
     <ContentLayout>
       <Container
@@ -26,7 +26,7 @@ export default (props: HomePageProps) => {
         <Box padding="xxxl">
           <SpaceBetween size="l" alignItems="center">
             <SpaceBetween size="l" direction="horizontal">
-              {paths?.map((path) => (
+              {paths?.map((path: any) => (
                 <Button key={`button-${path}`} href={`${rootPath}${path}`}>
                   <Box variant="h2" padding="m">
                     {titlise(path)}

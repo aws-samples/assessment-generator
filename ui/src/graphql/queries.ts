@@ -20,15 +20,6 @@ export const listCourses = /* GraphQL */ `
     }
   }
 `;
-export const listClasses = /* GraphQL */ `
-  query ListClasses {
-    listClasses {
-      id
-      name
-      students
-    }
-  }
-`;
 export const listStudents = /* GraphQL */ `
   query ListStudents {
     listStudents {
@@ -44,7 +35,6 @@ export const getAssessment = /* GraphQL */ `
       id
       name
       course
-      classId
       lectureDate
       deadline
       updatedAt
@@ -64,7 +54,6 @@ export const listAssessments = /* GraphQL */ `
       id
       name
       course
-      classId
       lectureDate
       deadline
       updatedAt
@@ -86,7 +75,6 @@ export const getStudentAssessment = /* GraphQL */ `
         id
         name
         course
-        classId
         lectureDate
         deadline
         updatedAt
@@ -113,7 +101,6 @@ export const listStudentAssessments = /* GraphQL */ `
         id
         name
         course
-        classId
         lectureDate
         deadline
         updatedAt
@@ -133,7 +120,7 @@ export const listStudentAssessments = /* GraphQL */ `
   }
 `;
 export const publishAssessment = /* GraphQL */ `
-  query PublishAssessment($assessmentId: ID!, $classId: String!) {
-    publishAssessment(assessmentId: $assessmentId, classId: $classId)
+  query PublishAssessment($assessmentId: ID!) {
+    publishAssessment(assessmentId: $assessmentId)
   }
 `;

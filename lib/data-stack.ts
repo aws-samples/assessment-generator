@@ -83,22 +83,6 @@ export class DataStack extends NestedStack {
       responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
     });
 
-    /////////// Classes
-
-    const classesTable = new aws_dynamodb.TableV2(this, 'ClassesTable', {
-      partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
-      removalPolicy: RemovalPolicy.DESTROY,
-    });
-
-    const classesDs = api.addDynamoDbDataSource('ClassesDataSource', classesTable);
-
-    classesDs.createResolver('QueryListClassesResolver', {
-      typeName: 'Query',
-      fieldName: 'listClasses',
-      requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
-    });
-
     /////////// Students
 
     const studentsTable = new aws_dynamodb.TableV2(this, 'StudentsTable', {
@@ -264,11 +248,13 @@ export class DataStack extends NestedStack {
       entry: 'lib/lambdas/publishAssessment.ts',
       environment: {
         region: this.region,
-        classesTable: classesTable.tableName,
+        studentsTable: studentsTable.tableName,
         studentAssessmentsTable: studentAssessmentsTable.tableName,
+        assessmentsTable: assessmentsTable.tableName,
       },
     });
-    classesTable.grantReadData(publishFn);
+    studentsTable.grantReadData(publishFn);
+    assessmentsTable.grantReadWriteData(publishFn);
     studentAssessmentsTable.grantReadWriteData(publishFn);
     const publishAssessmentDs = api.addLambdaDataSource('PublishAssessmentDataSource', publishFn);
 

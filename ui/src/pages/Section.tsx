@@ -1,7 +1,9 @@
+import { useContext } from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
 import { routes } from '../routes';
 import { titlise } from '../helpers';
+import { UserProfileContext } from '../contexts/userProfile';
 
 type SectionProps = { id: number };
 
@@ -9,7 +11,9 @@ export default (props: SectionProps) => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const { path: rootPath, children: childRoutes }: any = routes[0][0].children[props.id];
+  const userProfile = useContext(UserProfileContext);
+
+  const { path: rootPath, children: childRoutes }: any = (routes as any)[userProfile?.group!][0].children[props.id];
 
   const paths = childRoutes!.map(({ path }: any) => path);
   return (
