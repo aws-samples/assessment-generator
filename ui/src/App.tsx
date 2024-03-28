@@ -5,10 +5,11 @@ import messages from '@cloudscape-design/components/i18n/messages/all.en';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import type { WithAuthenticatorProps } from '@aws-amplify/ui-react';
 import { withAuthenticator } from '@aws-amplify/ui-react';
-import { routes } from './routes';
+import { routes as routesList } from './routes';
 import { titlise } from './helpers';
 import { AlertType, DispatchAlertContext } from './contexts/alerts';
 import { UserProfileContext, UserProfile } from './contexts/userProfile';
+import { RoutesContext } from './contexts/routes';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const LOCALE = 'en';
@@ -46,76 +47,82 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
 
   if (!userProfile?.group) return null;
 
-  const currentRoutes = (routes as any)[userProfile.group];
-  const router = createBrowserRouter(currentRoutes);
-  const [sideNavRoutes] = currentRoutes;
+  const routes = (routesList as any)[userProfile.group];
+  const router = createBrowserRouter(routes);
+  const [sideNavRoutes] = routes;
 
   return (
     <DispatchAlertContext.Provider value={dispatchAlert}>
       <UserProfileContext.Provider value={userProfile}>
-        <I18nProvider locale={LOCALE} messages={[messages]}>
-          <div id="h">
-            <TopNavigation
-              identity={{
-                href: '#',
-                // title: 'Gen Assess',
-              }}
-              utilities={[
-                {
-                  type: 'menu-dropdown',
-                  text: `${userProfile?.group?.toUpperCase()}: ${userProfile?.name}`,
-                  // description: `Profile: ${userProfile?.group?.toUpperCase()}`,
-                  iconName: 'user-profile',
-                  items: [{ id: 'signout', text: 'Sign out' }],
-                  onItemClick: ({ detail }) => {
-                    if (detail.id === 'signout') signOut && signOut();
+        <RoutesContext.Provider value={routes}>
+          <I18nProvider locale={LOCALE} messages={[messages]}>
+            <div id="h">
+              <TopNavigation
+                identity={{
+                  href: '#',
+                  // title: 'Gen Assess',
+                }}
+                utilities={[
+                  {
+                    type: 'menu-dropdown',
+                    text: `${userProfile?.group?.toUpperCase()}: ${userProfile?.name}`,
+                    // description: `Profile: ${userProfile?.group?.toUpperCase()}`,
+                    iconName: 'user-profile',
+                    items: [{ id: 'signout', text: 'Sign out' }],
+                    onItemClick: ({ detail }) => {
+                      if (detail.id === 'signout') signOut && signOut();
+                    },
                   },
-                },
-              ]}
-            />
-          </div>
-          <AppLayout
-            headerSelector="#h"
-            breadcrumbs={
-              <BreadcrumbGroup
-                items={[
-                  { text: 'Home', href: '#' },
-                  { text: 'Service', href: '#' },
                 ]}
               />
-            }
-            navigationOpen={true}
-            navigation={
-              <SideNavigation
-                activeHref={window.location.pathname}
-                header={{
-                  href: '/',
-                  text: 'Gen Assess',
-                }}
-                onFollow={(_e) => {
-                  // e.preventDefault();
-                }}
-                items={sideNavRoutes.children.map(({ path, children }: any) => {
-                  if (children) {
-                    return {
-                      type: 'expandable-link-group',
-                      text: titlise(path),
-                      href: `/${path}`,
-                      // href: path,
-                      items: children.map(({ path: childPath }: any) => ({ type: 'link', text: titlise(childPath), href: `/${path}/${childPath}` })),
-                    };
-                  } else {
-                    return { type: 'link', text: titlise(path), href: `/${path}` };
-                  }
-                })}
-              />
-            }
-            notifications={<Flashbar items={alerts} />}
-            toolsOpen={false}
-            tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
-            content={<RouterProvider router={router} />}
-          />
-        </I18nProvider>
+            </div>
+            <AppLayout
+              headerSelector="#h"
+              breadcrumbs={
+                <BreadcrumbGroup
+                  items={[
+                    { text: 'Home', href: '#' },
+                    { text: 'Service', href: '#' },
+                  ]}
+                />
+              }
+              navigationOpen={true}
+              navigation={
+                <SideNavigation
+                  activeHref={window.location.pathname}
+                  header={{
+                    href: '/',
+                    text: 'Gen Assess',
+                  }}
+                  onFollow={(_e) => {
+                    // e.preventDefault();
+                  }}
+                  items={sideNavRoutes.children.map(({ path, children }: any) => {
+                    if (children) {
+                      return {
+                        type: 'expandable-link-group',
+                        text: titlise(path),
+                        href: `/${path}`,
+                        // href: path,
+                        items: children.map(({ path: childPath }: any) => ({
+                          type: 'link',
+                          text: titlise(childPath),
+                          href: `/${path}/${childPath}`,
+                        })),
+                      };
+                    } else {
+                      return { type: 'link', text: titlise(path), href: `/${path}` };
+                    }
+                  })}
+                />
+              }
+              notifications={<Flashbar items={alerts} />}
+              toolsOpen={false}
+              tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
+              content={<RouterProvider router={router} />}
+            />
+          </I18nProvider>
+        </RoutesContext.Provider>
       </UserProfileContext.Provider>
     </DispatchAlertContext.Provider>
   );

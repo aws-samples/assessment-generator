@@ -1,17 +1,16 @@
 import { useContext } from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
-import { routes } from '../routes';
 import { titlise } from '../helpers';
-import { UserProfileContext } from '../contexts/userProfile';
+import { RoutesContext } from '../contexts/routes';
 
 export default () => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const userProfile = useContext(UserProfileContext);
+  const routes = useContext(RoutesContext);
 
-  const [{ path: rootPath, children: childRoutes }] = (routes as any)[userProfile?.group!];
+  const [{ path: rootPath, children: childRoutes }] = routes;
   const paths = childRoutes!.map(({ path }: any) => path);
 
   return (

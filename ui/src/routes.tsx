@@ -51,14 +51,18 @@ export const routes = {
         },
         {
           path: 'students',
-          element: <Section id={2} />,
-          children: [
-            {
-              path: 'find-student',
-              element: <FindStudent />,
-            },
-          ],
+          element: <FindStudent />,
         },
+        // {
+        //   path: 'students',
+        //   element: <Section id={2} />,
+        //   children: [
+        //     {
+        //       path: 'find-student',
+        //       element: <FindStudent />,
+        //     },
+        //   ],
+        // },
       ],
     },
     { path: 'edit-assessment/:id', element: <EditAssessments />, children: [] },
@@ -66,7 +70,7 @@ export const routes = {
   students: [
     {
       path: '/',
-      element: <HomePage route={1} />,
+      element: <HomePage />,
       children: [
         {
           path: 'dashboard',

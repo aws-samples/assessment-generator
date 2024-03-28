@@ -62,21 +62,19 @@ export default () => {
             {
               id: 'publish',
               header: '',
-              cell: (item) =>
-                item.published ? (
-                  'Published'
-                ) : (
-                  <Button
-                    onClick={() =>
-                      client
-                        .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
-                        .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
-                        .catch(() => dispatchAlert({ type: AlertType.ERROR }))
-                    }
-                  >
-                    publish
-                  </Button>
-                ),
+              cell: (item) => (
+                <Button
+                  disabled={!!item.published}
+                  onClick={() =>
+                    client
+                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
+                      .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                      .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                  }
+                >
+                  {item.published ? 'Published' : 'Publish'}
+                </Button>
+              ),
             },
           ]}
           columnDisplay={[
