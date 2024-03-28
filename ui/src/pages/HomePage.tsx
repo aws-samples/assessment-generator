@@ -1,17 +1,17 @@
+import { useContext } from 'react';
 import { useOutlet } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
 import { routes } from '../routes';
 import { titlise } from '../helpers';
+import { UserProfileContext } from '../contexts/userProfile';
 
-type HomePageProps = {
-  route: number;
-};
-
-export default (props: HomePageProps) => {
+export default () => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [{ path: rootPath, children: childRoutes }] = (routes as any)[props.route];
+  const userProfile = useContext(UserProfileContext);
+
+  const [{ path: rootPath, children: childRoutes }] = (routes as any)[userProfile?.group!];
   const paths = childRoutes!.map(({ path }: any) => path);
 
   return (

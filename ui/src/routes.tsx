@@ -15,7 +15,7 @@ export const routes = {
   teachers: [
     {
       path: '/',
-      element: <HomePage route={0} />,
+      element: <HomePage />,
       children: [
         {
           path: 'settings',
