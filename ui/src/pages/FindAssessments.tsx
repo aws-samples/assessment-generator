@@ -57,23 +57,26 @@ export default () => {
             {
               id: 'edit',
               header: '',
-              cell: (item) => <Link href={`/edit-assessment/${item.id}`}>edit</Link>,
+              cell: (item) => (item.published ? null : <Link href={`/edit-assessment/${item.id}`}>edit</Link>),
             },
             {
               id: 'publish',
               header: '',
-              cell: (item) => (
-                <Button
-                  onClick={() =>
-                    client
-                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id, classId: item.classId } })
-                      .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
-                      .catch(() => dispatchAlert({ type: AlertType.ERROR }))
-                  }
-                >
-                  publish
-                </Button>
-              ),
+              cell: (item) =>
+                item.published ? (
+                  'Published'
+                ) : (
+                  <Button
+                    onClick={() =>
+                      client
+                        .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
+                        .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                        .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                    }
+                  >
+                    publish
+                  </Button>
+                ),
             },
           ]}
           columnDisplay={[

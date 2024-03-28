@@ -13,10 +13,6 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 
 const LOCALE = 'en';
 
-const currentRoutes = routes[0];
-const router = createBrowserRouter(currentRoutes);
-const [sideNavRoutes] = currentRoutes;
-
 export function App({ signOut, user }: WithAuthenticatorProps) {
   const [alerts, setAlerts] = useState<FlashbarProps.MessageDefinition[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>();
@@ -35,10 +31,6 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
     ]);
   };
 
-  // To be removed
-  fetchAuthSession().then((session) => console.log(session));
-  console.log(userProfile);
-
   useEffect(() => {
     fetchAuthSession()
       .then((session) =>
@@ -51,6 +43,12 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
       )
       .catch(() => dispatchAlert({ type: AlertType.ERROR }));
   }, []);
+
+  if (!userProfile?.group) return null;
+
+  const currentRoutes = (routes as any)[userProfile.group];
+  const router = createBrowserRouter(currentRoutes);
+  const [sideNavRoutes] = currentRoutes;
 
   return (
     <DispatchAlertContext.Provider value={dispatchAlert}>
@@ -65,8 +63,8 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
               utilities={[
                 {
                   type: 'menu-dropdown',
-                  text: userProfile?.name,
-                  description: `Profile: ${userProfile?.group?.toUpperCase()}`,
+                  text: `${userProfile?.group?.toUpperCase()}: ${userProfile?.name}`,
+                  // description: `Profile: ${userProfile?.group?.toUpperCase()}`,
                   iconName: 'user-profile',
                   items: [{ id: 'signout', text: 'Sign out' }],
                   onItemClick: ({ detail }) => {

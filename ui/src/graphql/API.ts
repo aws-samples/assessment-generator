@@ -56,7 +56,6 @@ export type AssessmentInput = {
   id: string,
   name: string,
   course: string,
-  classId: string,
   lectureDate: string,
   deadline: string,
   questions: Array< QandAInput | null >,
@@ -75,7 +74,6 @@ export type Assessment = {
   id: string,
   name?: string | null,
   course?: string | null,
-  classId?: string | null,
   lectureDate?: string | null,
   deadline?: string | null,
   updatedAt?: string | null,
@@ -115,18 +113,19 @@ export type Course = {
   description?: string | null,
 };
 
-export type Class = {
-  __typename: "Class",
-  id: string,
-  name?: string | null,
-  students?: Array< string | null > | null,
-};
-
 export type Student = {
   __typename: "Student",
   id: string,
   firstName?: string | null,
   lastName?: string | null,
+};
+
+export type GenerateAssessmentInput = {
+  name: string,
+  courseId: string,
+  lectureDate: string,
+  deadline: string,
+  locations: Array< string | null >,
 };
 
 export type UpsertSettingsMutationVariables = {
@@ -171,7 +170,6 @@ export type UpsertAssessmentMutation = {
     id: string,
     name?: string | null,
     course?: string | null,
-    classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -199,7 +197,6 @@ export type UpsertStudentAssessmentMutation = {
       id: string,
       name?: string | null,
       course?: string | null,
-      classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
@@ -237,15 +234,6 @@ export type ListCoursesQuery = {
   } | null > | null,
 };
 
-export type ListClassesQuery = {
-  listClasses?:  Array< {
-    __typename: "Class",
-    id: string,
-    name?: string | null,
-    students?: Array< string | null > | null,
-  } | null > | null,
-};
-
 export type ListStudentsQuery = {
   listStudents?:  Array< {
     __typename: "Student",
@@ -265,7 +253,6 @@ export type GetAssessmentQuery = {
     id: string,
     name?: string | null,
     course?: string | null,
-    classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -286,7 +273,6 @@ export type ListAssessmentsQuery = {
     id: string,
     name?: string | null,
     course?: string | null,
-    classId?: string | null,
     lectureDate?: string | null,
     deadline?: string | null,
     updatedAt?: string | null,
@@ -314,7 +300,6 @@ export type GetStudentAssessmentQuery = {
       id: string,
       name?: string | null,
       course?: string | null,
-      classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
@@ -343,7 +328,6 @@ export type ListStudentAssessmentsQuery = {
       id: string,
       name?: string | null,
       course?: string | null,
-      classId?: string | null,
       lectureDate?: string | null,
       deadline?: string | null,
       updatedAt?: string | null,
@@ -365,9 +349,25 @@ export type ListStudentAssessmentsQuery = {
 
 export type PublishAssessmentQueryVariables = {
   assessmentId: string,
-  classId: string,
 };
 
 export type PublishAssessmentQuery = {
   publishAssessment?: boolean | null,
+};
+
+export type CreateKnowledgeBaseQueryVariables = {
+  courseId?: string | null,
+  locations?: Array< string | null > | null,
+};
+
+export type CreateKnowledgeBaseQuery = {
+  createKnowledgeBase?: string | null,
+};
+
+export type GenerateAssessmentQueryVariables = {
+  input?: GenerateAssessmentInput | null,
+};
+
+export type GenerateAssessmentQuery = {
+  generateAssessment?: string | null,
 };
