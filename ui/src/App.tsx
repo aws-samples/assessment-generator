@@ -47,7 +47,8 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
 
   if (!userProfile?.group) return null;
 
-  const routes = (routesList as any)[userProfile.group];
+  // const routes = (routesList as any)[userProfile.group];
+  const routes = (routesList as any)['students'];
   const router = createBrowserRouter(routes);
   const [sideNavRoutes] = routes;
 
@@ -94,8 +95,9 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
                     href: '/',
                     text: 'Gen Assess',
                   }}
-                  onFollow={(_e) => {
-                    // e.preventDefault();
+                  onFollow={(e) => {
+                    e.preventDefault();
+                    router.navigate(e.detail.href);
                   }}
                   items={sideNavRoutes.children.map(({ path, children }: any) => {
                     if (children) {

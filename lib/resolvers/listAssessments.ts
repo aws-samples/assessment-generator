@@ -11,6 +11,5 @@ export function request(ctx) {
 }
 
 export const response = (ctx) => {
-  console.log('ctx ====== ', ctx);
   return ctx.result.items;
 };

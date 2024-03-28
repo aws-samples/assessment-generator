@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter, Button } from '@cloudscape-design/components';
+import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { listAssessments, publishAssessment } from '../graphql/queries';
 import { Assessment } from '../graphql/API';
@@ -8,6 +9,8 @@ import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 const client = generateClient();
 
 export default () => {
+  const navigate = useNavigate();
+
   const dispatchAlert = useContext(DispatchAlertContext);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
@@ -57,7 +60,18 @@ export default () => {
             {
               id: 'edit',
               header: '',
-              cell: (item) => (item.published ? null : <Link href={`/edit-assessment/${item.id}`}>edit</Link>),
+              cell: (item) =>
+                item.published ? null : (
+                  <Link
+                    href={`/edit-assessment/${item.id}`}
+                    onFollow={(e) => {
+                      e.preventDefault();
+                      navigate(e.detail.href!);
+                    }}
+                  >
+                    edit
+                  </Link>
+                ),
             },
             {
               id: 'publish',
