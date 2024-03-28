@@ -15,8 +15,6 @@ export class DataService {
     //Create UUID
     let assessmentId = uuidv4();
 
-    console.log(JSON.stringify(improvedQuestions));
-    console.log(ASSESSMENT_TABLE);
     const command = new PutCommand({
       TableName: ASSESSMENT_TABLE,
       Item: {

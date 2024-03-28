@@ -22,36 +22,6 @@ export class GenAiService {
     this.knowledgeBaseId = knowledgeBaseId;
   }
 
-  private async callLLM(modelId, prompt): Promise<string> {
-    logger.debug(prompt);
-    const body = JSON.stringify({
-      "anthropic_version": "bedrock-2023-05-31",
-      "max_tokens": 4096,
-      "messages": [
-        {
-          "role": "user",
-          "content": [
-            { "type": "text", "text": prompt },
-          ],
-        },
-      ],
-    });
-    const response = await bedrock.invokeModel({
-      body: body,
-      modelId: modelId,
-      accept: "application/json",
-      contentType: "application/json",
-    });
-
-    //TODO find out what Types we should expect
-    const text = response.body.transformToString();
-    //logger.info(text);
-    const modelRes = JSON.parse(text);
-    const contentElementElement = modelRes.content[0]["text"];
-
-    return contentElementElement;
-  }
-
   public async getTopics(referenceDocuments: ReferenceDocuments) {
 
     let prompt = `
@@ -72,7 +42,7 @@ For each topic, include a brief description of what was covered.
   }
 
   public async generateInitialQuestions(topicsExtractionOutput: string, assessmentTemplate: AssessmentTemplate) {
-
+    // TODO add topic to response for each question
     let prompt = `
 Craft a multiple-choice questionnaire (${assessmentTemplate.totalQuestions} questions)  for a university student based on the Provided Summarised Transcript.
 Do not make references to the transcript or the lecture, the quiz should be clear and concise.
@@ -154,6 +124,36 @@ Structure your response in this format and do not include any additional text, r
       improvedQuestions.push(improvedQuestion);
     }
     return Promise.resolve(improvedQuestions);
+  }
+
+  private async callLLM(modelId, prompt): Promise<string> {
+    logger.debug(prompt);
+    const body = JSON.stringify({
+      "anthropic_version": "bedrock-2023-05-31",
+      "max_tokens": 4096,
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            { "type": "text", "text": prompt },
+          ],
+        },
+      ],
+    });
+    const response = await bedrock.invokeModel({
+      body: body,
+      modelId: modelId,
+      accept: "application/json",
+      contentType: "application/json",
+    });
+
+    //TODO find out what Types we should expect
+    const text = response.body.transformToString();
+    //logger.info(text);
+    const modelRes = JSON.parse(text);
+    const contentElementElement = modelRes.content[0]["text"];
+
+    return contentElementElement;
   }
 
   private async improveQuestion(originalQuestion: Question, relevantDocs: KnowledgeBaseRetrievalResult[] | undefined) {
