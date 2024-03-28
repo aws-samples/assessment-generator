@@ -18,12 +18,15 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { Lambda } from "aws-cdk-lib/aws-ses-actions";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
 
 interface DataStackProps extends NestedStackProps {
   userPool: aws_cognito.UserPool;
+  artifactsUploadBucket: s3.Bucket;
+  documentProcessorLambda: NodejsFunction;
 }
 
 export class DataStack extends NestedStack {
@@ -32,6 +35,8 @@ export class DataStack extends NestedStack {
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
     const { userPool } = props;
+    const artifactsUploadBucket = props.artifactsUploadBucket;
+    const documentProcessorLambda = props.documentProcessorLambda;
 
     const api = new aws_appsync.GraphqlApi(this, 'Api', {
       name: 'Api',
@@ -209,14 +214,6 @@ export class DataStack extends NestedStack {
       })
     );
 
-    const bucket = new s3.Bucket(this, 'QGenerationBucket', {
-      encryption: s3.BucketEncryption.S3_MANAGED,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      enforceSSL: true,
-    });
-
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
       logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
@@ -237,7 +234,7 @@ export class DataStack extends NestedStack {
       environment: {
         POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
-        Q_GENERATION_BUCKET: bucket.bucketName,
+        Q_GENERATION_BUCKET: artifactsUploadBucket.bucketName,
         ASSESSMENTS_TABLE: assessmentsTable.tableName
       },
       bundling: {
@@ -245,7 +242,7 @@ export class DataStack extends NestedStack {
         externalModules: ['@aws-sdk/client-s3', '@aws-sdk/client-sns'],
       },
     });
-    bucket.grantRead(questionsGenerator);
+    artifactsUploadBucket.grantRead(questionsGenerator);
     assessmentsTable.grantReadData(questionsGenerator);
 
     let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
@@ -280,11 +277,7 @@ export class DataStack extends NestedStack {
     });
 
     /////////// Create KnowledgeBase
-
-    const createKnowledgeBaseFn = new aws_lambda_nodejs.NodejsFunction(this, 'KnowledgeBaseFn', {
-      entry: 'lib/lambdas/dummy.ts',
-    });
-    const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', createKnowledgeBaseFn);
+    const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', documentProcessorLambda);
 
     createKnowledgeBaseDs.createResolver('CreateKnowledgeBaseResolver', {
       typeName: 'Query',

@@ -46,23 +46,24 @@ export class VectorStore {
     this.indexName = indexName;
   }
 
-  static async getVectorStore(kbName: string): Promise<VectorStore> {
+  static async getVectorStore(indexName: string): Promise<VectorStore> {
 
-    let apiResponse = await opssClient.indices.exists({ index: kbName });
+    let apiResponse = await opssClient.indices.exists({ index: indexName });
 
     logger.info(apiResponse as any);
     if (apiResponse.statusCode == 200) {
-      logger.info(`${kbName} exists`);
-      return new VectorStore(kbName);
+      logger.info(`${indexName} exists`);
+      return new VectorStore(indexName);
     } else {
+      logger.info(`${indexName} does not exists, creating`);
       //create the index
       const indexCreationResponse = await opssClient.indices.create({
-        index: kbName,
+        index: indexName,
         body: settings,
       });
       // noinspection TypeScriptValidateTypes
       logger.info("Index Created", { index: indexCreationResponse });
-      return new VectorStore(kbName);
+      return new VectorStore(indexName);
     }
   }
 }

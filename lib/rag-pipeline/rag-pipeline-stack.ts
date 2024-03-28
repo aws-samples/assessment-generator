@@ -1,15 +1,21 @@
 import * as cdk from 'aws-cdk-lib';
-import { ArnFormat, aws_iam, CfnOutput, Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
+import {
+  ArnFormat,
+  aws_dynamodb,
+  aws_iam,
+  aws_s3,
+  CfnOutput,
+  NestedStack,
+  NestedStackProps,
+  RemovalPolicy,
+} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Bucket } from 'aws-cdk-lib/aws-s3';
-import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
-import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from "path";
 import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
-import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import * as opensearchserverless from 'aws-cdk-lib/aws-opensearchserverless';
 import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 
@@ -36,7 +42,7 @@ const DOCUMENT_PROCESSOR_NAME = 'DocumentProcessor';
 
 export class RagPipelineStack extends NestedStack {
   public artifactsUploadBucket: Bucket;
-  private documentProcessor: NodejsFunction;
+  public documentProcessor: NodejsFunction;
 
   constructor(scope: Construct, id: string, props?: NestedStackProps) {
     super(scope, id, props);
@@ -273,6 +279,14 @@ export class RagPipelineStack extends NestedStack {
       autoDeleteObjects: true,
       removalPolicy: RemovalPolicy.DESTROY,
       enforceSSL: true,
+      cors: [
+        {
+          allowedMethods: [aws_s3.HttpMethods.HEAD, aws_s3.HttpMethods.GET, aws_s3.HttpMethods.POST, aws_s3.HttpMethods.PUT],
+          allowedOrigins: ['*'],
+          allowedHeaders: ['*'],
+          exposedHeaders: ['ETag'],
+        },
+      ],
     });
 
     // The bucket utilised for raw files to be ingested in the KB
@@ -285,34 +299,20 @@ export class RagPipelineStack extends NestedStack {
     });
     kbStagingBucket.grantReadWrite(bedrockExecutionRole);
 
-
-    // Creating the processing queue with related S3 trigger and DLQ.
-    const deadLetterQueue = new sqs.Queue(this, 'DeadLetterQueue', {
-      retentionPeriod: cdk.Duration.days(14),
-      encryption: sqs.QueueEncryption.SQS_MANAGED,
-      enforceSSL: true,
-    });
-    const eventQueue = new sqs.Queue(this, 'Queue', {
-      retentionPeriod: cdk.Duration.days(14),
-      visibilityTimeout: cdk.Duration.seconds(30),
-      deadLetterQueue: {
-        maxReceiveCount: 5,
-        queue: deadLetterQueue,
-      },
-      encryption: sqs.QueueEncryption.SQS_MANAGED,
-      enforceSSL: true,
-    });
-
-    this.artifactsUploadBucket.addEventNotification(s3.EventType.OBJECT_CREATED,
-      new s3n.SqsDestination(eventQueue));
-
-
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
       logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${DOCUMENT_PROCESSOR_NAME}/${this.node.addr}`,
       retention: RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
+
+
+    const kbTable = new aws_dynamodb.TableV2(this, 'KBTable', {
+      partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'courseId', type: aws_dynamodb.AttributeType.STRING },
+      removalPolicy: RemovalPolicy.DESTROY,
+    });
+
 
     this.documentProcessor = new NodejsFunction(this, DOCUMENT_PROCESSOR_NAME, {
       description: 'Processes uploaded S3 documents and adds to the KB.',
@@ -331,6 +331,8 @@ export class RagPipelineStack extends NestedStack {
         OPSS_HOST: cfnCollection.attrCollectionEndpoint,
         OPSS_COLLECTION_ARN: cfnCollection.attrArn,
         KB_STAGING_BUCKET: kbStagingBucket.bucketName,
+        ARTIFACTS_UPLOAD_BUCKET: this.artifactsUploadBucket.bucketName,
+        KB_TABLE: kbTable.tableName,
       },
       bundling: {
         minify: true,
@@ -342,13 +344,7 @@ export class RagPipelineStack extends NestedStack {
     });
     this.artifactsUploadBucket.grantRead(this.documentProcessor);
     kbStagingBucket.grantReadWrite(this.documentProcessor);
-
-    this.documentProcessor.addEventSource(new SqsEventSource(eventQueue, {
-      batchSize: 10,
-      maxBatchingWindow: Duration.minutes(1),
-      reportBatchItemFailures: true,
-    }));
-
+    kbTable.grantReadWriteData(this.documentProcessor);
 
     // Display the source artifactsUploadBucket information in the console.
     new CfnOutput(this, 'SourceBucket', {

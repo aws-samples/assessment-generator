@@ -15,8 +15,13 @@ import {
 import { logger } from "../utils/pt";
 import { VectorStore } from "./vectorStore";
 
+import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 
 const bedrockAgentClient = new BedrockAgentClient();
+const client = new DynamoDBClient();
+const docClient = DynamoDBDocumentClient.from(client);
+const KB_TABLE = process.env.KB_TABLE;
 
 export class BedrockKnowledgeBase {
   private readonly knowledgeBaseId: string;
@@ -27,24 +32,40 @@ export class BedrockKnowledgeBase {
     this.dataSourceId = kbDataSourceId;
   }
 
-  static async getKnowledgeBase(kbName: string): Promise<BedrockKnowledgeBase> {
+  static async getKnowledgeBase(userId: string, courseId: string): Promise<BedrockKnowledgeBase> {
 
+    // Check DDB Table
+    const ddbResponse = await docClient.send(new GetCommand({
+      Key: {
+        userId,
+        courseId
+      },
+      TableName: KB_TABLE,
+    }));
+
+    if(ddbResponse.Item){
+      logger.info(ddbResponse as any);
+      return new BedrockKnowledgeBase(ddbResponse.Item["knowledgeBaseId"], ddbResponse.Item["kbDataSourceId"]);
+    }
+    const kbName = `${courseId}-${userId}`;
     const kbDataSourceName = `${kbName}-datasource`;
 
-    //check if a kb already exists
-    let knowledgeBaseId = await BedrockKnowledgeBase.getKnowledgeBaseFromName(kbName);
-    if (!knowledgeBaseId) {
-      //Setup knowledgeBase if it does not exist already
-      logger.info(`KnowledgeBase: ${kbName} does not exist, creating`);
-      const vectorStore = await VectorStore.getVectorStore(kbName);
-      knowledgeBaseId = await BedrockKnowledgeBase.createKnowledgeBase(kbName, vectorStore.indexName);
-    }
-    //check if the KB was configured
-    let kbDataSourceId = await BedrockKnowledgeBase.getKBDataSource(knowledgeBaseId, kbDataSourceName);
-    if (!kbDataSourceId) {
-      kbDataSourceId = await BedrockKnowledgeBase.createDataSource(kbName, knowledgeBaseId, kbDataSourceName);
-    }
-    //TODO save all the Knowledgebase / Opensearch index configuration in a database
+    // The Knowledge Base does not exist
+    logger.info(`KnowledgeBase: ${userId} does not exist, creating`);
+    const vectorStore = await VectorStore.getVectorStore(kbName);
+    let knowledgeBaseId = await BedrockKnowledgeBase.createKnowledgeBase(kbName, vectorStore.indexName);
+    let kbDataSourceId = await BedrockKnowledgeBase.createDataSource(userId, knowledgeBaseId, kbDataSourceName);
+
+    const storeKBResponse = await docClient.send(new PutCommand({
+      TableName: KB_TABLE,
+      Item: {
+        userId,
+        courseId,
+        knowledgeBaseId,
+        kbDataSourceId
+      }
+    }));
+
     return new BedrockKnowledgeBase(knowledgeBaseId, kbDataSourceId);
   }
 
@@ -130,7 +151,7 @@ export class BedrockKnowledgeBase {
     let dataSourceSummaries = listDataSourcesResponse.dataSourceSummaries;
     if (dataSourceSummaries !== undefined && dataSourceSummaries.length > 0) {
       let dataSourceSummary = dataSourceSummaries.find((summary) => summary.name === kbDataSourceName);
-      return dataSourceSummary.dataSourceId;
+      return dataSourceSummary?.dataSourceId;
     }
     return undefined;
   }
@@ -149,7 +170,7 @@ export class BedrockKnowledgeBase {
     // if the knowledge base does not exist, go and create one
     if (response.knowledgeBaseSummaries !== undefined && response.knowledgeBaseSummaries.length > 0) {
       const knowledgeBaseSummary = response.knowledgeBaseSummaries.find((kbSummary) => kbSummary.name === kbName);
-      return knowledgeBaseSummary.knowledgeBaseId;
+      return knowledgeBaseSummary?.knowledgeBaseId;
     }
     //return undefined in case there is no existing KnowledgeBase configured for the provided kbName
     return undefined;

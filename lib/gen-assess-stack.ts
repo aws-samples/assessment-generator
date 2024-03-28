@@ -14,24 +14,15 @@ export class GenAssessStack extends Stack {
     const authStack = new AuthStack(this, 'AuthStack');
 
     const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
-
-    const { api } = new DataStack(this, 'DataStack', { userPool: authStack.userPool });
+    const { api } = new DataStack(this, 'DataStack', {
+      userPool: authStack.userPool,
+      artifactsUploadBucket: ragPipipelineStack.artifactsUploadBucket,
+      documentProcessorLambda: ragPipipelineStack.documentProcessor,
+    });
 
     const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
 
-    const storageBucket = new aws_s3.Bucket(this, 'StorageBucket', {
-      autoDeleteObjects: true,
-      removalPolicy: RemovalPolicy.DESTROY,
-      cors: [
-        {
-          allowedMethods: [aws_s3.HttpMethods.HEAD, aws_s3.HttpMethods.GET, aws_s3.HttpMethods.POST, aws_s3.HttpMethods.PUT],
-          allowedOrigins: ['*'],
-          allowedHeaders: ['*'],
-          exposedHeaders: ['ETag'],
-        },
-      ],
-    });
-    storageBucket.grantReadWrite(authStack.identityPool.authenticatedRole);
+    ragPipipelineStack.artifactsUploadBucket.grantReadWrite(authStack.identityPool.authenticatedRole);
 
     const config = {
       Auth: {
@@ -51,7 +42,7 @@ export class GenAssessStack extends Stack {
       Storage: {
         S3: {
           region: this.region,
-          bucket: storageBucket.bucketName,
+          bucket: ragPipipelineStack.artifactsUploadBucket.bucketName,
         },
       },
     };
