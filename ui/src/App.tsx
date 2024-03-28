@@ -63,8 +63,8 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
               utilities={[
                 {
                   type: 'menu-dropdown',
-                  text: userProfile?.name,
-                  description: `Profile: ${userProfile?.group?.toUpperCase()}`,
+                  text: `${userProfile?.group?.toUpperCase()}: ${userProfile?.name}`,
+                  // description: `Profile: ${userProfile?.group?.toUpperCase()}`,
                   iconName: 'user-profile',
                   items: [{ id: 'signout', text: 'Sign out' }],
                   onItemClick: ({ detail }) => {
