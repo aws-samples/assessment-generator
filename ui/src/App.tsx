@@ -47,8 +47,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
 
   if (!userProfile?.group) return null;
 
-  // const routes = (routesList as any)[userProfile.group];
-  const routes = (routesList as any)['students'];
+  const routes = (routesList as any)[userProfile.group];
   const router = createBrowserRouter(routes);
   const [sideNavRoutes] = routes;
 
