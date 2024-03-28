@@ -17,6 +17,7 @@ const LOCALE = 'en';
 export function App({ signOut, user }: WithAuthenticatorProps) {
   const [alerts, setAlerts] = useState<FlashbarProps.MessageDefinition[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | undefined>();
+  const [activeHref, setActiveHref] = useState(window.location.pathname);
 
   const dispatchAlert = (newAlert: FlashbarProps.MessageDefinition) => {
     const id = Date.now().toString();
@@ -50,6 +51,8 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
   const routes = (routesList as any)[userProfile.group];
   const router = createBrowserRouter(routes);
   const [sideNavRoutes] = routes;
+
+  router.subscribe(({ location }) => setActiveHref(location.pathname));
 
   return (
     <DispatchAlertContext.Provider value={dispatchAlert}>
@@ -89,7 +92,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
               navigationOpen={true}
               navigation={
                 <SideNavigation
-                  activeHref={window.location.pathname}
+                  activeHref={activeHref}
                   header={{
                     href: '/',
                     text: 'Gen Assess',
