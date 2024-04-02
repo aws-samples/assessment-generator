@@ -11,9 +11,9 @@ const docClient = DynamoDBDocumentClient.from(client);
 const ASSESSMENT_TABLE = process.env.ASSESSMENT_TABLE || "GenAssessStack-DataStackNestedStackDataStackNestedStackResource8D986F6F-1B8VYNK2IZULF-AssessmentsTable6996196E-4JI1FPXW24NX";
 export class DataService {
 
-  async storeAssessment(improvedQuestions: Question[], userId: string) {
-    //Create UUID
-    let assessmentId = uuidv4();
+  async storeAssessment(improvedQuestions: Question[], userId: string, assessmentId?:string) {
+    //Create UUID if it is not passed in
+    assessmentId = assessmentId || uuidv4();
 
     const command = new PutCommand({
       TableName: ASSESSMENT_TABLE,

@@ -5,20 +5,19 @@ import {
   aws_cognito,
   aws_dynamodb,
   aws_iam,
-  aws_logs, Duration,
+  aws_lambda_nodejs,
+  aws_logs,
+  Duration,
   NestedStack,
   NestedStackProps,
   RemovalPolicy,
-  aws_lambda_nodejs,
 } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from 'path';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import * as s3 from "aws-cdk-lib/aws-s3";
-import { Lambda } from "aws-cdk-lib/aws-ses-actions";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -211,7 +210,7 @@ export class DataStack extends NestedStack {
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
         actions: ['bedrock:*'],
-      })
+      }),
     );
 
     // Creating the log group.
@@ -235,7 +234,7 @@ export class DataStack extends NestedStack {
         POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         Q_GENERATION_BUCKET: artifactsUploadBucket.bucketName,
-        ASSESSMENTS_TABLE: assessmentsTable.tableName
+        ASSESSMENTS_TABLE: assessmentsTable.tableName,
       },
       bundling: {
         minify: true,
@@ -245,9 +244,25 @@ export class DataStack extends NestedStack {
     artifactsUploadBucket.grantRead(questionsGenerator);
     assessmentsTable.grantReadWriteData(questionsGenerator);
 
-    let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
-      handler: questionsGenerator,
+    const qaGeneratorWrapper = new NodejsFunction(this, `${QUESTIONS_GENERATOR_NAME}-wrapper`, {
+      description: 'Wraps around the Question generator ',
+      entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'wrapper', 'index.ts'),
+      memorySize: 512,
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      tracing: Tracing.ACTIVE,
+      timeout: Duration.seconds(30),
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'questions-generator-wrapper',
+        POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
+        QA_LAMBDA_NAME: questionsGenerator.functionName,
+      },
+      bundling: {
+        minify: true,
+        externalModules: ['@aws-sdk/client-lambda'],
+      },
     });
+    questionsGenerator.grantInvoke(qaGeneratorWrapper);
 
     /////////// Publish Assessment
 
@@ -287,7 +302,7 @@ export class DataStack extends NestedStack {
     });
 
     /////////// Generate Assessment
-    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', questionsGenerator);
+    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', qaGeneratorWrapper);
 
     generateAssessmentDs.createResolver('GenerateAssessmentResolver', {
       typeName: 'Query',

@@ -16,17 +16,21 @@
 
 
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { APIGatewayProxyEventV2, AppSyncResolverEvent, Context } from 'aws-lambda';
+import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { ReferenceDocuments } from "./models/referenceDocuments";
 import { DataService } from "./services/dataService";
 import { GenAiService } from "./services/genAiService";
-import { KBCreationRequest } from "../../../rag-pipeline/lambdas/event-handler/definitions/kbCreationRequest";
-import { GenerateAssessmentInput, GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
+import { GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
 import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
 
 
 const dataService = new DataService();
+
+class WrappedAppSyncEvent {
+  assessmentId: string;
+  ctx: AppSyncResolverEvent<GenerateAssessmentQueryVariables>;
+}
 
 class Lambda implements LambdaInterface {
   knowledgeBaseId: string;
@@ -34,11 +38,13 @@ class Lambda implements LambdaInterface {
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: AppSyncResolverEvent<GenerateAssessmentQueryVariables>, lambdaContext: Context): Promise<string> {
-    const generateAssessmentInput = event.arguments.input;
+  async handler(event: WrappedAppSyncEvent, lambdaContext: Context): Promise<string> {
+    let assessmentId = event.assessmentId;
+    const ctx = event.ctx;
+    const generateAssessmentInput = ctx.arguments.input;
     logger.info(generateAssessmentInput as any);
 
-    const identity = event.identity as AppSyncIdentityCognito;
+    const identity = ctx.identity as AppSyncIdentityCognito;
     const userId = identity.sub;
 
     if (!generateAssessmentInput) {
@@ -60,7 +66,7 @@ class Lambda implements LambdaInterface {
 
     logger.info(improvedQuestions as any);
 
-    let assessmentId = await dataService.storeAssessment(improvedQuestions, userId);
+    assessmentId = await dataService.storeAssessment(improvedQuestions, userId, assessmentId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;
   }
