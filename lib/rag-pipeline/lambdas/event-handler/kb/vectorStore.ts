@@ -28,6 +28,10 @@ const settings = {
       "vector": {
         "type": "knn_vector",
         "dimension": 1536,
+        "method": {
+          "engine": "faiss",
+          "name": "hnsw"
+        },
       },
       "text": {
         "type": "text",
