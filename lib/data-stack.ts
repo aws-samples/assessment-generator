@@ -243,7 +243,7 @@ export class DataStack extends NestedStack {
       },
     });
     artifactsUploadBucket.grantRead(questionsGenerator);
-    assessmentsTable.grantReadData(questionsGenerator);
+    assessmentsTable.grantReadWriteData(questionsGenerator);
 
     let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
       handler: questionsGenerator,
