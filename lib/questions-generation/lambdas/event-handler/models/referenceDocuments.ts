@@ -20,7 +20,7 @@ export class ReferenceDocuments {
   static async fromRequest(generateAssessmentInput: GenerateAssessmentInput) {
     const documents = generateAssessmentInput.locations;
     const assessmentTemplateId = "";
-    const knowledgeBaseId = "NFN8WIUXXX";
+    const knowledgeBaseId = "0LZGU4OWBW";
 
     let documentsContent = await Promise.all(documents.map(async (s3ObjectKey) => {
       if(s3ObjectKey==null){
@@ -28,7 +28,7 @@ export class ReferenceDocuments {
       }
       const getObjectCommand = new GetObjectCommand({
         Bucket: this.SOURCE_BUCKET,
-        Key: s3ObjectKey,
+        Key: `public/${s3ObjectKey}`,
       });
       const s3response: GetObjectCommandOutput = await s3Client.send<GetObjectCommand>(getObjectCommand);
       const document = await s3response.Body?.transformToString();

@@ -50,22 +50,29 @@ class Lambda implements LambdaInterface {
     return await knowledgeBase.ingestDocuments();
   }
 
-  private async copyObjects(objectKeys: string[]) {
+  private async copyObjects(objectKeys: Array<string | null>) {
     for (let i = 0; i < objectKeys.length; i++) {
       const objectKey = objectKeys[i];
-      const newObjectKey = objectKey.replace("KnowledgeBases/", "");
-      logger.info({ objectKey, newObjectKey } as any);
-      //Upload file to destination S3 bucket
-      const copyObjectRequest = {
-        CopySource: `${process.env.ARTIFACTS_UPLOAD_BUCKET}/public/${objectKey}`,
-        Bucket: process.env.KB_STAGING_BUCKET,
-        Key: newObjectKey,
-      };
-      logger.info("Copy object to target bucket", copyObjectRequest as any);
-      const copyObjectCommand = new CopyObjectCommand(copyObjectRequest);
-      const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
-      logger.info("CopyObject result", { data: copyObjectOutput } as any);
+      //TODO change the Type so that value can't be null
+      if(objectKey){
+        await this.copyObject(objectKey);
+      }
     }
+  }
+
+  private async copyObject(objectKey: string) {
+    const newObjectKey = objectKey.replace("KnowledgeBases/", "");
+    logger.info({ objectKey, newObjectKey } as any);
+    //Upload file to destination S3 bucket
+    const copyObjectRequest = {
+      CopySource: `${process.env.ARTIFACTS_UPLOAD_BUCKET}/public/${objectKey}`,
+      Bucket: process.env.KB_STAGING_BUCKET,
+      Key: newObjectKey,
+    };
+    logger.info("Copy object to target bucket", copyObjectRequest as any);
+    const copyObjectCommand = new CopyObjectCommand(copyObjectRequest);
+    const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
+    logger.info("CopyObject result", { data: copyObjectOutput } as any);
   }
 }
 
