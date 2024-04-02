@@ -10,7 +10,7 @@ import {
   ListKnowledgeBasesCommand,
   ListKnowledgeBasesResponse,
   StartIngestionJobCommand,
-  StartIngestionJobCommandOutput,
+  StartIngestionJobCommandOutput, ValidationException,
 } from "@aws-sdk/client-bedrock-agent";
 import { logger } from "../utils/pt";
 import { VectorStore } from "./vectorStore";
@@ -38,23 +38,24 @@ export class BedrockKnowledgeBase {
     const ddbResponse = await docClient.send(new GetCommand({
       Key: {
         userId,
-        courseId
+        courseId,
       },
       TableName: KB_TABLE,
     }));
 
-    if(ddbResponse.Item){
+    if (ddbResponse.Item) {
       logger.info(ddbResponse as any);
       return new BedrockKnowledgeBase(ddbResponse.Item["knowledgeBaseId"], ddbResponse.Item["kbDataSourceId"]);
     }
     const kbName = `${courseId}-${userId}`;
+    const s3prefix = `${userId}/${courseId}/`;
     const kbDataSourceName = `${kbName}-datasource`;
 
     // The Knowledge Base does not exist
     logger.info(`KnowledgeBase: ${userId} does not exist, creating`);
     const vectorStore = await VectorStore.getVectorStore(kbName);
     let knowledgeBaseId = await BedrockKnowledgeBase.createKnowledgeBase(kbName, vectorStore.indexName);
-    let kbDataSourceId = await BedrockKnowledgeBase.createDataSource(userId, knowledgeBaseId, kbDataSourceName);
+    let kbDataSourceId = await BedrockKnowledgeBase.createDataSource(knowledgeBaseId, kbDataSourceName, s3prefix);
 
     const storeKBResponse = await docClient.send(new PutCommand({
       TableName: KB_TABLE,
@@ -62,21 +63,23 @@ export class BedrockKnowledgeBase {
         userId,
         courseId,
         knowledgeBaseId,
-        kbDataSourceId
-      }
+        kbDataSourceId,
+        indexName: vectorStore.indexName,
+        s3prefix,
+      },
     }));
 
     return new BedrockKnowledgeBase(knowledgeBaseId, kbDataSourceId);
   }
 
-  private static async createDataSource(kbName: string, knowledgeBaseId: string, kbDataSourceName: string): Promise<string> {
+  private static async createDataSource(knowledgeBaseId: string, kbDataSourceName: string, s3prefix: string): Promise<string> {
     //Create datasource
     const createDataSourceCommand = new CreateDataSourceCommand({
       dataSourceConfiguration: {
         type: "S3",
         s3Configuration: {
           bucketArn: `arn:aws:s3:::${process.env.KB_STAGING_BUCKET}`,
-          inclusionPrefixes: [kbName],
+          inclusionPrefixes: [s3prefix],
         },
       },
       vectorIngestionConfiguration: {
@@ -126,12 +129,8 @@ export class BedrockKnowledgeBase {
         },
       },
     });
-    // noinspection TypeScriptValidateTypes
-    logger.info("KB creating", { request: createKbRequest });
 
-    // noinspection TypeScriptValidateTypes
-    const createKbResponse: CreateKnowledgeBaseResponse = await bedrockAgentClient.send<CreateKnowledgeBaseCommandInput, CreateKnowledgeBaseResponse>(createKbRequest);
-
+    const createKbResponse = await this.createKBWithRetry(createKbRequest);
     // noinspection TypeScriptValidateTypes
     logger.info("KB Created", { response: createKbResponse });
 
@@ -140,6 +139,34 @@ export class BedrockKnowledgeBase {
     }
 
     return createKbResponse.knowledgeBase.knowledgeBaseId;
+  }
+
+  private static async createKBWithRetry(createKbRequest: CreateKnowledgeBaseCommand): Promise<CreateKnowledgeBaseResponse> {
+    const MAX_ATTEMPTS = 3;
+    const WAIT_MS = 5000;
+    let attempts = 0;
+    while (attempts < MAX_ATTEMPTS) {
+      attempts++;
+      try {
+        // noinspection TypeScriptValidateTypes
+        logger.info(`Attempt ${attempts}. KB creating`, { request: createKbRequest });
+        // noinspection TypeScriptValidateTypes
+        const createKbResponse = await bedrockAgentClient.send<CreateKnowledgeBaseCommandInput, CreateKnowledgeBaseResponse>(createKbRequest);
+        return createKbResponse;
+      } catch (e) {
+        logger.info(e);
+        if ((e instanceof ValidationException) && e.message.includes("no such index")) {
+          logger.info("Index still creating, wait and retry");
+          await new Promise(resolve => {
+            return setTimeout(resolve, WAIT_MS);
+          });
+        } else {
+          //non-retryable error
+          throw e;
+        }
+      }
+    }
+    throw new Error(`Unable to create KB after ${MAX_ATTEMPTS} attempts`);
   }
 
   private static async getKBDataSource(knowledgeBaseId: string, kbDataSourceName: string) {
