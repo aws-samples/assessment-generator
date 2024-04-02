@@ -5,18 +5,15 @@ import {
   CreateKnowledgeBaseCommand,
   CreateKnowledgeBaseCommandInput,
   CreateKnowledgeBaseResponse,
-  ListDataSourcesCommand,
-  ListDataSourcesResponse,
-  ListKnowledgeBasesCommand,
-  ListKnowledgeBasesResponse,
   StartIngestionJobCommand,
-  StartIngestionJobCommandOutput, ValidationException,
+  StartIngestionJobCommandOutput,
+  ValidationException,
 } from "@aws-sdk/client-bedrock-agent";
 import { logger } from "../utils/pt";
 import { VectorStore } from "./vectorStore";
 
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 
 const bedrockAgentClient = new BedrockAgentClient();
 const client = new DynamoDBClient();
@@ -45,6 +42,7 @@ export class BedrockKnowledgeBase {
 
     if (ddbResponse.Item) {
       logger.info(ddbResponse as any);
+      //TODO verify that the KB ID and the data source still exist
       return new BedrockKnowledgeBase(ddbResponse.Item["knowledgeBaseId"], ddbResponse.Item["kbDataSourceId"]);
     }
     const kbName = `${courseId}-${userId}`;
@@ -167,40 +165,6 @@ export class BedrockKnowledgeBase {
       }
     }
     throw new Error(`Unable to create KB after ${MAX_ATTEMPTS} attempts`);
-  }
-
-  private static async getKBDataSource(knowledgeBaseId: string, kbDataSourceName: string) {
-    let listDataSourcesCommand = new ListDataSourcesCommand({ knowledgeBaseId: knowledgeBaseId, maxResults: 1000 });
-    // noinspection TypeScriptValidateTypes
-    const listDataSourcesResponse: ListDataSourcesResponse = await bedrockAgentClient.send(listDataSourcesCommand);
-    logger.info(listDataSourcesResponse as any);
-
-    let dataSourceSummaries = listDataSourcesResponse.dataSourceSummaries;
-    if (dataSourceSummaries !== undefined && dataSourceSummaries.length > 0) {
-      let dataSourceSummary = dataSourceSummaries.find((summary) => summary.name === kbDataSourceName);
-      return dataSourceSummary?.dataSourceId;
-    }
-    return undefined;
-  }
-
-  private static async getKnowledgeBaseFromName(kbName: string) {
-    //TODO sanitise and hash input + store in DB for easier lookup
-    const listKnowledgeBasesCommand = new ListKnowledgeBasesCommand({
-      maxResults: 1000,
-    });
-
-    // noinspection TypeScriptValidateTypes
-    const response: ListKnowledgeBasesResponse = await bedrockAgentClient.send(listKnowledgeBasesCommand);
-    // noinspection TypeScriptValidateTypes
-    logger.info("KB output:", { data: response });
-
-    // if the knowledge base does not exist, go and create one
-    if (response.knowledgeBaseSummaries !== undefined && response.knowledgeBaseSummaries.length > 0) {
-      const knowledgeBaseSummary = response.knowledgeBaseSummaries.find((kbSummary) => kbSummary.name === kbName);
-      return knowledgeBaseSummary?.knowledgeBaseId;
-    }
-    //return undefined in case there is no existing KnowledgeBase configured for the provided kbName
-    return undefined;
   }
 
   async ingestDocuments() {
