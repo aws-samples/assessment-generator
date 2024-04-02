@@ -216,7 +216,7 @@ export class DataStack extends NestedStack {
 
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
-      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
+      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
       retention: RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -287,11 +287,7 @@ export class DataStack extends NestedStack {
     });
 
     /////////// Generate Assessment
-
-    const generateAssessmentFn = new aws_lambda_nodejs.NodejsFunction(this, 'GenerateAssessmentFn', {
-      entry: 'lib/lambdas/dummy.ts',
-    });
-    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', generateAssessmentFn);
+    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', questionsGenerator);
 
     generateAssessmentDs.createResolver('GenerateAssessmentResolver', {
       typeName: 'Query',

@@ -16,11 +16,14 @@
 
 
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { APIGatewayProxyEventV2, Context } from 'aws-lambda';
+import { APIGatewayProxyEventV2, AppSyncResolverEvent, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { ReferenceDocuments } from "./models/referenceDocuments";
 import { DataService } from "./services/dataService";
 import { GenAiService } from "./services/genAiService";
+import { KBCreationRequest } from "../../../rag-pipeline/lambdas/event-handler/definitions/kbCreationRequest";
+import { GenerateAssessmentInput, GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
+import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
 
 
 const dataService = new DataService();
@@ -31,13 +34,17 @@ class Lambda implements LambdaInterface {
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: APIGatewayProxyEventV2, lambdaContext: Context): Promise<string> {
+  async handler(event: AppSyncResolverEvent<GenerateAssessmentQueryVariables>, lambdaContext: Context): Promise<string> {
+    const generateAssessmentInput = event.arguments.input;
+    logger.info(generateAssessmentInput as any);
 
+    const identity = event.identity as AppSyncIdentityCognito;
+    const userId = identity.sub;
 
-    if (!event.body) {
+    if (!generateAssessmentInput) {
       throw new Error("Unable to process the request");
     }
-    const referenceDocuments = await ReferenceDocuments.fromJSON(event.body);
+    const referenceDocuments = await ReferenceDocuments.fromRequest(generateAssessmentInput);
     this.knowledgeBaseId = referenceDocuments.knowledgeBaseId;
     const genAiService = new GenAiService(this.knowledgeBaseId);
 
@@ -53,7 +60,6 @@ class Lambda implements LambdaInterface {
 
     logger.info(improvedQuestions as any);
 
-    const userId = "user1";
     let assessmentId = await dataService.storeAssessment(improvedQuestions, userId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;

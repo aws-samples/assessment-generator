@@ -301,7 +301,7 @@ export class RagPipelineStack extends NestedStack {
 
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
-      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${DOCUMENT_PROCESSOR_NAME}/${this.node.addr}`,
+      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/${DOCUMENT_PROCESSOR_NAME}/${this.node.addr}`,
       retention: RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });

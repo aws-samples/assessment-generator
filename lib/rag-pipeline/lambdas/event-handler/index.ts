@@ -20,8 +20,8 @@ import { StartIngestionJobCommandOutput } from '@aws-sdk/client-bedrock-agent';
 import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
 import { logger, tracer } from "./utils/pt";
 import { BedrockKnowledgeBase } from "./kb/bedrockKnowledgeBase";
-import { KBCreationRequest } from "./definitions/kbCreationRequest";
 import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
+import { CreateKnowledgeBaseQueryVariables } from "../../../../ui/src/graphql/API";
 
 
 const s3Client = new S3Client();
@@ -34,9 +34,12 @@ class Lambda implements LambdaInterface {
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: AppSyncResolverEvent<KBCreationRequest>, lambdaContext: Context): Promise<StartIngestionJobCommandOutput> {
+  async handler(event: AppSyncResolverEvent<CreateKnowledgeBaseQueryVariables>, lambdaContext: Context): Promise<StartIngestionJobCommandOutput> {
 
     let kbCreationRequest = event.arguments;
+    if(!(kbCreationRequest && kbCreationRequest.courseId && kbCreationRequest.locations && kbCreationRequest.locations.length>0)){
+      throw new Error("Invalid inputs");
+    }
 
     await this.copyObjects(kbCreationRequest.locations);
     const identity = event.identity as AppSyncIdentityCognito;

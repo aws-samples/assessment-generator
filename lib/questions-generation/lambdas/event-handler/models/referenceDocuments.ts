@@ -1,6 +1,7 @@
 import { AssessmentTemplate } from "./assessmentTemplate";
 import { GenerateAssessmentRequest } from "./generateAssessmentRequest";
 import { GetObjectCommand, GetObjectCommandOutput, S3Client } from "@aws-sdk/client-s3";
+import { GenerateAssessmentInput } from "../../../../../ui/src/graphql/API";
 
 
 const s3Client = new S3Client();
@@ -16,11 +17,15 @@ export class ReferenceDocuments {
     this.assessmentTemplate = assessmentTemplate;
     this.knowledgeBaseId = knowledgeBaseId;
   }
+  static async fromRequest(generateAssessmentInput: GenerateAssessmentInput) {
+    const documents = generateAssessmentInput.locations;
+    const assessmentTemplateId = "";
+    const knowledgeBaseId = "NFN8WIUXXX";
 
-
-  static async fromJSON(apiGWRequestBody: string): Promise<ReferenceDocuments> {
-    const parsedBody = JSON.parse(apiGWRequestBody) as GenerateAssessmentRequest;
-    let documentsContent = await Promise.all(parsedBody.documents.map(async (s3ObjectKey) => {
+    let documentsContent = await Promise.all(documents.map(async (s3ObjectKey) => {
+      if(s3ObjectKey==null){
+        return;
+      }
       const getObjectCommand = new GetObjectCommand({
         Bucket: this.SOURCE_BUCKET,
         Key: s3ObjectKey,
@@ -37,7 +42,7 @@ export class ReferenceDocuments {
       throw new Error("No valid documents");
     }
 
-    const assessmentTemplate = await AssessmentTemplate.fromId(parsedBody.assessmentTemplateId);
-    return new ReferenceDocuments(documentsContent, assessmentTemplate, parsedBody.knowledgeBaseId);
+    const assessmentTemplate = await AssessmentTemplate.fromId(assessmentTemplateId);
+    return new ReferenceDocuments(documentsContent, assessmentTemplate, knowledgeBaseId);
   }
 }
