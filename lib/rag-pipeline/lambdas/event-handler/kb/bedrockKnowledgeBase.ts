@@ -170,10 +170,13 @@ export class BedrockKnowledgeBase {
   async ingestDocuments() {
 
     //Start ingestion into KB
-    const startIngestionJobCommand = new StartIngestionJobCommand({
+    const ingestionInput = {
       dataSourceId: this.dataSourceId,
       knowledgeBaseId: this.knowledgeBaseId,
-    });
+    };
+    logger.info("Start document ingestion", ingestionInput as any);
+
+    const startIngestionJobCommand = new StartIngestionJobCommand(ingestionInput);
 
     // noinspection TypeScriptValidateTypes
     const startIngestionResponse: StartIngestionJobCommandOutput = await bedrockAgentClient.send<StartIngestionJobCommandOutput>(startIngestionJobCommand);
