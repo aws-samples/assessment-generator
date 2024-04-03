@@ -51,6 +51,7 @@ export const upsertAssessment = /* GraphQL */ `mutation UpsertAssessment($input:
       question
       answers
       correctAnswer
+      explanation
       __typename
     }
     published
@@ -77,6 +78,7 @@ export const upsertStudentAssessment = /* GraphQL */ `mutation UpsertStudentAsse
         question
         answers
         correctAnswer
+        explanation
         __typename
       }
       published

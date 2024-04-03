@@ -57,11 +57,11 @@ input AssessTemplateInput {
 }
 
 type QandA {
-  title: String
-  question: String
-  answers: [String]
-  correctAnswer: Int
-  explanation: String
+  title: String!
+  question: String!
+  answers: [String!]!
+  correctAnswer: Int!
+  explanation: String!
 }
 
 input QandAInput {
@@ -69,17 +69,18 @@ input QandAInput {
   question: String!
   answers: [String]!
   correctAnswer: Int!
+  explanation: String!
 }
 
 type Assessment {
   id: ID!
-  name: String
-  course: String
-  lectureDate: AWSDate
-  deadline: AWSDate
-  updatedAt: AWSDateTime
+  name: String!
+  course: String!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
+  updatedAt: AWSDateTime!
   questions: [QandA!]!
-  published: Boolean
+  published: Boolean!
   status: String!
 }
 
@@ -89,8 +90,9 @@ input AssessmentInput {
   course: String!
   lectureDate: AWSDate!
   deadline: AWSDate!
-  questions: [QandAInput]!
+  questions: [QandAInput!]!
   published: Boolean
+  status: String!
 }
 
 type StudentAssessment {

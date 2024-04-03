@@ -57,6 +57,7 @@ export const getAssessment = /* GraphQL */ `query GetAssessment($id: ID!) {
       question
       answers
       correctAnswer
+      explanation
       __typename
     }
     published
@@ -81,6 +82,7 @@ export const listAssessments = /* GraphQL */ `query ListAssessments {
       question
       answers
       correctAnswer
+      explanation
       __typename
     }
     published
@@ -107,6 +109,7 @@ export const getStudentAssessment = /* GraphQL */ `query GetStudentAssessment($p
         question
         answers
         correctAnswer
+        explanation
         __typename
       }
       published
@@ -139,6 +142,7 @@ export const listStudentAssessments = /* GraphQL */ `query ListStudentAssessment
         question
         answers
         correctAnswer
+        explanation
         __typename
       }
       published
