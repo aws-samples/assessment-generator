@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter } from '@cloudscape-design/components';
+import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { listStudentAssessments } from '../graphql/queries';
 import { StudentAssessment } from '../graphql/API';
@@ -7,6 +8,8 @@ import { StudentAssessment } from '../graphql/API';
 const client = generateClient();
 
 export default () => {
+  const navigate = useNavigate();
+
   const [assessments, setAssessments] = useState<StudentAssessment[]>([]);
 
   useEffect(() => {
@@ -40,7 +43,20 @@ export default () => {
             {
               id: 'status',
               header: 'Status',
-              cell: (item) => (item.completed ? 'Completed' : <Link href={`/assessment/${item.parentAssessId}`}>Start</Link>),
+              cell: (item) =>
+                item.completed ? (
+                  'Completed'
+                ) : (
+                  <Link
+                    href={`/assessment/${item.parentAssessId}`}
+                    onFollow={(e) => {
+                      e.preventDefault();
+                      navigate(e.detail.href!);
+                    }}
+                  >
+                    Start
+                  </Link>
+                ),
             },
             {
               id: 'score',

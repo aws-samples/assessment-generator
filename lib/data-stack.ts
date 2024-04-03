@@ -124,8 +124,8 @@ export class DataStack extends NestedStack {
     /////////// Assessments
 
     const assessmentsTable = new aws_dynamodb.TableV2(this, 'AssessmentsTable', {
-      partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
-      sortKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
+      partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
+      sortKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
       globalSecondaryIndexes: [
         {
           indexName: 'id-only',
@@ -147,8 +147,8 @@ export class DataStack extends NestedStack {
     assessmentsDs.createResolver('QueryListAssessmentsResolver', {
       typeName: 'Query',
       fieldName: 'listAssessments',
-      requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
+      code: aws_appsync.Code.fromAsset('lib/resolvers/listAssessments.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
     assessmentsDs.createResolver('QueryAssessmentResolver', {
@@ -178,8 +178,8 @@ export class DataStack extends NestedStack {
     studentAssessmentsDs.createResolver('QueryListStudentAssessmentsResolver', {
       typeName: 'Query',
       fieldName: 'listStudentAssessments',
-      requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
-      responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
+      code: aws_appsync.Code.fromAsset('lib/resolvers/listStudentAssessments.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
     studentAssessmentsDs.createResolver('QueryStudentAssessmentResolver', {

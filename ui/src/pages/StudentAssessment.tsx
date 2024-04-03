@@ -85,6 +85,7 @@ export default () => {
           submitButton: 'Submit',
           optional: 'optional',
         }}
+        onCancel={() => navigate('/assessments')}
         onNavigate={({ detail }) => {
           setActiveStepIndex(detail.requestedStepIndex);
         }}

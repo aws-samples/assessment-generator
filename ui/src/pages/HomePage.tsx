@@ -1,17 +1,17 @@
-import { useOutlet } from 'react-router-dom';
+import { useContext } from 'react';
+import { useOutlet, useNavigate } from 'react-router-dom';
 import { ContentLayout, Container, Header, Box, SpaceBetween, Button } from '@cloudscape-design/components';
-import { routes } from '../routes';
 import { titlise } from '../helpers';
+import { RoutesContext } from '../contexts/routes';
 
-type HomePageProps = {
-  route: number;
-};
-
-export default (props: HomePageProps) => {
+export default () => {
   const outlet = useOutlet();
   if (outlet) return outlet;
 
-  const [{ path: rootPath, children: childRoutes }] = (routes as any)[props.route];
+  const navigate = useNavigate();
+  const routes = useContext(RoutesContext);
+
+  const [{ children: childRoutes }] = routes;
   const paths = childRoutes!.map(({ path }: any) => path);
 
   return (
@@ -27,7 +27,7 @@ export default (props: HomePageProps) => {
           <SpaceBetween size="l" alignItems="center">
             <SpaceBetween size="l" direction="horizontal">
               {paths?.map((path: any) => (
-                <Button key={`button-${path}`} href={`${rootPath}${path}`}>
+                <Button key={`button-${path}`} onClick={() => navigate(path)}>
                   <Box variant="h2" padding="m">
                     {titlise(path)}
                   </Box>

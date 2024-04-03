@@ -27,7 +27,7 @@ export default () => {
         <Container
           header={
             <SpaceBetween size="l">
-              <Header variant="h1">Find Student:</Header>
+              <Header variant="h1">Students:</Header>
             </SpaceBetween>
           }
         >
