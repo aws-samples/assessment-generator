@@ -15,8 +15,7 @@
  */
 
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { AppSyncResolverEvent, Context, S3EventRecord } from 'aws-lambda';
-import { StartIngestionJobCommandOutput } from '@aws-sdk/client-bedrock-agent';
+import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
 import { logger, tracer } from "./utils/pt";
 import { BedrockKnowledgeBase } from "./kb/bedrockKnowledgeBase";
@@ -34,10 +33,10 @@ class Lambda implements LambdaInterface {
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: AppSyncResolverEvent<CreateKnowledgeBaseQueryVariables>, lambdaContext: Context): Promise<StartIngestionJobCommandOutput> {
+  async handler(event: AppSyncResolverEvent<CreateKnowledgeBaseQueryVariables>, lambdaContext: Context): Promise<string> {
 
     let kbCreationRequest = event.arguments;
-    if(!(kbCreationRequest && kbCreationRequest.courseId && kbCreationRequest.locations && kbCreationRequest.locations.length>0)){
+    if (!(kbCreationRequest && kbCreationRequest.courseId && kbCreationRequest.locations && kbCreationRequest.locations.length > 0)) {
       throw new Error("Invalid inputs");
     }
 
@@ -47,14 +46,18 @@ class Lambda implements LambdaInterface {
 
     const knowledgeBase = await BedrockKnowledgeBase.getKnowledgeBase(userId, kbCreationRequest.courseId);
 
-    return await knowledgeBase.ingestDocuments();
+    const startIngestionJobCommandOutput = await knowledgeBase.ingestDocuments();
+    if (!(startIngestionJobCommandOutput.ingestionJob && startIngestionJobCommandOutput.ingestionJob.ingestionJobId)) {
+      throw new Error("KB Ingestion failed");
+    }
+    return startIngestionJobCommandOutput.ingestionJob.ingestionJobId;
   }
 
   private async copyObjects(objectKeys: Array<string | null>) {
     for (let i = 0; i < objectKeys.length; i++) {
       const objectKey = objectKeys[i];
       //TODO change the Type so that value can't be null
-      if(objectKey){
+      if (objectKey) {
         await this.copyObject(objectKey);
       }
     }
