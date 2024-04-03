@@ -1,5 +1,5 @@
-import { Question } from "./question";
+import { QandA } from "../../../../../ui/src/graphql/API";
 
 export class Response {
-  questions: Question[];
+  questions: QandA[];
 }

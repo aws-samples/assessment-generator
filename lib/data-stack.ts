@@ -257,6 +257,7 @@ export class DataStack extends NestedStack {
         POWERTOOLS_SERVICE_NAME: 'questions-generator-wrapper',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         QA_LAMBDA_NAME: questionsGenerator.functionName,
+        ASSESSMENTS_TABLE: assessmentsTable.tableName,
       },
       bundling: {
         minify: true,
@@ -264,6 +265,7 @@ export class DataStack extends NestedStack {
       },
     });
     questionsGenerator.grantInvoke(qaGeneratorWrapper);
+    assessmentsTable.grantReadWriteData(qaGeneratorWrapper);
 
     /////////// Publish Assessment
 

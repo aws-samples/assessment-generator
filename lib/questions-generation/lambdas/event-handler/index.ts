@@ -39,6 +39,8 @@ class Lambda implements LambdaInterface {
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: WrappedAppSyncEvent, lambdaContext: Context): Promise<string> {
+    //TODO implement mechanism to update the table with Status:failed in case of errors
+
     let assessmentId = event.assessmentId;
     const ctx = event.ctx;
     const generateAssessmentInput = ctx.arguments.input;
@@ -66,7 +68,7 @@ class Lambda implements LambdaInterface {
 
     logger.info(improvedQuestions as any);
 
-    assessmentId = await dataService.storeAssessment(improvedQuestions, userId, assessmentId);
+    assessmentId = await dataService.updateAssessment(improvedQuestions, userId, assessmentId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;
   }

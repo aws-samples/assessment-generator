@@ -1,11 +1,11 @@
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { ReferenceDocuments } from "../models/referenceDocuments";
 import { AssessmentTemplate } from "../models/assessmentTemplate";
-import { Question } from "../models/question";
 import { GeneratedQuestions } from "../models/generatedQuestions";
 import { BedrockAgentRuntime, KnowledgeBaseRetrievalResult } from "@aws-sdk/client-bedrock-agent-runtime";
 import { BedrockRuntime } from "@aws-sdk/client-bedrock-runtime";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import { QandA } from "../../../../../ui/src/graphql/API";
 
 
 const CLAUDE_3_HAIKU = "anthropic.claude-3-haiku-20240307-v1:0";
@@ -57,7 +57,7 @@ Follow these guidelines:
 Ensure that only one answer is correct.
 
 Formulate a question that probes knowledge of the Core Concepts.
-Present four answer choices labeled as A, B, C, and D.
+Present four answer choices labeled as 1, 2, 3, and 4.
 Indicate the correct answer labeled as 'answer'.
 Articulate a reasoned and concise defense for your chosen answer without relying on direct references to the text labeled as "explanation"
 
@@ -65,22 +65,15 @@ Structure your response in this format and do not include any additional text, r
 \`\`\`xml
 <response>
     <questions>
+        <title>[Brief question title]</title>
         <questionText>
             [Question]
         </questionText>
-        <answers>
-            <answerText>[Option A]</answerText>
-        </answers>
-        <answers>
-            <answerText>[Option B]</answerText>
-        </answers>
-        <answers>
-            <answerText>[Option C]</answerText>
-        </answers>
-        <answers>
-            <answerText>[Option D]</answerText>
-        </answers>
-        <correctAnswer>[Correct Answer Letter]</correctAnswer>
+        <answers>[Option 1]</answers>
+        <answers>[Option 2]</answers>
+        <answers>[Option 3]</answers>
+        <answers>[Option 4]</answers>
+        <correctAnswer>[Correct Answer Number]</correctAnswer>
         <explanation>[Explanation for Correctness]</explanation>
     </questions>
     <!-- all other questions below   -->
@@ -95,7 +88,7 @@ Structure your response in this format and do not include any additional text, r
     return llmResponse;
   }
 
-  public async getRelevantDocuments(question: Question) {
+  public async getRelevantDocuments(question: QandA) {
     //logger.info(question as any);
 
     const kbQuery = `Find the relevant documents for the following quiz question:\n${JSON.stringify(question)}`;
@@ -115,7 +108,7 @@ Structure your response in this format and do not include any additional text, r
 
     logger.debug(generatedQuestions);
     const parsedQuestions: GeneratedQuestions = parser.parse(generatedQuestions);
-    let improvedQuestions: Question[] = [];
+    let improvedQuestions: QandA[] = [];
 
     for (let i = 0; i < parsedQuestions.response.questions.length; i++) {
       const question = parsedQuestions.response.questions[i];
@@ -156,7 +149,7 @@ Structure your response in this format and do not include any additional text, r
     return contentElementElement;
   }
 
-  private async improveQuestion(originalQuestion: Question, relevantDocs: KnowledgeBaseRetrievalResult[] | undefined) {
+  private async improveQuestion(originalQuestion: QandA, relevantDocs: KnowledgeBaseRetrievalResult[] | undefined): Promise<QandA> {
     if (!(relevantDocs && relevantDocs.length > 0)) {
       return originalQuestion;
     }
@@ -181,22 +174,15 @@ ${xmlDocs}
 Structure your response in this format and do not include any additional imput. The response must be valid XML following this FORMAT:
 \`\`\`xml
 <question>
+    <title>[Brief question title]</title>
     <questionText>
         [Question]
     </questionText>
-    <answers>
-        <answerText>[Option A]</answerText>
-    </answers>
-    <answers>
-        <answerText>[Option B]</answerText>
-    </answers>
-    <answers>
-        <answerText>[Option C]</answerText>
-    </answers>
-    <answers>
-        <answerText>[Option D]</answerText>
-    </answers>
-    <correctAnswer>[Correct Answer Letter]</correctAnswer>
+    <answers>[Option 1]</answers>
+    <answers>[Option 2]</answers>
+    <answers>[Option 3]</answers>
+    <answers>[Option 4]</answers>
+    <correctAnswer>[Correct Answer Number]</correctAnswer>
     <explanation>[Explanation for Correctness]</explanation>
 </question>
 \`\`\`
@@ -205,7 +191,7 @@ Structure your response in this format and do not include any additional imput. 
     logger.debug(prompt);
     const llmResponse = await this.callLLM(CLAUDE_3_HAIKU, prompt);
     logger.debug(llmResponse);
-    const { question }: { question: Question } = parser.parse(llmResponse);
+    const { question }: { question: QandA } = parser.parse(llmResponse);
     return question;
   }
 }

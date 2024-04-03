@@ -19,11 +19,13 @@ import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
 import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
-import { v4 as uuidv4 } from "uuid";
 import { InvocationType, InvokeCommand, LambdaClient } from "@aws-sdk/client-lambda";
+import { DataService } from "../event-handler/services/dataService";
+import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
 
 
 const client = new LambdaClient();
+const dataService = new DataService();
 
 class Lambda implements LambdaInterface {
 
@@ -31,9 +33,13 @@ class Lambda implements LambdaInterface {
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: AppSyncResolverEvent<GenerateAssessmentQueryVariables>, lambdaContext: Context): Promise<string> {
+    if (!event.arguments.input) {
+      throw new Error("Invalid input");
+    }
 
-    const assessmentId = uuidv4();
-    logger.info(event as any);
+    const identity = event.identity as AppSyncIdentityCognito;
+    const userId = identity.sub;
+    const assessmentId = await dataService.storeEmptyAssessment(event.arguments.input, userId);
 
     // noinspection TypeScriptValidateTypes
     const invokeResponse = await client.send(new InvokeCommand({
@@ -45,8 +51,6 @@ class Lambda implements LambdaInterface {
       }),
     }));
     logger.info(invokeResponse);
-
-    //TODO add a row in DDB to indicate "in progress"
 
     return assessmentId;
   }
