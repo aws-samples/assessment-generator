@@ -47,6 +47,7 @@ export class DataStack extends NestedStack {
         },
       },
       logConfig: { retention: aws_logs.RetentionDays.ONE_WEEK, fieldLogLevel: aws_appsync.FieldLogLevel.ALL },
+      xrayEnabled: true
     });
 
     /////////// Settings

@@ -8,7 +8,7 @@ import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt"
 
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
-const ASSESSMENT_TABLE = process.env.ASSESSMENT_TABLE || "GenAssessStack-DataStackNestedStackDataStackNestedStackResource8D986F6F-1B8VYNK2IZULF-AssessmentsTable6996196E-4JI1FPXW24NX";
+const ASSESSMENT_TABLE = process.env.ASSESSMENTS_TABLE;
 export class DataService {
 
   async storeAssessment(improvedQuestions: Question[], userId: string, assessmentId?:string) {
