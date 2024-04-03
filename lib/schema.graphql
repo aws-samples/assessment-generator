@@ -57,10 +57,11 @@ input AssessTemplateInput {
 }
 
 type QandA {
-  title: String!
-  question: String!
-  answers: [String!]!
-  correctAnswer: Int!
+  title: String
+  question: String
+  answers: [String]
+  correctAnswer: Int
+  explanation: String
 }
 
 input QandAInput {
@@ -79,6 +80,7 @@ type Assessment {
   updatedAt: AWSDateTime
   questions: [QandA!]!
   published: Boolean
+  status: String!
 }
 
 input AssessmentInput {

@@ -79,6 +79,7 @@ export type Assessment = {
   updatedAt?: string | null,
   questions:  Array<QandA >,
   published?: boolean | null,
+  status: string,
 };
 
 export type QandA = {
@@ -181,6 +182,7 @@ export type UpsertAssessmentMutation = {
       correctAnswer: number,
     } >,
     published?: boolean | null,
+    status: string,
   } | null,
 };
 
@@ -208,12 +210,16 @@ export type UpsertStudentAssessmentMutation = {
         correctAnswer: number,
       } >,
       published?: boolean | null,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type GetSettingsQueryVariables = {
 };
 
 export type GetSettingsQuery = {
@@ -225,6 +231,9 @@ export type GetSettingsQuery = {
   } | null,
 };
 
+export type ListCoursesQueryVariables = {
+};
+
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -232,6 +241,9 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
+};
+
+export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -264,7 +276,11 @@ export type GetAssessmentQuery = {
       correctAnswer: number,
     } >,
     published?: boolean | null,
+    status: string,
   } | null,
+};
+
+export type ListAssessmentsQueryVariables = {
 };
 
 export type ListAssessmentsQuery = {
@@ -284,6 +300,7 @@ export type ListAssessmentsQuery = {
       correctAnswer: number,
     } >,
     published?: boolean | null,
+    status: string,
   } | null > | null,
 };
 
@@ -311,12 +328,16 @@ export type GetStudentAssessmentQuery = {
         correctAnswer: number,
       } >,
       published?: boolean | null,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
@@ -339,6 +360,7 @@ export type ListStudentAssessmentsQuery = {
         correctAnswer: number,
       } >,
       published?: boolean | null,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
