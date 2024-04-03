@@ -58,6 +58,11 @@ export default () => {
               cell: (item) => item.updatedAt,
             },
             {
+              id: 'status',
+              header: 'Status',
+              cell: (item) => item.status,
+            },
+            {
               id: 'edit',
               header: '',
               cell: (item) =>
@@ -97,6 +102,7 @@ export default () => {
             { id: 'lectureDate', visible: true },
             { id: 'deadline', visible: true },
             { id: 'updatedAt', visible: true },
+            { id: 'status', visible: true },
             { id: 'edit', visible: true },
             { id: 'publish', visible: true },
           ]}

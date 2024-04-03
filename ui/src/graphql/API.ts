@@ -58,8 +58,9 @@ export type AssessmentInput = {
   course: string,
   lectureDate: string,
   deadline: string,
-  questions: Array< QandAInput | null >,
+  questions: Array< QandAInput >,
   published?: boolean | null,
+  status: string,
 };
 
 export type QandAInput = {
@@ -67,18 +68,20 @@ export type QandAInput = {
   question: string,
   answers: Array< string | null >,
   correctAnswer: number,
+  explanation: string,
 };
 
 export type Assessment = {
   __typename: "Assessment",
   id: string,
-  name?: string | null,
-  course?: string | null,
-  lectureDate?: string | null,
-  deadline?: string | null,
-  updatedAt?: string | null,
+  name: string,
+  course: string,
+  lectureDate: string,
+  deadline: string,
+  updatedAt: string,
   questions:  Array<QandA >,
-  published?: boolean | null,
+  published: boolean,
+  status: string,
 };
 
 export type QandA = {
@@ -87,6 +90,7 @@ export type QandA = {
   question: string,
   answers: Array< string >,
   correctAnswer: number,
+  explanation: string,
 };
 
 export type StudentAssessmentInput = {
@@ -168,19 +172,21 @@ export type UpsertAssessmentMutation = {
   upsertAssessment?:  {
     __typename: "Assessment",
     id: string,
-    name?: string | null,
-    course?: string | null,
-    lectureDate?: string | null,
-    deadline?: string | null,
-    updatedAt?: string | null,
+    name: string,
+    course: string,
+    lectureDate: string,
+    deadline: string,
+    updatedAt: string,
     questions:  Array< {
       __typename: "QandA",
       title: string,
       question: string,
       answers: Array< string >,
       correctAnswer: number,
+      explanation: string,
     } >,
-    published?: boolean | null,
+    published: boolean,
+    status: string,
   } | null,
 };
 
@@ -195,25 +201,30 @@ export type UpsertStudentAssessmentMutation = {
     assessment?:  {
       __typename: "Assessment",
       id: string,
-      name?: string | null,
-      course?: string | null,
-      lectureDate?: string | null,
-      deadline?: string | null,
-      updatedAt?: string | null,
+      name: string,
+      course: string,
+      lectureDate: string,
+      deadline: string,
+      updatedAt: string,
       questions:  Array< {
         __typename: "QandA",
         title: string,
         question: string,
         answers: Array< string >,
         correctAnswer: number,
+        explanation: string,
       } >,
-      published?: boolean | null,
+      published: boolean,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type GetSettingsQueryVariables = {
 };
 
 export type GetSettingsQuery = {
@@ -225,6 +236,9 @@ export type GetSettingsQuery = {
   } | null,
 };
 
+export type ListCoursesQueryVariables = {
+};
+
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -232,6 +246,9 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
+};
+
+export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -251,39 +268,46 @@ export type GetAssessmentQuery = {
   getAssessment?:  {
     __typename: "Assessment",
     id: string,
-    name?: string | null,
-    course?: string | null,
-    lectureDate?: string | null,
-    deadline?: string | null,
-    updatedAt?: string | null,
+    name: string,
+    course: string,
+    lectureDate: string,
+    deadline: string,
+    updatedAt: string,
     questions:  Array< {
       __typename: "QandA",
       title: string,
       question: string,
       answers: Array< string >,
       correctAnswer: number,
+      explanation: string,
     } >,
-    published?: boolean | null,
+    published: boolean,
+    status: string,
   } | null,
+};
+
+export type ListAssessmentsQueryVariables = {
 };
 
 export type ListAssessmentsQuery = {
   listAssessments?:  Array< {
     __typename: "Assessment",
     id: string,
-    name?: string | null,
-    course?: string | null,
-    lectureDate?: string | null,
-    deadline?: string | null,
-    updatedAt?: string | null,
+    name: string,
+    course: string,
+    lectureDate: string,
+    deadline: string,
+    updatedAt: string,
     questions:  Array< {
       __typename: "QandA",
       title: string,
       question: string,
       answers: Array< string >,
       correctAnswer: number,
+      explanation: string,
     } >,
-    published?: boolean | null,
+    published: boolean,
+    status: string,
   } | null > | null,
 };
 
@@ -298,25 +322,30 @@ export type GetStudentAssessmentQuery = {
     assessment?:  {
       __typename: "Assessment",
       id: string,
-      name?: string | null,
-      course?: string | null,
-      lectureDate?: string | null,
-      deadline?: string | null,
-      updatedAt?: string | null,
+      name: string,
+      course: string,
+      lectureDate: string,
+      deadline: string,
+      updatedAt: string,
       questions:  Array< {
         __typename: "QandA",
         title: string,
         question: string,
         answers: Array< string >,
         correctAnswer: number,
+        explanation: string,
       } >,
-      published?: boolean | null,
+      published: boolean,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
@@ -326,19 +355,21 @@ export type ListStudentAssessmentsQuery = {
     assessment?:  {
       __typename: "Assessment",
       id: string,
-      name?: string | null,
-      course?: string | null,
-      lectureDate?: string | null,
-      deadline?: string | null,
-      updatedAt?: string | null,
+      name: string,
+      course: string,
+      lectureDate: string,
+      deadline: string,
+      updatedAt: string,
       questions:  Array< {
         __typename: "QandA",
         title: string,
         question: string,
         answers: Array< string >,
         correctAnswer: number,
+        explanation: string,
       } >,
-      published?: boolean | null,
+      published: boolean,
+      status: string,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,

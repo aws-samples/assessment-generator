@@ -131,14 +131,14 @@ export default () => {
           </Container>
           <Container header={<Header variant="h2">Choose Correct Answer</Header>}>
             <Tiles
-              value={correctAnswer.toString()}
+              value={(correctAnswer-1).toString()}
               items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
               onChange={({ detail }) =>
                 updateAssessment({
                   type: ActionTypes.Update,
                   stepIndex: activeStepIndex,
                   key: 'correctAnswer',
-                  content: +detail.value,
+                  content: +detail.value+1,
                 })
               }
             />

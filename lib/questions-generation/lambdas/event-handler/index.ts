@@ -16,19 +16,64 @@
 
 
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { APIGatewayProxyEventV2, Context, SQSBatchResponse } from 'aws-lambda';
+import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
+import { ReferenceDocuments } from "./models/referenceDocuments";
+import { DataService } from "./services/dataService";
+import { GenAiService } from "./services/genAiService";
+import { GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
+import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
 
+
+const dataService = new DataService();
+
+class WrappedAppSyncEvent {
+  assessmentId: string;
+  ctx: AppSyncResolverEvent<GenerateAssessmentQueryVariables>;
+}
 
 class Lambda implements LambdaInterface {
+  knowledgeBaseId: string;
+
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: APIGatewayProxyEventV2, lambdaContext: Context): Promise<string> {
+  async handler(event: WrappedAppSyncEvent, lambdaContext: Context): Promise<string> {
+    //TODO implement mechanism to update the table with Status:failed in case of errors
 
-    return "Success";
+    let assessmentId = event.assessmentId;
+    const ctx = event.ctx;
+    const generateAssessmentInput = ctx.arguments.input;
+    logger.info(generateAssessmentInput as any);
+
+    const identity = ctx.identity as AppSyncIdentityCognito;
+    const userId = identity.sub;
+
+    if (!generateAssessmentInput) {
+      throw new Error("Unable to process the request");
+    }
+    const referenceDocuments = await ReferenceDocuments.fromRequest(generateAssessmentInput);
+    this.knowledgeBaseId = referenceDocuments.knowledgeBaseId;
+    const genAiService = new GenAiService(this.knowledgeBaseId);
+
+    // Extract topics from the Transcript document
+    const topicsExtractionOutput = await genAiService.getTopics(referenceDocuments);
+
+    // Generate questions with given values
+    const generatedQuestions = await genAiService.generateInitialQuestions(topicsExtractionOutput, referenceDocuments.assessmentTemplate);
+
+    // Query knowledge base for relevant documents
+    // Refine questions/answers and include relevant documents
+    const improvedQuestions = await genAiService.improveQuestions(generatedQuestions);
+
+    logger.info(improvedQuestions as any);
+
+    assessmentId = await dataService.updateAssessment(improvedQuestions, userId, assessmentId);
+    logger.info(`Assessment generated: ${assessmentId}`);
+    return assessmentId;
   }
 }
+
 
 // The Lambda handler class.
 const handlerClass = new Lambda();

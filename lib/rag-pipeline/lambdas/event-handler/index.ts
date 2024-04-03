@@ -14,130 +14,68 @@
  * limitations under the License.
  */
 
-import { InvalidDocumentObjectException, ObjectNotFoundException } from './exceptions';
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
-import { Context, S3Event, S3EventRecord, SQSBatchResponse, SQSEvent, SQSRecord } from 'aws-lambda';
-import { BatchProcessor, EventType, processPartialResponse } from '@aws-lambda-powertools/batch';
-import { StartIngestionJobCommandOutput } from '@aws-sdk/client-bedrock-agent';
+import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { CopyObjectCommand, CopyObjectOutput, S3Client } from "@aws-sdk/client-s3";
-import { DocumentEvent } from "./s3/documentEvent";
-import { extractPrefix } from "./utils/extractPrefix";
 import { logger, tracer } from "./utils/pt";
-import { getEventType } from "./s3/getEventType";
 import { BedrockKnowledgeBase } from "./kb/bedrockKnowledgeBase";
-
-/**
- * The async batch processor processes the received
- * events from SQS in parallel.
- */
-const processor = new BatchProcessor(EventType.SQS);
-
-/**
- * When S3 emits an event, it will encode the object key
- * in the event record using quote-encoding.
- * This function restores the object key in its unencoded
- * form and returns the event record with the unquoted object key.
- * @param event the S3 event record.
- * @returns the S3 event record with the unquoted object key.
- */
-const unquote = (event: S3EventRecord): S3EventRecord => {
-  event.s3.object.key = decodeURIComponent(event.s3.object.key.replace(/\+/g, " "));
-  return (event);
-};
+import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
+import { CreateKnowledgeBaseQueryVariables } from "../../../../ui/src/graphql/API";
 
 
 const s3Client = new S3Client();
 
-/**
- * The lambda class definition containing the lambda handler.
- * @note using a `LambdaInterface` is required in
- * this context in order to be able to use annotations
- * that are only supported on classes and methods.
- */
 class Lambda implements LambdaInterface {
-
   /**
-   * @param s3Event the S3 event record.
-   * @note the `next` decorator will automatically forward the
-   * returned cloud event to the next middlewares
+   * @param event the received AppSyncResolver event, wrapping the KB creation request
+   * @param lambdaContext the Context provided by Lambda
    */
-  //TODO Add idempotency
-  async s3RecordHandler(s3Event: S3EventRecord): Promise<StartIngestionJobCommandOutput> {
-    const event = unquote(s3Event);
-    const objectKey = event.s3.object.key;
+  @tracer.captureLambdaHandler()
+  @logger.injectLambdaContext({ logEvent: true })
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async handler(event: AppSyncResolverEvent<CreateKnowledgeBaseQueryVariables>, lambdaContext: Context): Promise<string> {
 
-    logger.info("Normalised event", { data: { original: objectKey, normalised: event.s3.object.key } } as any);
-
-    //TODO validate object types
-    const eventType = getEventType(event.eventName);
-    if (eventType === DocumentEvent.DOCUMENT_DELETED) {
-      return;
+    let kbCreationRequest = event.arguments;
+    if (!(kbCreationRequest && kbCreationRequest.courseId && kbCreationRequest.locations && kbCreationRequest.locations.length > 0)) {
+      throw new Error("Invalid inputs");
     }
-    const prefix = extractPrefix(objectKey);
 
+    await this.copyObjects(kbCreationRequest.locations);
+    const identity = event.identity as AppSyncIdentityCognito;
+    const userId = identity.sub;
 
+    const knowledgeBase = await BedrockKnowledgeBase.getKnowledgeBase(userId, kbCreationRequest.courseId);
+
+    const startIngestionJobCommandOutput = await knowledgeBase.ingestDocuments();
+    if (!(startIngestionJobCommandOutput.ingestionJob && startIngestionJobCommandOutput.ingestionJob.ingestionJobId)) {
+      throw new Error("KB Ingestion failed");
+    }
+    return startIngestionJobCommandOutput.ingestionJob.ingestionJobId;
+  }
+
+  private async copyObjects(objectKeys: Array<string | null>) {
+    for (let i = 0; i < objectKeys.length; i++) {
+      const objectKey = objectKeys[i];
+      //TODO change the Type so that value can't be null
+      if (objectKey) {
+        await this.copyObject(objectKey);
+      }
+    }
+  }
+
+  private async copyObject(objectKey: string) {
+    const newObjectKey = objectKey.replace("KnowledgeBases/", "");
+    logger.info({ objectKey, newObjectKey } as any);
     //Upload file to destination S3 bucket
     const copyObjectRequest = {
-      CopySource: `${event.s3.bucket.name}/${objectKey}`,
+      CopySource: `${process.env.ARTIFACTS_UPLOAD_BUCKET}/public/${objectKey}`,
       Bucket: process.env.KB_STAGING_BUCKET,
-      Key: objectKey,
+      Key: newObjectKey,
     };
     logger.info("Copy object to target bucket", copyObjectRequest as any);
     const copyObjectCommand = new CopyObjectCommand(copyObjectRequest);
     const copyObjectOutput = await s3Client.send<CopyObjectOutput>(copyObjectCommand);
     logger.info("CopyObject result", { data: copyObjectOutput } as any);
-
-    const knowledgeBase = await BedrockKnowledgeBase.getKnowledgeBase(prefix);
-    return await knowledgeBase.ingestDocuments();
-  }
-
-  /**
-   * @param record an SQS record to process. This SQS record
-   * contains at least an S3 event.
-   * @return a promise that resolves when all the S3 events
-   * contained in the SQS record have been processed.
-   */
-  async sqsRecordHandler(record: SQSRecord): Promise<any> {
-    const event = JSON.parse(record.body) as S3Event;
-
-    // Filter out invalid events.
-    if (!Array.isArray(event.Records)) {
-      return (Promise.resolve());
-    }
-
-    // For each record in the S3 event, we forward them
-    // in a normalized way to the next middlewares.
-    for (const record of event.Records) {
-      try {
-        await this.s3RecordHandler(record);
-      } catch (err) {
-        logger.error(err as any);
-        if (err instanceof ObjectNotFoundException
-          || err instanceof InvalidDocumentObjectException) {
-          // If the S3 object was not found, or is not a file,
-          // the event should be ignored.
-
-        } else {
-          throw err;
-        }
-      }
-    }
-  }
-
-  /**
-   * @param event the received SQS records, each wrapping
-   * a collection of S3 events.
-   * @param lambdaContext the Context provided by Lambda
-   * @note the input looks as follows:
-   *  SQSEvent { Records: [SqsRecord<S3Event>, ...] }
-   */
-  @tracer.captureLambdaHandler()
-  @logger.injectLambdaContext({ logEvent: true })
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async handler(event: SQSEvent, lambdaContext: Context): Promise<SQSBatchResponse> {
-    return (await processPartialResponse(
-      event, this.sqsRecordHandler.bind(this), processor,
-    ));
   }
 }
 

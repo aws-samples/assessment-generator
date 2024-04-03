@@ -72,9 +72,13 @@ export default () => {
                       })
                     )
                   );
+                  //TODO implement validation
+                  if (!(course && course.value)){
+                    throw new Error("Invalid course")
+                  }
                   client.graphql({
                     query: generateAssessment,
-                    variables: { input: { name, lectureDate, deadline, courseId: course?.value, locations: data.map(({ key }) => key) } },
+                    variables: { input: { name, lectureDate, deadline, courseId: course.value, locations: data.map(({ key }) => key) } },
                   });
                   dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment is being generated' });
                 } catch (_e) {

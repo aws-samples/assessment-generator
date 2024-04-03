@@ -5,24 +5,27 @@ import {
   aws_cognito,
   aws_dynamodb,
   aws_iam,
+  aws_lambda_nodejs,
   aws_logs,
+  Duration,
   NestedStack,
   NestedStackProps,
   RemovalPolicy,
-  aws_lambda_nodejs,
 } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from 'path';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
+import * as s3 from "aws-cdk-lib/aws-s3";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
 
 interface DataStackProps extends NestedStackProps {
   userPool: aws_cognito.UserPool;
+  artifactsUploadBucket: s3.Bucket;
+  documentProcessorLambda: NodejsFunction;
 }
 
 export class DataStack extends NestedStack {
@@ -31,6 +34,8 @@ export class DataStack extends NestedStack {
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
     const { userPool } = props;
+    const artifactsUploadBucket = props.artifactsUploadBucket;
+    const documentProcessorLambda = props.documentProcessorLambda;
 
     const api = new aws_appsync.GraphqlApi(this, 'Api', {
       name: 'Api',
@@ -42,6 +47,7 @@ export class DataStack extends NestedStack {
         },
       },
       logConfig: { retention: aws_logs.RetentionDays.ONE_WEEK, fieldLogLevel: aws_appsync.FieldLogLevel.ALL },
+      xrayEnabled: true
     });
 
     /////////// Settings
@@ -205,12 +211,12 @@ export class DataStack extends NestedStack {
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
         actions: ['bedrock:*'],
-      })
+      }),
     );
 
     // Creating the log group.
     const logGroup = new LogGroup(this, 'LogGroup', {
-      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/middlewares/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
+      logGroupName: `/${NAMESPACE}/${cdk.Stack.of(this).stackName}/${QUESTIONS_GENERATOR_NAME}/${this.node.addr}`,
       retention: RetentionDays.ONE_WEEK,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
@@ -223,24 +229,43 @@ export class DataStack extends NestedStack {
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
       tracing: Tracing.ACTIVE,
+      timeout: Duration.minutes(15),
       logGroup: logGroup,
       environment: {
         POWERTOOLS_SERVICE_NAME: 'questions-generator',
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
-        // BEDROCK_ROLE_ARN: bedrockExecutionRole.roleArn,
-        // OPSS_HOST: cfnCollection.attrCollectionEndpoint,
-        // OPSS_COLLECTION_ARN: cfnCollection.attrArn,
-        // KB_STAGING_BUCKET: kbStagingBucket.bucketName,
+        Q_GENERATION_BUCKET: artifactsUploadBucket.bucketName,
+        ASSESSMENTS_TABLE: assessmentsTable.tableName,
       },
       bundling: {
         minify: true,
         externalModules: ['@aws-sdk/client-s3', '@aws-sdk/client-sns'],
       },
     });
+    artifactsUploadBucket.grantRead(questionsGenerator);
+    assessmentsTable.grantReadWriteData(questionsGenerator);
 
-    let lambdaRestApi = new LambdaRestApi(this, 'myapi', {
-      handler: questionsGenerator,
+    const qaGeneratorWrapper = new NodejsFunction(this, `${QUESTIONS_GENERATOR_NAME}-wrapper`, {
+      description: 'Wraps around the Question generator ',
+      entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'wrapper', 'index.ts'),
+      memorySize: 512,
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      tracing: Tracing.ACTIVE,
+      timeout: Duration.seconds(30),
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'questions-generator-wrapper',
+        POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
+        QA_LAMBDA_NAME: questionsGenerator.functionName,
+        ASSESSMENTS_TABLE: assessmentsTable.tableName,
+      },
+      bundling: {
+        minify: true,
+        externalModules: ['@aws-sdk/client-lambda'],
+      },
     });
+    questionsGenerator.grantInvoke(qaGeneratorWrapper);
+    assessmentsTable.grantReadWriteData(qaGeneratorWrapper);
 
     /////////// Publish Assessment
 
@@ -251,6 +276,10 @@ export class DataStack extends NestedStack {
         studentsTable: studentsTable.tableName,
         studentAssessmentsTable: studentAssessmentsTable.tableName,
         assessmentsTable: assessmentsTable.tableName,
+      },
+      bundling: {
+        minify: true,
+        externalModules: ['@aws-sdk/client-dynamodb'],
       },
     });
     studentsTable.grantReadData(publishFn);
@@ -266,11 +295,7 @@ export class DataStack extends NestedStack {
     });
 
     /////////// Create KnowledgeBase
-
-    const createKnowledgeBaseFn = new aws_lambda_nodejs.NodejsFunction(this, 'KnowledgeBaseFn', {
-      entry: 'lib/lambdas/dummy.ts',
-    });
-    const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', createKnowledgeBaseFn);
+    const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', documentProcessorLambda);
 
     createKnowledgeBaseDs.createResolver('CreateKnowledgeBaseResolver', {
       typeName: 'Query',
@@ -280,11 +305,7 @@ export class DataStack extends NestedStack {
     });
 
     /////////// Generate Assessment
-
-    const generateAssessmentFn = new aws_lambda_nodejs.NodejsFunction(this, 'GenerateAssessmentFn', {
-      entry: 'lib/lambdas/dummy.ts',
-    });
-    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', generateAssessmentFn);
+    const generateAssessmentDs = api.addLambdaDataSource('GenerateAssessmentDs', qaGeneratorWrapper);
 
     generateAssessmentDs.createResolver('GenerateAssessmentResolver', {
       typeName: 'Query',
