@@ -66,9 +66,9 @@ Structure your response in this format and do not include any additional text, r
 <response>
     <questions>
         <title>[Brief question title]</title>
-        <questionText>
+        <question>
             [Question]
-        </questionText>
+        </question>
         <answers>[Option 1]</answers>
         <answers>[Option 2]</answers>
         <answers>[Option 3]</answers>
@@ -175,9 +175,9 @@ Structure your response in this format and do not include any additional imput. 
 \`\`\`xml
 <question>
     <title>[Brief question title]</title>
-    <questionText>
+    <question>
         [Question]
-    </questionText>
+    </question>
     <answers>[Option 1]</answers>
     <answers>[Option 2]</answers>
     <answers>[Option 3]</answers>

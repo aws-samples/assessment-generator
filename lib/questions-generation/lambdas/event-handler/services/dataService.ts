@@ -45,6 +45,7 @@ export class DataService {
         userId: userId,
         id: assessmentId,
         status: "IN_PROGRESS",
+        questions: [],
         published: false,
         updatedAt: (new Date()).toISOString(),
       },
