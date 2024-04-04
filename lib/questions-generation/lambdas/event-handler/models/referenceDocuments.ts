@@ -2,9 +2,11 @@ import { AssessmentTemplate } from "./assessmentTemplate";
 import { GetObjectCommand, GetObjectCommandOutput, S3Client } from "@aws-sdk/client-s3";
 import { GenerateAssessmentInput } from "../../../../../ui/src/graphql/API";
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
+import { DataService } from "../services/dataService";
 
 
 const s3Client = new S3Client();
+const dataService = new DataService();
 
 export class ReferenceDocuments {
   private static SOURCE_BUCKET = process.env.Q_GENERATION_BUCKET;
@@ -18,10 +20,11 @@ export class ReferenceDocuments {
     this.knowledgeBaseId = knowledgeBaseId;
   }
 
-  static async fromRequest(generateAssessmentInput: GenerateAssessmentInput) {
+  static async fromRequest(generateAssessmentInput: GenerateAssessmentInput, userId: string) {
     const documents = generateAssessmentInput.locations;
     const assessmentTemplateId = "";
-    const knowledgeBaseId = "0LZGU4OWBW";
+    const {knowledgeBaseId} = await dataService.getExistingKnowledgeBase(generateAssessmentInput.courseId, userId);
+    logger.info(`Using knowledgeBaseId: ${knowledgeBaseId}`);
 
     let documentsContent = await Promise.all(documents.map(async (s3ObjectKey) => {
       if (s3ObjectKey == null) {

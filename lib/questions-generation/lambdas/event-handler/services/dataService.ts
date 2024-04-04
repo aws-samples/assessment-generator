@@ -8,6 +8,7 @@ import { Assessment, GenerateAssessmentInput, QandA } from "../../../../../ui/sr
 const client = new DynamoDBClient();
 const docClient = DynamoDBDocumentClient.from(client);
 const ASSESSMENT_TABLE = process.env.ASSESSMENTS_TABLE;
+const KB_TABLE = process.env.KB_TABLE
 
 export class DataService {
 
@@ -71,5 +72,22 @@ export class DataService {
 
     logger.info(ddbResponse as any);
     return ddbResponse.Item as Assessment;
+  }
+
+
+  async getExistingKnowledgeBase(courseId: string, userId: string) {
+    // noinspection TypeScriptValidateTypes
+    const command = new GetCommand({
+      Key: {
+        userId: userId,
+        courseId: courseId,
+      },
+      TableName: KB_TABLE,
+    });
+    logger.info(command as any);
+    let ddbResponse = await docClient.send(command);
+
+    logger.info(ddbResponse as any);
+    return ddbResponse.Item;
   }
 }

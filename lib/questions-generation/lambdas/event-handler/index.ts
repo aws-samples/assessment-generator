@@ -52,7 +52,7 @@ class Lambda implements LambdaInterface {
     if (!generateAssessmentInput) {
       throw new Error("Unable to process the request");
     }
-    const referenceDocuments = await ReferenceDocuments.fromRequest(generateAssessmentInput);
+    const referenceDocuments = await ReferenceDocuments.fromRequest(generateAssessmentInput, userId);
     this.knowledgeBaseId = referenceDocuments.knowledgeBaseId;
     const genAiService = new GenAiService(this.knowledgeBaseId);
 

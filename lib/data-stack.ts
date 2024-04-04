@@ -18,6 +18,7 @@ import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as s3 from "aws-cdk-lib/aws-s3";
+import { TableV2 } from "aws-cdk-lib/aws-dynamodb";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -26,6 +27,7 @@ interface DataStackProps extends NestedStackProps {
   userPool: aws_cognito.UserPool;
   artifactsUploadBucket: s3.Bucket;
   documentProcessorLambda: NodejsFunction;
+  kbTable: TableV2
 }
 
 export class DataStack extends NestedStack {
@@ -33,7 +35,7 @@ export class DataStack extends NestedStack {
 
   constructor(scope: Construct, id: string, props: DataStackProps) {
     super(scope, id, props);
-    const { userPool } = props;
+    const { userPool, kbTable } = props;
     const artifactsUploadBucket = props.artifactsUploadBucket;
     const documentProcessorLambda = props.documentProcessorLambda;
 
@@ -236,6 +238,7 @@ export class DataStack extends NestedStack {
         POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
         Q_GENERATION_BUCKET: artifactsUploadBucket.bucketName,
         ASSESSMENTS_TABLE: assessmentsTable.tableName,
+        KB_TABLE: kbTable.tableName,
       },
       bundling: {
         minify: true,
@@ -244,6 +247,7 @@ export class DataStack extends NestedStack {
     });
     artifactsUploadBucket.grantRead(questionsGenerator);
     assessmentsTable.grantReadWriteData(questionsGenerator);
+    kbTable.grantReadData(questionsGenerator);
 
     const qaGeneratorWrapper = new NodejsFunction(this, `${QUESTIONS_GENERATOR_NAME}-wrapper`, {
       description: 'Wraps around the Question generator ',

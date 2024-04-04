@@ -18,6 +18,7 @@ export class GenAssessStack extends Stack {
       userPool: authStack.userPool,
       artifactsUploadBucket: ragPipipelineStack.artifactsUploadBucket,
       documentProcessorLambda: ragPipipelineStack.documentProcessor,
+      kbTable: ragPipipelineStack.kbTable
     });
 
     const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });

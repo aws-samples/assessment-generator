@@ -18,6 +18,7 @@ import { Architecture, Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 import * as opensearchserverless from 'aws-cdk-lib/aws-opensearchserverless';
 import { ManagedPolicy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { TableV2 } from "aws-cdk-lib/aws-dynamodb";
 
 
 /**
@@ -43,6 +44,7 @@ const DOCUMENT_PROCESSOR_NAME = 'DocumentProcessor';
 export class RagPipelineStack extends NestedStack {
   public artifactsUploadBucket: Bucket;
   public documentProcessor: NodejsFunction;
+  public kbTable: TableV2;
 
   constructor(scope: Construct, id: string, props?: NestedStackProps) {
     super(scope, id, props);
@@ -307,7 +309,7 @@ export class RagPipelineStack extends NestedStack {
     });
 
 
-    const kbTable = new aws_dynamodb.TableV2(this, 'KBTable', {
+    this.kbTable = new aws_dynamodb.TableV2(this, 'KBTable', {
       partitionKey: { name: 'userId', type: aws_dynamodb.AttributeType.STRING },
       sortKey: { name: 'courseId', type: aws_dynamodb.AttributeType.STRING },
       removalPolicy: RemovalPolicy.DESTROY,
@@ -332,7 +334,7 @@ export class RagPipelineStack extends NestedStack {
         OPSS_COLLECTION_ARN: cfnCollection.attrArn,
         KB_STAGING_BUCKET: kbStagingBucket.bucketName,
         ARTIFACTS_UPLOAD_BUCKET: this.artifactsUploadBucket.bucketName,
-        KB_TABLE: kbTable.tableName,
+        KB_TABLE: this.kbTable.tableName,
       },
       bundling: {
         minify: true,
@@ -344,7 +346,7 @@ export class RagPipelineStack extends NestedStack {
     });
     this.artifactsUploadBucket.grantRead(this.documentProcessor);
     kbStagingBucket.grantReadWrite(this.documentProcessor);
-    kbTable.grantReadWriteData(this.documentProcessor);
+    this.kbTable.grantReadWriteData(this.documentProcessor);
 
     // Display the source artifactsUploadBucket information in the console.
     new CfnOutput(this, 'SourceBucket', {
