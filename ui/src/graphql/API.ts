@@ -224,9 +224,6 @@ export type UpsertStudentAssessmentMutation = {
   } | null,
 };
 
-export type GetSettingsQueryVariables = {
-};
-
 export type GetSettingsQuery = {
   getSettings?:  {
     __typename: "Settings",
@@ -236,9 +233,6 @@ export type GetSettingsQuery = {
   } | null,
 };
 
-export type ListCoursesQueryVariables = {
-};
-
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -246,9 +240,6 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
-};
-
-export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -284,9 +275,6 @@ export type GetAssessmentQuery = {
     published: boolean,
     status: string,
   } | null,
-};
-
-export type ListAssessmentsQueryVariables = {
 };
 
 export type ListAssessmentsQuery = {
@@ -343,9 +331,6 @@ export type GetStudentAssessmentQuery = {
     score?: number | null,
     updatedAt?: string | null,
   } | null,
-};
-
-export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
