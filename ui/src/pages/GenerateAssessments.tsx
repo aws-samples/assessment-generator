@@ -73,10 +73,10 @@ export default () => {
                     )
                   );
                   //TODO implement validation
-                  if (!(course && course.value)){
-                    throw new Error("Invalid course")
+                  if (!(course && course.value)) {
+                    throw new Error('Invalid course');
                   }
-                  client.graphql({
+                  await client.graphql({
                     query: generateAssessment,
                     variables: { input: { name, lectureDate, deadline, courseId: course.value, locations: data.map(({ key }) => key) } },
                   });

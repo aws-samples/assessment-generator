@@ -56,7 +56,7 @@ export default () => {
             )
           );
           client.graphql({ query: createKnowledgeBase, variables: { courseId: course?.value, locations: data.map(({ key }) => key) } });
-          dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
+          await dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
         } catch (_e) {
           dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' });
         }
