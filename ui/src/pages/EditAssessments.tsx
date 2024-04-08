@@ -1,6 +1,6 @@
 import { useState, useReducer, useEffect, useContext } from 'react';
 import { Wizard, Container, Header, SpaceBetween, Input, Button, Textarea, Tiles } from '@cloudscape-design/components';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { Assessment } from '../graphql/API';
 import { getAssessment } from '../graphql/queries';
@@ -41,6 +41,7 @@ const reducer = (state: Assessment, actions: { type: ActionTypes; stepIndex?: nu
 
 export default () => {
   const params = useParams();
+  const navigate = useNavigate();
   const dispatchAlert = useContext(DispatchAlertContext);
 
   const [assessment, updateAssessment] = useReducer(reducer, {} as never);
@@ -63,7 +64,7 @@ export default () => {
   }, []);
 
   const steps =
-    (assessment as Assessment).questions?.map(({ title, question, answers, correctAnswer }) => ({
+    (assessment as Assessment).questions?.map(({ title, question, answers, correctAnswer, explanation }) => ({
       title,
       content: (
         <SpaceBetween size="l">
@@ -131,16 +132,24 @@ export default () => {
           </Container>
           <Container header={<Header variant="h2">Choose Correct Answer</Header>}>
             <Tiles
-              value={(correctAnswer-1).toString()}
+              value={(correctAnswer - 1).toString()}
               items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
               onChange={({ detail }) =>
                 updateAssessment({
                   type: ActionTypes.Update,
                   stepIndex: activeStepIndex,
                   key: 'correctAnswer',
-                  content: +detail.value+1,
+                  content: +detail.value + 1,
                 })
               }
+            />
+          </Container>
+          <Container header={<Header variant="h2">Explanation</Header>}>
+            <Textarea
+              onChange={({ detail }) =>
+                updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'explanation', content: detail.value })
+              }
+              value={explanation}
             />
           </Container>
         </SpaceBetween>
@@ -153,6 +162,7 @@ export default () => {
         client
           .graphql<any>({ query: upsertAssessment, variables: { input: assessment } })
           .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment updated successfully' }))
+          .then(() => navigate('/assessments/find-assessments'))
           .catch(() => dispatchAlert({ type: AlertType.ERROR }));
       }}
       i18nStrings={{
