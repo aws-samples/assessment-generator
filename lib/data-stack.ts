@@ -321,7 +321,22 @@ export class DataStack extends NestedStack {
     generateAssessmentDs.createResolver('GenerateAssessmentResolver', {
       typeName: 'Query',
       fieldName: 'generateAssessment',
-      code: aws_appsync.Code.fromAsset('lib/resolvers/generateAssessment.ts'),
+      code: aws_appsync.Code.fromAsset('lib/resolvers/lambdaResolver.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
+    /////////// Check Assessment Status
+
+    const checkAssessStatusFn = new NodejsFunction(this, 'CheckAssessStatusFn', {
+      entry: 'lib/lambdas/checkAssessStatus.ts',
+    });
+
+    const checkAssessStatusDs = api.addLambdaDataSource('CheckAssessmentStatusDs', checkAssessStatusFn);
+
+    checkAssessStatusDs.createResolver('CheckAssesstStatusResolver', {
+      typeName: 'Query',
+      fieldName: 'checkAssessStatus',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/lambdaResolver.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 

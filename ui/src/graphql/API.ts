@@ -138,6 +138,12 @@ export type GenerateAssessmentInput = {
   locations: Array< string | null >,
 };
 
+export enum AssessStatus {
+  InProgress = "InProgress",
+  Complete = "Complete",
+}
+
+
 export type UpsertSettingsMutationVariables = {
   input?: UpsertSettingsInput | null,
 };
@@ -405,4 +411,12 @@ export type GenerateAssessmentQueryVariables = {
 
 export type GenerateAssessmentQuery = {
   generateAssessment?: string | null,
+};
+
+export type CheckAssessStatusQueryVariables = {
+  id: string,
+};
+
+export type CheckAssessStatusQuery = {
+  checkAssessStatus?: AssessStatus | null,
 };

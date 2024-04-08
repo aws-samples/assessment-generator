@@ -10,6 +10,11 @@ enum AssessType {
   Type3
 }
 
+enum AssessStatus {
+  InProgress
+  Complete
+}
+
 type Settings {
   uiLang: Lang
   docLang: Lang
@@ -144,4 +149,5 @@ type Query {
   publishAssessment(assessmentId: ID!): Boolean
   createKnowledgeBase(courseId: ID, locations: [String]): ID
   generateAssessment(input: GenerateAssessmentInput): ID
+  checkAssessStatus(id: ID!): AssessStatus
 }

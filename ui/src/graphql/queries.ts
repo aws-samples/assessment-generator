@@ -142,3 +142,8 @@ export const generateAssessment = /* GraphQL */ `
     generateAssessment(input: $input)
   }
 `;
+export const checkAssessStatus = /* GraphQL */ `
+  query CheckAssessStatus($id: ID!) {
+    checkAssessStatus(id: $id)
+  }
+`;
