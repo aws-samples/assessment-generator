@@ -73,7 +73,7 @@ export type AssessmentInput = {
   deadline: string,
   questions: Array< QandAInput >,
   published?: boolean | null,
-  status: string,
+  status: AssessStatus,
 };
 
 export type QandAInput = {
@@ -83,6 +83,14 @@ export type QandAInput = {
   correctAnswer: number,
   explanation: string,
 };
+
+export enum AssessStatus {
+  IN_PROGRESS = "IN_PROGRESS",
+  CREATED = "CREATED",
+  FAILED = "FAILED",
+  PUBLISHED = "PUBLISHED",
+}
+
 
 export type Assessment = {
   __typename: "Assessment",
@@ -94,7 +102,7 @@ export type Assessment = {
   updatedAt: string,
   questions:  Array<QandA >,
   published: boolean,
-  status: string,
+  status: AssessStatus,
 };
 
 export type QandA = {
@@ -137,12 +145,6 @@ export type GenerateAssessmentInput = {
   deadline: string,
   locations: Array< string | null >,
 };
-
-export enum AssessStatus {
-  InProgress = "InProgress",
-  Complete = "Complete",
-}
-
 
 export type UpsertSettingsMutationVariables = {
   input?: UpsertSettingsInput | null,
@@ -211,7 +213,7 @@ export type UpsertAssessmentMutation = {
       explanation: string,
     } >,
     published: boolean,
-    status: string,
+    status: AssessStatus,
   } | null,
 };
 
@@ -240,7 +242,7 @@ export type UpsertStudentAssessmentMutation = {
         explanation: string,
       } >,
       published: boolean,
-      status: string,
+      status: AssessStatus,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
@@ -298,7 +300,7 @@ export type GetAssessmentQuery = {
       explanation: string,
     } >,
     published: boolean,
-    status: string,
+    status: AssessStatus,
   } | null,
 };
 
@@ -320,7 +322,7 @@ export type ListAssessmentsQuery = {
       explanation: string,
     } >,
     published: boolean,
-    status: string,
+    status: AssessStatus,
   } | null > | null,
 };
 
@@ -349,7 +351,7 @@ export type GetStudentAssessmentQuery = {
         explanation: string,
       } >,
       published: boolean,
-      status: string,
+      status: AssessStatus,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
@@ -379,7 +381,7 @@ export type ListStudentAssessmentsQuery = {
         explanation: string,
       } >,
       published: boolean,
-      status: string,
+      status: AssessStatus,
     } | null,
     answers?: Array< number | null > | null,
     completed?: boolean | null,
@@ -411,12 +413,4 @@ export type GenerateAssessmentQueryVariables = {
 
 export type GenerateAssessmentQuery = {
   generateAssessment?: string | null,
-};
-
-export type CheckAssessStatusQueryVariables = {
-  id: string,
-};
-
-export type CheckAssessStatusQuery = {
-  checkAssessStatus?: AssessStatus | null,
 };

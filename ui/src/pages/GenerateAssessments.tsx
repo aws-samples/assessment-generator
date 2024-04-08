@@ -19,7 +19,7 @@ import {
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
 import { useNavigate } from 'react-router-dom';
-import { generateAssessment, listCourses, checkAssessStatus } from '../graphql/queries';
+import { generateAssessment, listCourses, getAssessment } from '../graphql/queries';
 import { Course, AssessStatus } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { UserProfileContext } from '../contexts/userProfile';
@@ -45,9 +45,9 @@ export default () => {
 
   function checkStatus() {
     setTimeout(() => {
-      client.graphql<any>({ query: checkAssessStatus, variables: { id: assessId } }).then(({ data }) => {
-        const status = data.checkAssessStatus;
-        if (status === AssessStatus.Complete) {
+      client.graphql<any>({ query: getAssessment, variables: { id: assessId } }).then(({ data }) => {
+        const { status } = data.getAssessment;
+        if (status === AssessStatus.CREATED) {
           dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment generated successfully' });
           return navigate(`/edit-assessment/${assessId}`);
         }

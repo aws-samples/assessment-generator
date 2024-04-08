@@ -3,7 +3,7 @@ import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, Butto
 import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { listAssessments, publishAssessment } from '../graphql/queries';
-import { Assessment } from '../graphql/API';
+import { Assessment, AssessStatus } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 
 const client = generateClient();
@@ -66,7 +66,7 @@ export default () => {
               id: 'edit',
               header: '',
               cell: (item) =>
-                item.published ? null : (
+                item.published || item.status !== AssessStatus.CREATED ? null : (
                   <Link
                     href={`/edit-assessment/${item.id}`}
                     onFollow={(e) => {
@@ -81,19 +81,20 @@ export default () => {
             {
               id: 'publish',
               header: '',
-              cell: (item) => (
-                <Button
-                  disabled={!!item.published}
-                  onClick={() =>
-                    client
-                      .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
-                      .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
-                      .catch(() => dispatchAlert({ type: AlertType.ERROR }))
-                  }
-                >
-                  {item.published ? 'Published' : 'Publish'}
-                </Button>
-              ),
+              cell: (item) =>
+                item.status === AssessStatus.CREATED ? (
+                  <Button
+                    disabled={!!item.published}
+                    onClick={() =>
+                      client
+                        .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
+                        .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                        .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+                    }
+                  >
+                    {item.published ? 'Published' : 'Publish'}
+                  </Button>
+                ) : null,
             },
           ]}
           columnDisplay={[

@@ -11,8 +11,10 @@ enum AssessType {
 }
 
 enum AssessStatus {
-  InProgress
-  Complete
+  IN_PROGRESS
+  CREATED
+  FAILED
+  PUBLISHED
 }
 
 type Settings {
@@ -92,7 +94,7 @@ type Assessment {
   updatedAt: AWSDateTime!
   questions: [QandA!]!
   published: Boolean!
-  status: String!
+  status: AssessStatus!
 }
 
 input AssessmentInput {
@@ -103,7 +105,7 @@ input AssessmentInput {
   deadline: AWSDate!
   questions: [QandAInput!]!
   published: Boolean
-  status: String!
+  status: AssessStatus!
 }
 
 type StudentAssessment {
@@ -149,5 +151,4 @@ type Query {
   publishAssessment(assessmentId: ID!): Boolean
   createKnowledgeBase(courseId: ID, locations: [String]): ID
   generateAssessment(input: GenerateAssessmentInput): ID
-  checkAssessStatus(id: ID!): AssessStatus
 }
