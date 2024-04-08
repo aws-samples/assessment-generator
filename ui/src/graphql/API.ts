@@ -29,6 +29,19 @@ export type Settings = {
   assessType?: AssessType | null,
 };
 
+export type CourseInput = {
+  id?: string | null,
+  name: string,
+  description: string,
+};
+
+export type Course = {
+  __typename: "Course",
+  id: string,
+  name?: string | null,
+  description?: string | null,
+};
+
 export type AssessTemplateInput = {
   name?: string | null,
   docLang: Lang,
@@ -110,13 +123,6 @@ export type StudentAssessment = {
   updatedAt?: string | null,
 };
 
-export type Course = {
-  __typename: "Course",
-  id: string,
-  name?: string | null,
-  description?: string | null,
-};
-
 export type Student = {
   __typename: "Student",
   id: string,
@@ -142,6 +148,19 @@ export type UpsertSettingsMutation = {
     uiLang?: Lang | null,
     docLang?: Lang | null,
     assessType?: AssessType | null,
+  } | null,
+};
+
+export type UpsertCourseMutationVariables = {
+  input?: CourseInput | null,
+};
+
+export type UpsertCourseMutation = {
+  upsertCourse?:  {
+    __typename: "Course",
+    id: string,
+    name?: string | null,
+    description?: string | null,
   } | null,
 };
 

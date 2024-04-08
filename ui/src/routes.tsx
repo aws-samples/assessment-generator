@@ -10,6 +10,7 @@ import EditAssessments from './pages/EditAssessments';
 import FindStudent from './pages/FindStudent';
 import MyDashboard from './pages/MyDashboard';
 import StudentAssessment from './pages/StudentAssessment';
+import Courses from './pages/Courses';
 
 export const routes = {
   teachers: [
@@ -32,6 +33,10 @@ export const routes = {
             {
               path: 'create-assessment-template',
               element: <CreateAssessmentTemplate />,
+            },
+            {
+              path: 'courses',
+              element: <Courses />,
             },
           ],
         },

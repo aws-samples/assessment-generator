@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, TextFilter, Button } from '@cloudscape-design/components';
+import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, Button, Pagination } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { listAssessments, publishAssessment } from '../graphql/queries';
@@ -114,7 +114,8 @@ export default () => {
               Empty
             </Box>
           }
-          filter={<TextFilter filteringPlaceholder="Find resources" filteringText="" />}
+          // filter={<TextFilter filteringPlaceholder="Find resources" filteringText="" />}
+          pagination={<Pagination currentPageIndex={1} pagesCount={1} />}
         />
       </Container>
     </ContentLayout>

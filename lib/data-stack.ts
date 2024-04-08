@@ -17,8 +17,8 @@ import path from 'path';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import * as s3 from "aws-cdk-lib/aws-s3";
-import { TableV2 } from "aws-cdk-lib/aws-dynamodb";
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -27,7 +27,7 @@ interface DataStackProps extends NestedStackProps {
   userPool: aws_cognito.UserPool;
   artifactsUploadBucket: s3.Bucket;
   documentProcessorLambda: NodejsFunction;
-  kbTable: TableV2
+  kbTable: TableV2;
 }
 
 export class DataStack extends NestedStack {
@@ -49,7 +49,7 @@ export class DataStack extends NestedStack {
         },
       },
       logConfig: { retention: aws_logs.RetentionDays.ONE_WEEK, fieldLogLevel: aws_appsync.FieldLogLevel.ALL },
-      xrayEnabled: true
+      xrayEnabled: true,
     });
 
     /////////// Settings
@@ -89,6 +89,13 @@ export class DataStack extends NestedStack {
       fieldName: 'listCourses',
       requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbScanTable(),
       responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
+    });
+
+    coursesDs.createResolver('MutationUpsertCourseResolver', {
+      typeName: 'Mutation',
+      fieldName: 'upsertCourse',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/upsertCourse.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
     /////////// Students
@@ -213,7 +220,7 @@ export class DataStack extends NestedStack {
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
         actions: ['bedrock:*'],
-      }),
+      })
     );
 
     // Creating the log group.

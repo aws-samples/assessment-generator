@@ -11,6 +11,15 @@ export const upsertSettings = /* GraphQL */ `
     }
   }
 `;
+export const upsertCourse = /* GraphQL */ `
+  mutation UpsertCourse($input: CourseInput) {
+    upsertCourse(input: $input) {
+      id
+      name
+      description
+    }
+  }
+`;
 export const createAssessTemplate = /* GraphQL */ `
   mutation CreateAssessTemplate($input: AssessTemplateInput) {
     createAssessTemplate(input: $input) {

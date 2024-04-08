@@ -28,6 +28,12 @@ type Course {
   description: String
 }
 
+input CourseInput {
+  id: ID
+  name: String!
+  description: String!
+}
+
 type Student {
   id: ID!
   firstName: String
@@ -121,6 +127,7 @@ input GenerateAssessmentInput {
 
 type Mutation {
   upsertSettings(input: UpsertSettingsInput): Settings
+  upsertCourse(input: CourseInput): Course
   createAssessTemplate(input: AssessTemplateInput): AssessTemplate
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
