@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
-import { Assessment, GenerateAssessmentInput, QandA } from "../../../../../ui/src/graphql/API";
+import { Assessment, AssessStatus, GenerateAssessmentInput, QandA } from "../../../../../ui/src/graphql/API";
 
 
 const client = new DynamoDBClient();
@@ -16,7 +16,7 @@ export class DataService {
 
     const currentAssessment = await this.getExistingAssessment(userId, assessmentId);
     currentAssessment.questions = improvedQuestions;
-    currentAssessment.status = "CREATED";
+    currentAssessment.status = AssessStatus.CREATED;
     currentAssessment.published = false;
     currentAssessment.updatedAt = (new Date()).toISOString();
 
@@ -45,7 +45,7 @@ export class DataService {
         deadline: assessmentInput.deadline,
         userId: userId,
         id: assessmentId,
-        status: "IN_PROGRESS",
+        status: AssessStatus.IN_PROGRESS,
         questions: [],
         published: false,
         updatedAt: (new Date()).toISOString(),

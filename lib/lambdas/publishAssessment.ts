@@ -1,5 +1,6 @@
 import { DynamoDBClient, BatchWriteItemCommand, UpdateItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
+import { AssessStatus } from "../../ui/src/graphql/API";
 
 const region = process.env.region!;
 const studentsTable = process.env.studentsTable!;
@@ -17,6 +18,7 @@ export const handler: Handler = async (event) => {
 
   console.log('students ==== ', students);
 
+  // noinspection TypeScriptValidateTypes
   await dynamoClient.send(
     new BatchWriteItemCommand({
       RequestItems: {
@@ -42,13 +44,15 @@ export const handler: Handler = async (event) => {
     })
   );
 
+  // noinspection TypeScriptValidateTypes
   await dynamoClient.send(
     new UpdateItemCommand({
       TableName: assessmentsTable,
       Key: { id: { S: assessmentId }, userId: { S: userId } },
-      UpdateExpression: 'set published = :published',
+      UpdateExpression: 'set published = :published, status = :status',
       ExpressionAttributeValues: {
         ':published': { BOOL: 'true' },
+        ':status': { S: AssessStatus.PUBLISHED },
       },
       ReturnValues: 'ALL_NEW',
     } as any)
