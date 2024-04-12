@@ -42,9 +42,38 @@ For each topic, include a brief description of what was covered.
   }
 
   public async generateInitialQuestions(topicsExtractionOutput: string, assessmentTemplate: AssessmentTemplate) {
+    // why generate answers at this step? can we generate them after?
+    // make sure you explain in AB3, do answers improve by generated after with KB
+    // framework to evaluate how to improve prompts - evaluate questions - a/b testing - compare cost, effectiveness,
+
+    // question that will come up - how do you evaluate responses - e.g. standard metrics - why Haiku, why Opus etc
+    // put in context of running in production as a customer - what would I want to know?
+
+    // what was the methodology for creating the promtps - what did you try, lessons learnt (slide)
+    // split prompts in a separate file for easier history lookup - or how could you load the prompt extrernally
+    // during AB3 - note down talking points on potential improvements (e.g. how you could improve/change) from
+
+    // try a Meta-prompt - ask how to improve the prompt - could reformulate/change - check Anthropic metaprompt - watch the training, see official docs
+
+    // KB topics - chunking, different mechanism?
+    // KB can you run Step Function instead of Lambda? future improvement Metadata
+
+    // assessment template - prompt injection
+
+    // Metrics for questions generations - use PT metrics
+    // could you generate by batch - enable customer to view
+
+    // how do you reslove internal link to HTTP accessible link - using
+
+    // AB3 - start from demo, show happy path, avoid getting derailed (especially if answer is coming later)
+    // explain customer can pick their own design and adapt
+    
+
+
     // TODO add topic to response for each question
     let prompt = `
 Craft a multiple-choice questionnaire (${assessmentTemplate.totalQuestions} questions)  for a university student based on the Provided Summarised Transcript.
+Ensure you have ONLY ${assessmentTemplate.totalQuestions} questions.
 Do not make references to the transcript or the lecture, the quiz should be clear and concise.
 Do not ask questions on whether the topic was covered or not in the lecture.
 Build ${assessmentTemplate.easyQuestions} easy, ${assessmentTemplate.mediumQuestions} medium, and ${assessmentTemplate.hardQuestions} hard questions.

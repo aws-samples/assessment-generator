@@ -64,6 +64,7 @@ class Lambda implements LambdaInterface {
 
     // Query knowledge base for relevant documents
     // Refine questions/answers and include relevant documents
+    // consideration - could lose the context because the improvement is 1 by 1
     const improvedQuestions = await genAiService.improveQuestions(generatedQuestions);
 
     logger.info(improvedQuestions as any);
