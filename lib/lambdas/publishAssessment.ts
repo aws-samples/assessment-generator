@@ -49,10 +49,13 @@ export const handler: Handler = async (event) => {
     new UpdateItemCommand({
       TableName: assessmentsTable,
       Key: { id: { S: assessmentId }, userId: { S: userId } },
-      UpdateExpression: 'set published = :published, status = :status',
+      UpdateExpression: 'set published = :published, #st = :status',
       ExpressionAttributeValues: {
         ':published': { BOOL: 'true' },
         ':status': { S: AssessStatus.PUBLISHED },
+      },
+      ExpressionAttributeNames:{
+        "#st":"status"
       },
       ReturnValues: 'ALL_NEW',
     } as any)
