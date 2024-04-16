@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Table, Header, SpaceBetween, Container, ContentLayout, Link, Box, Pagination } from '@cloudscape-design/components';
+import { Table, Header, SpaceBetween, Container, ContentLayout, Button, Box, Pagination } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { listStudentAssessments } from '../graphql/queries';
@@ -47,21 +47,13 @@ export default () => {
               sortingField: 'name',
             },
             {
-              id: 'status',
-              header: 'Status',
+              id: 'action',
+              header: 'Action',
               cell: (item) =>
                 item.completed ? (
-                  'Completed'
+                  <Button onClick={() => navigate('/review/' + item.parentAssessId)}>Review</Button>
                 ) : (
-                  <Link
-                    href={`/assessment/${item.parentAssessId}`}
-                    onFollow={(e) => {
-                      e.preventDefault();
-                      navigate(e.detail.href!);
-                    }}
-                  >
-                    Start
-                  </Link>
+                  <Button onClick={() => navigate('/assessment/' + item.parentAssessId)}>Start</Button>
                 ),
             },
             {
@@ -73,8 +65,8 @@ export default () => {
           columnDisplay={[
             { id: 'id', visible: true },
             { id: 'name', visible: true },
-            { id: 'status', visible: true },
             { id: 'score', visible: true },
+            { id: 'action', visible: true },
           ]}
           items={assessments}
           loadingText="Loading list"
