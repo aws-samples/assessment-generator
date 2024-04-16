@@ -34,11 +34,17 @@ export default () => {
         <Table
           columnDefinitions={[
             {
-              id: 'parentAssessId',
-              header: 'Assessment Id',
+              id: 'id',
+              header: 'Id',
               cell: (item) => item.parentAssessId,
               sortingField: 'id',
               isRowHeader: true,
+            },
+            {
+              id: 'name',
+              header: 'Name',
+              cell: (item) => item.assessment!.name,
+              sortingField: 'name',
             },
             {
               id: 'status',
@@ -65,7 +71,8 @@ export default () => {
             },
           ]}
           columnDisplay={[
-            { id: 'parentAssessId', visible: true },
+            { id: 'id', visible: true },
+            { id: 'name', visible: true },
             { id: 'status', visible: true },
             { id: 'score', visible: true },
           ]}
