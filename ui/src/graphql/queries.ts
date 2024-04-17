@@ -134,7 +134,7 @@ export const getStudentAssessment = /* GraphQL */ `query GetStudentAssessment($p
       status
       __typename
     }
-    answers
+    chosenAnswers
     completed
     score
     updatedAt
@@ -167,7 +167,7 @@ export const listStudentAssessments = /* GraphQL */ `query ListStudentAssessment
       status
       __typename
     }
-    answers
+    chosenAnswers
     completed
     score
     updatedAt

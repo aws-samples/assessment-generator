@@ -97,7 +97,7 @@ export const upsertStudentAssessment = /* GraphQL */ `mutation UpsertStudentAsse
       status
       __typename
     }
-    answers
+    chosenAnswers
     completed
     score
     updatedAt
