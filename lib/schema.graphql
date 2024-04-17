@@ -5,9 +5,7 @@ enum Lang {
 }
 
 enum AssessType {
-  Type1
-  Type2
-  Type3
+  MultipleChoiceQuestionnaire
 }
 
 enum AssessStatus {
