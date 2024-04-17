@@ -186,7 +186,6 @@ export class RagPipelineStack extends NestedStack {
         "Principal": [
           `${lambdaRole.roleArn}`,
           `${bedrockExecutionRole.roleArn}`,
-          "arn:aws:sts::089689156629:assumed-role/consoleAccess/mriccia-Isengard", //TODO remove before publishing
         ],
         "Description": "data-access-rule",
       },
