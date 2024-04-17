@@ -34,11 +34,13 @@ export default () => {
       i18nStrings={{
         stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
         collapsedStepsLabel: (stepNumber, stepsCount) => `Question ${stepNumber} of ${stepsCount}`,
+        cancelButton: 'Cancel',
         previousButton: 'Previous',
         nextButton: 'Next',
         submitButton: 'Finish',
         optional: 'optional',
       }}
+      onCancel={() => navigate('/assessments')}
       onNavigate={({ detail }) => {
         setActiveStepIndex(detail.requestedStepIndex);
       }}
