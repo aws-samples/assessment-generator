@@ -92,7 +92,7 @@ export const getStudentAssessment = /* GraphQL */ `
         published
         status
       }
-      answers
+      chosenAnswers
       completed
       score
       updatedAt
@@ -120,7 +120,7 @@ export const listStudentAssessments = /* GraphQL */ `
         published
         status
       }
-      answers
+      chosenAnswers
       completed
       score
       updatedAt

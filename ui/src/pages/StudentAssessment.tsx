@@ -67,7 +67,7 @@ export default () => {
                 input: {
                   parentAssessId: params.id!,
                   score: calculatedScore,
-                  answers: chosenAnswers.map(Number),
+                  chosenAnswers: chosenAnswers.map(Number),
                   completed: true,
                 },
               },
@@ -101,6 +101,7 @@ export default () => {
               <Container header={<Header variant="h2">Answer</Header>}>
                 <FormField label={'Choose:'}>
                   <Tiles
+                    columns={1}
                     value={chosenAnswers[activeStepIndex]}
                     items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
                     onChange={({ detail }) => {

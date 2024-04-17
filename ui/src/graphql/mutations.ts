@@ -77,7 +77,7 @@ export const upsertStudentAssessment = /* GraphQL */ `
         published
         status
       }
-      answers
+      chosenAnswers
       completed
       score
       updatedAt
