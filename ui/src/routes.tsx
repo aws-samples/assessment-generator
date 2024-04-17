@@ -1,7 +1,7 @@
 import DefaultSettings from './pages/DefaultSettings';
 import Section from './pages/Section';
 import HomePage from './pages/HomePage';
-import CreateKowledgeBase from './pages/CreateKnowledgeBase';
+import ManageKnowledgeBases from './pages/ManageKnowledgeBases';
 import CreateAssessmentTemplate from './pages/CreateAssessmentTemplate';
 import FindAssessments from './pages/FindAssessments';
 import StudentAssessments from './pages/StudentAssessments';
@@ -27,8 +27,8 @@ export const routes = {
               element: <DefaultSettings />,
             },
             {
-              path: 'create-knowledge-base',
-              element: <CreateKowledgeBase />,
+              path: 'manage-knowledge-bases',
+              element: <ManageKnowledgeBases />,
             },
             {
               path: 'create-assessment-template',

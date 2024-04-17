@@ -73,7 +73,7 @@ export default () => {
             </Button>
           </SpaceBetween>
         }
-        header={<Header variant="h1">Create Knowledge Base</Header>}
+        header={<Header variant="h1">Manage Knowledge Bases</Header>}
       >
         <ContentLayout>
           <Container
