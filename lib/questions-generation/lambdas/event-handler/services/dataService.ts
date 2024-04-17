@@ -3,9 +3,12 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { Assessment, AssessStatus, GenerateAssessmentInput, QandA } from "../../../../../ui/src/graphql/API";
+import { AssessmentTemplate } from "../models/assessmentTemplate";
 
 const ASSESSMENT_TABLE = process.env.ASSESSMENTS_TABLE;
 const KB_TABLE = process.env.KB_TABLE;
+const ASSESS_TEMPLATE_TABLE = process.env.ASSESS_TEMPLATE_TABLE;
+
 
 export class DataService {
   private docClient: DynamoDBDocumentClient;
@@ -92,6 +95,22 @@ export class DataService {
 
     logger.info(ddbResponse as any);
     return ddbResponse.Item;
+  }
+
+  async getExistingAssessmentTemplate(assessTemplateId:string,  userId: string):Promise<AssessmentTemplate>{
+    // noinspection TypeScriptValidateTypes
+    const command = new GetCommand({
+      Key: {
+        userId: userId,
+        id: assessTemplateId,
+      },
+      TableName: ASSESS_TEMPLATE_TABLE,
+    });
+    logger.info(command as any);
+    let ddbResponse = await this.docClient.send(command);
+
+    logger.info(ddbResponse as any);
+    return ddbResponse.Item as AssessmentTemplate;
   }
 
   async updateFailedAssessment(userId: string, assessmentId: string) {

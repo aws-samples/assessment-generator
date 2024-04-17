@@ -19,14 +19,14 @@ import {
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
 import { useNavigate } from 'react-router-dom';
-import { generateAssessment, listCourses, getAssessment } from '../graphql/queries';
-import { Course, AssessStatus } from '../graphql/API';
+import { generateAssessment, listCourses, getAssessment, listAssessTemplates } from '../graphql/queries';
+import { Course, AssessStatus, AssessTemplate } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { UserProfileContext } from '../contexts/userProfile';
 
 const client = generateClient();
 
-const assessTemplates = ['template1', 'template2', 'template3'].map((temp) => ({ value: temp }));
+// const assessTemplates = ['template1', 'template2', 'template3'].map((temp) => ({ value: temp }));
 
 export default () => {
   const navigate = useNavigate();
@@ -37,11 +37,22 @@ export default () => {
   const [lectureDate, setLectureDate] = useState('');
   const [deadline, setDeadline] = useState('');
   const [useDefault, setUseDefault] = useState(true);
-  const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
   const [courses, setCourses] = useState<SelectProps.Option[]>([]);
   const [course, setCourse] = useState<SelectProps.Option | null>(null);
   const [files, setFiles] = useState<File[]>([]);
   const [assessId, setAssessId] = useState('');
+  const [assessTemplates, setAssessTemplates] = useState<SelectProps.Option[]>([]);
+  const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
+
+
+  useEffect(() => {
+    client.graphql<any>({ query: listAssessTemplates }).then(({ data }) => {
+      const list = data.listAssessTemplates;
+      if (!list) return;
+      const options = list.map((assessTemplate: AssessTemplate) => ({ label: assessTemplate.name, value: assessTemplate.id }));
+      setAssessTemplates(options);
+    });
+  }, []);
 
   function checkStatus() {
     setTimeout(() => {
@@ -100,7 +111,7 @@ export default () => {
                     }
                     const res = await client.graphql<any>({
                       query: generateAssessment,
-                      variables: { input: { name, lectureDate, deadline, courseId: course.value, locations: data.map(({ key }) => key) } },
+                      variables: { input: { name, lectureDate, deadline, courseId: course.value, assessTemplateId: assessTemplate?.value, locations: data.map(({ key }) => key) } },
                     });
                     const id = res.data.generateAssessment;
                     setAssessId(id);

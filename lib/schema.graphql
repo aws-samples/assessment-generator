@@ -5,9 +5,7 @@ enum Lang {
 }
 
 enum AssessType {
-  Type1
-  Type2
-  Type3
+  MultipleChoiceQuestionnaire
 }
 
 enum AssessStatus {
@@ -130,6 +128,7 @@ input GenerateAssessmentInput {
   lectureDate: AWSDate!
   deadline: AWSDate!
   locations: [String]!
+  assessTemplateId: String
 }
 
 type Mutation {
@@ -146,6 +145,7 @@ type Query {
   listStudents: [Student]
   getAssessment(id: ID!): Assessment
   listAssessments: [Assessment]
+  listAssessTemplates: [AssessTemplate]
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
   publishAssessment(assessmentId: ID!): Boolean

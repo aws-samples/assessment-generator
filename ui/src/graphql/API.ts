@@ -16,9 +16,7 @@ export enum Lang {
 
 
 export enum AssessType {
-  Type1 = "Type1",
-  Type2 = "Type2",
-  Type3 = "Type3",
+  MultipleChoiceQuestionnaire = "MultipleChoiceQuestionnaire",
 }
 
 
@@ -144,6 +142,7 @@ export type GenerateAssessmentInput = {
   lectureDate: string,
   deadline: string,
   locations: Array< string | null >,
+  assessTemplateId?: string | null,
 };
 
 export type UpsertSettingsMutationVariables = {
@@ -251,6 +250,9 @@ export type UpsertStudentAssessmentMutation = {
   } | null,
 };
 
+export type GetSettingsQueryVariables = {
+};
+
 export type GetSettingsQuery = {
   getSettings?:  {
     __typename: "Settings",
@@ -260,6 +262,9 @@ export type GetSettingsQuery = {
   } | null,
 };
 
+export type ListCoursesQueryVariables = {
+};
+
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -267,6 +272,9 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
+};
+
+export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -304,6 +312,9 @@ export type GetAssessmentQuery = {
   } | null,
 };
 
+export type ListAssessmentsQueryVariables = {
+};
+
 export type ListAssessmentsQuery = {
   listAssessments?:  Array< {
     __typename: "Assessment",
@@ -323,6 +334,24 @@ export type ListAssessmentsQuery = {
     } >,
     published: boolean,
     status: AssessStatus,
+  } | null > | null,
+};
+
+export type ListAssessTemplatesQueryVariables = {
+};
+
+export type ListAssessTemplatesQuery = {
+  listAssessTemplates?:  Array< {
+    __typename: "AssessTemplate",
+    id: string,
+    name?: string | null,
+    docLang?: Lang | null,
+    assessType?: AssessType | null,
+    totalQuestions?: number | null,
+    easyQuestions?: number | null,
+    mediumQuestions?: number | null,
+    hardQuestions?: number | null,
+    createdAt?: string | null,
   } | null > | null,
 };
 
@@ -358,6 +387,9 @@ export type GetStudentAssessmentQuery = {
     score?: number | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
