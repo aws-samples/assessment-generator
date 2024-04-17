@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wizard, Container, Header, SpaceBetween, Box, Tiles } from '@cloudscape-design/components';
+import { Wizard, Container, Header, SpaceBetween, Box } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
