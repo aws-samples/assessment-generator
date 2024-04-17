@@ -22,7 +22,7 @@ export class ReferenceDocuments {
 
   static async fromRequest(generateAssessmentInput: GenerateAssessmentInput, userId: string) {
     const documents = generateAssessmentInput.locations;
-    const assessmentTemplateId = "";
+    const assessmentTemplateId = generateAssessmentInput.assessTemplateId || undefined;
     const {knowledgeBaseId} = await dataService.getExistingKnowledgeBase(generateAssessmentInput.courseId, userId);
     logger.info(`Using knowledgeBaseId: ${knowledgeBaseId}`);
 
@@ -47,7 +47,7 @@ export class ReferenceDocuments {
       throw new Error("No valid documents");
     }
 
-    const assessmentTemplate = await AssessmentTemplate.fromId(assessmentTemplateId);
+    const assessmentTemplate = await AssessmentTemplate.fromId(assessmentTemplateId, userId);
     return new ReferenceDocuments(documentsContent, assessmentTemplate, knowledgeBaseId);
   }
 }

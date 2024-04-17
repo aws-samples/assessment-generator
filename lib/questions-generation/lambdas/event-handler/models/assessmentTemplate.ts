@@ -1,5 +1,9 @@
 import { AssessType, Lang } from "../../../../../ui/src/graphql/API";
+import { DataService } from "../services/dataService";
+import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 
+
+const dataService = new DataService();
 export class AssessmentTemplate {
   docLang: Lang;
   assessType: AssessType;
@@ -17,8 +21,13 @@ export class AssessmentTemplate {
     this.hardQuestions = hardQuestions;
   }
 
-  static async fromId(assessmentTemplateId: string) {
+  static async fromId(assessmentTemplateId: string | undefined, userId: string) {
+    if (!assessmentTemplateId){
+      return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.MultipleChoiceQuestionnaire, 10, 5, 3, 2));
+    }
     // TODO read data from DDB
-    return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.Type1, 12, 3, 3, 3));
+    const existingAssessmentTemplate = dataService.getExistingAssessmentTemplate(assessmentTemplateId, userId);
+    logger.info(existingAssessmentTemplate as any);
+    return await existingAssessmentTemplate;
   }
 }

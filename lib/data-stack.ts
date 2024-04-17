@@ -131,6 +131,13 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
+    assessTemplateDs.createResolver('QueryListAssessTemplatesResolver', {
+      typeName: 'Query',
+      fieldName: 'listAssessTemplates',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/listAssessTemplates.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
     /////////// Assessments
 
     const assessmentsTable = new aws_dynamodb.TableV2(this, 'AssessmentsTable', {
@@ -246,6 +253,7 @@ export class DataStack extends NestedStack {
         Q_GENERATION_BUCKET: artifactsUploadBucket.bucketName,
         ASSESSMENTS_TABLE: assessmentsTable.tableName,
         KB_TABLE: kbTable.tableName,
+        ASSESS_TEMPLATE_TABLE: assessTemplatesTable.tableName,
       },
       bundling: {
         minify: true,
@@ -255,6 +263,7 @@ export class DataStack extends NestedStack {
     artifactsUploadBucket.grantRead(questionsGenerator);
     assessmentsTable.grantReadWriteData(questionsGenerator);
     kbTable.grantReadData(questionsGenerator);
+    assessTemplatesTable.grantReadData(questionsGenerator);
 
     const qaGeneratorWrapper = new NodejsFunction(this, `${QUESTIONS_GENERATOR_NAME}-wrapper`, {
       description: 'Wraps around the Question generator ',

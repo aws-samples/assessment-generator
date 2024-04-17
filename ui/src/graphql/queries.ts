@@ -94,6 +94,24 @@ export const listAssessments = /* GraphQL */ `query ListAssessments {
   APITypes.ListAssessmentsQueryVariables,
   APITypes.ListAssessmentsQuery
 >;
+export const listAssessTemplates = /* GraphQL */ `query ListAssessTemplates {
+  listAssessTemplates {
+    id
+    name
+    docLang
+    assessType
+    totalQuestions
+    easyQuestions
+    mediumQuestions
+    hardQuestions
+    createdAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListAssessTemplatesQueryVariables,
+  APITypes.ListAssessTemplatesQuery
+>;
 export const getStudentAssessment = /* GraphQL */ `query GetStudentAssessment($parentAssessId: ID!) {
   getStudentAssessment(parentAssessId: $parentAssessId) {
     parentAssessId

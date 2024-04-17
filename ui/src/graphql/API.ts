@@ -142,6 +142,7 @@ export type GenerateAssessmentInput = {
   lectureDate: string,
   deadline: string,
   locations: Array< string | null >,
+  assessTemplateId?: string | null,
 };
 
 export type UpsertSettingsMutationVariables = {
@@ -333,6 +334,24 @@ export type ListAssessmentsQuery = {
     } >,
     published: boolean,
     status: AssessStatus,
+  } | null > | null,
+};
+
+export type ListAssessTemplatesQueryVariables = {
+};
+
+export type ListAssessTemplatesQuery = {
+  listAssessTemplates?:  Array< {
+    __typename: "AssessTemplate",
+    id: string,
+    name?: string | null,
+    docLang?: Lang | null,
+    assessType?: AssessType | null,
+    totalQuestions?: number | null,
+    easyQuestions?: number | null,
+    mediumQuestions?: number | null,
+    hardQuestions?: number | null,
+    createdAt?: string | null,
   } | null > | null,
 };
 
