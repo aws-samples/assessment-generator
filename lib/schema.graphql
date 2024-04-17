@@ -109,7 +109,7 @@ input AssessmentInput {
 type StudentAssessment {
   parentAssessId: ID!
   assessment: Assessment
-  answers: [Int]
+  chosenAnswers: [Int]
   completed: Boolean
   score: Int
   updatedAt: AWSDateTime
@@ -117,7 +117,7 @@ type StudentAssessment {
 
 input StudentAssessmentInput {
   parentAssessId: ID!
-  answers: [Int]
+  chosenAnswers: [Int]
   score: Int
   completed: Boolean
 }

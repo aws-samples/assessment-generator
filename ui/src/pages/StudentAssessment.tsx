@@ -15,6 +15,7 @@ export default () => {
   const navigate = useNavigate();
   const dispatchAlert = useContext(DispatchAlertContext);
 
+  const [assessmentId, setAssessmentId] = useState<string>();
   const [questions, setQuestions] = useState<QandA[]>([]);
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [chosenAnswers, setChosenAnswers] = useState<string[]>([]);
@@ -26,6 +27,7 @@ export default () => {
       .then(({ data }) => {
         const result = data.getStudentAssessment;
         if (!result?.assessment?.questions) throw new Error();
+        setAssessmentId(result.parentAssessId);
         setQuestions(result.assessment.questions);
       })
       .catch(() => {});
@@ -39,21 +41,26 @@ export default () => {
         footer={
           <Box float="right">
             <Button variant="primary" onClick={() => navigate('/assessments')}>
-              Ok
+              Done
             </Button>
           </Box>
         }
       >
-        <PieChart
-          hideFilter
-          hideLegend
-          variant="donut"
-          data={[
-            { title: 'Correct', value: score! },
-            { title: 'Incorrect', value: 100 - score! },
-          ]}
-          innerMetricValue={`${score}%`}
-        />
+        <SpaceBetween size="l">
+          <PieChart
+            hideFilter
+            hideLegend
+            variant="donut"
+            data={[
+              { title: 'Correct', value: score! },
+              { title: 'Incorrect', value: 100 - score! },
+            ]}
+            innerMetricValue={`${score}%`}
+          />
+          <Button fullWidth onClick={() => navigate('/review/' + assessmentId)}>
+            Review
+          </Button>
+        </SpaceBetween>
       </Modal>
       <Wizard
         onSubmit={() => {
@@ -67,7 +74,7 @@ export default () => {
                 input: {
                   parentAssessId: params.id!,
                   score: calculatedScore,
-                  answers: chosenAnswers.map(Number),
+                  chosenAnswers: chosenAnswers.map(Number),
                   completed: true,
                 },
               },
@@ -101,6 +108,7 @@ export default () => {
               <Container header={<Header variant="h2">Answer</Header>}>
                 <FormField label={'Choose:'}>
                   <Tiles
+                    columns={1}
                     value={chosenAnswers[activeStepIndex]}
                     items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
                     onChange={({ detail }) => {

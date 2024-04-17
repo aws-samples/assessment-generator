@@ -1,5 +1,5 @@
 import { useState, useReducer, useEffect, useContext } from 'react';
-import { Wizard, Container, Header, SpaceBetween, Input, Button, Textarea, Tiles } from '@cloudscape-design/components';
+import { Wizard, Container, Header, SpaceBetween, Button, Textarea, Tiles } from '@cloudscape-design/components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
 import { Assessment } from '../graphql/API';
@@ -101,7 +101,7 @@ export default () => {
                     />
                   }
                 >
-                  <Input
+                  <Textarea
                     onChange={({ detail }) =>
                       updateAssessment({
                         type: ActionTypes.Update,

@@ -10,6 +10,7 @@ import EditAssessments from './pages/EditAssessments';
 import FindStudent from './pages/FindStudent';
 import MyDashboard from './pages/MyDashboard';
 import StudentAssessment from './pages/StudentAssessment';
+import ReviewAssessment from './pages/ReviewAssessment';
 import Courses from './pages/Courses';
 
 export const routes = {
@@ -88,5 +89,6 @@ export const routes = {
       ],
     },
     { path: 'assessment/:id', element: <StudentAssessment />, children: [] },
+    { path: 'review/:id', element: <ReviewAssessment />, children: [] },
   ],
 };
