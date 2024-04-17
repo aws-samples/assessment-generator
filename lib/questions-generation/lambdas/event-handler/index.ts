@@ -21,11 +21,8 @@ import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/util
 import { ReferenceDocuments } from "./models/referenceDocuments";
 import { DataService } from "./services/dataService";
 import { GenAiService } from "./services/genAiService";
-import { GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
+import { GenerateAssessmentInput, GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
 import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
-
-
-const dataService = new DataService();
 
 class WrappedAppSyncEvent {
   assessmentId: string;
@@ -34,12 +31,16 @@ class WrappedAppSyncEvent {
 
 class Lambda implements LambdaInterface {
   knowledgeBaseId: string;
+  private dataService: DataService;
+
+  constructor() {
+    this.dataService = new DataService();
+  }
 
   @tracer.captureLambdaHandler()
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: WrappedAppSyncEvent, lambdaContext: Context): Promise<string> {
-    //TODO implement mechanism to update the table with Status:failed in case of errors
 
     let assessmentId = event.assessmentId;
     const ctx = event.ctx;
@@ -52,6 +53,15 @@ class Lambda implements LambdaInterface {
     if (!generateAssessmentInput) {
       throw new Error("Unable to process the request");
     }
+    try {
+      return await this.processEvent(generateAssessmentInput, userId, assessmentId);
+    } catch (e) {
+      await this.dataService.updateFailedAssessment(userId, assessmentId);
+      throw e;
+    }
+  }
+
+  private async processEvent(generateAssessmentInput: GenerateAssessmentInput, userId: string, assessmentId: string) {
     const referenceDocuments = await ReferenceDocuments.fromRequest(generateAssessmentInput, userId);
     this.knowledgeBaseId = referenceDocuments.knowledgeBaseId;
     const genAiService = new GenAiService(this.knowledgeBaseId);
@@ -68,7 +78,7 @@ class Lambda implements LambdaInterface {
 
     logger.info(improvedQuestions as any);
 
-    assessmentId = await dataService.updateAssessment(improvedQuestions, userId, assessmentId);
+    assessmentId = await this.dataService.updateAssessment(improvedQuestions, userId, assessmentId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;
   }

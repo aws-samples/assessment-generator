@@ -1,16 +1,19 @@
 import { v4 as uuidv4 } from 'uuid';
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { Assessment, AssessStatus, GenerateAssessmentInput, QandA } from "../../../../../ui/src/graphql/API";
 
-
-const client = new DynamoDBClient();
-const docClient = DynamoDBDocumentClient.from(client);
 const ASSESSMENT_TABLE = process.env.ASSESSMENTS_TABLE;
-const KB_TABLE = process.env.KB_TABLE
+const KB_TABLE = process.env.KB_TABLE;
 
 export class DataService {
+  private docClient: DynamoDBDocumentClient;
+
+  constructor() {
+    const client = new DynamoDBClient();
+    this.docClient = DynamoDBDocumentClient.from(client);
+  }
 
   async updateAssessment(improvedQuestions: QandA[], userId: string, assessmentId: string) {
 
@@ -26,7 +29,7 @@ export class DataService {
     });
 
     logger.info(command as any);
-    let ddbResponse = await docClient.send(command);
+    let ddbResponse = await this.docClient.send(command);
     logger.info(ddbResponse as any);
     return assessmentId;
   }
@@ -53,7 +56,7 @@ export class DataService {
     });
 
     logger.info(command as any);
-    let ddbResponse = await docClient.send(command);
+    let ddbResponse = await this.docClient.send(command);
     logger.info(ddbResponse as any);
     return assessmentId;
   }
@@ -68,7 +71,7 @@ export class DataService {
       TableName: ASSESSMENT_TABLE,
     });
     logger.info(command as any);
-    let ddbResponse = await docClient.send(command);
+    let ddbResponse = await this.docClient.send(command);
 
     logger.info(ddbResponse as any);
     return ddbResponse.Item as Assessment;
@@ -85,9 +88,33 @@ export class DataService {
       TableName: KB_TABLE,
     });
     logger.info(command as any);
-    let ddbResponse = await docClient.send(command);
+    let ddbResponse = await this.docClient.send(command);
 
     logger.info(ddbResponse as any);
     return ddbResponse.Item;
+  }
+
+  async updateFailedAssessment(userId: string, assessmentId: string) {
+
+    const command = new UpdateCommand({
+      Key: {
+        userId: userId,
+        id: assessmentId,
+      },
+      UpdateExpression: "set #st=:status, updatedAt=:updatedAt",
+      ExpressionAttributeNames:{
+        "#st":"status"
+      },
+      ExpressionAttributeValues:{
+        ":status": AssessStatus.FAILED,
+        ":updatedAt": (new Date()).toISOString()
+      },
+      TableName: ASSESSMENT_TABLE,
+
+    });
+    logger.info(command as any);
+    let ddbResponse = await this.docClient.send(command);
+    logger.info(ddbResponse as any);
+    return assessmentId;
   }
 }
