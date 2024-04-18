@@ -47,14 +47,15 @@ export default () => {
           file,
         }));
         try {
-          await Promise.all(
+          const uploadResult = await Promise.all(
             data.map(({ key, file }) =>
               uploadData({
                 key,
                 data: file,
-              })
+              }).result
             )
           );
+          console.log(uploadResult);
           client.graphql({ query: createKnowledgeBase, variables: { courseId: course?.value, locations: data.map(({ key }) => key) } });
           await dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
         } catch (_e) {
