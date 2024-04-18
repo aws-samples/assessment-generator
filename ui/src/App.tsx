@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { AppLayout, BreadcrumbGroup, Flashbar, HelpPanel, SideNavigation, FlashbarProps, TopNavigation } from '@cloudscape-design/components';
+import {
+  AppLayout,
+  BreadcrumbGroup,
+  Flashbar,
+  FlashbarProps,
+  HelpPanel,
+  SideNavigation,
+  TopNavigation,
+} from '@cloudscape-design/components';
 import { I18nProvider } from '@cloudscape-design/components/i18n';
 import messages from '@cloudscape-design/components/i18n/messages/all.en';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
@@ -8,7 +16,7 @@ import { withAuthenticator } from '@aws-amplify/ui-react';
 import { routes as routesList } from './routes';
 import { titlise } from './helpers';
 import { AlertType, DispatchAlertContext } from './contexts/alerts';
-import { UserProfileContext, UserProfile } from './contexts/userProfile';
+import { UserProfile, UserProfileContext } from './contexts/userProfile';
 import { RoutesContext } from './contexts/routes';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
@@ -41,7 +49,7 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
           group: (session.tokens?.idToken?.payload as any)['cognito:groups'][0],
           email: session.tokens?.idToken?.payload.email,
           name: session.tokens?.idToken?.payload.name,
-        } as UserProfile)
+        } as UserProfile),
       )
       .catch(() => dispatchAlert({ type: AlertType.ERROR }));
   }, []);
@@ -120,10 +128,10 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
                   })}
                 />
               }
-              notifications={<Flashbar items={alerts} />}
+              notifications={<Flashbar items={alerts}/>}
               toolsOpen={false}
               tools={<HelpPanel header={<h2>Overview</h2>}>Help content</HelpPanel>}
-              content={<RouterProvider router={router} />}
+              content={<RouterProvider router={router}/>}
             />
           </I18nProvider>
         </RoutesContext.Provider>
@@ -132,4 +140,16 @@ export function App({ signOut, user }: WithAuthenticatorProps) {
   );
 }
 
-export default withAuthenticator(App, { signUpAttributes: ['name'] });
+export default withAuthenticator(App, {
+  signUpAttributes: ['name'],
+  formFields: {
+    signUp: {
+      "custom:role": {
+        placeholder: 'Enter "teachers" or "students"',
+        isRequired: true,
+        label: 'Role:',
+        pattern: "(teachers|students)"
+      },
+    },
+  },
+});

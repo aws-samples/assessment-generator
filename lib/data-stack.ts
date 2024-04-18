@@ -16,9 +16,10 @@ import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import path from 'path';
 import { Architecture, Runtime, Tracing } from 'aws-cdk-lib/aws-lambda';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
-import { ManagedPolicy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { ManagedPolicy, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
+import { StringParameter } from "aws-cdk-lib/aws-ssm";
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -27,6 +28,7 @@ interface DataStackProps extends NestedStackProps {
   userPool: aws_cognito.UserPool;
   artifactsUploadBucket: s3.Bucket;
   documentProcessorLambda: NodejsFunction;
+  postConfirmationLambda: NodejsFunction;
   kbTable: TableV2;
 }
 
@@ -104,6 +106,20 @@ export class DataStack extends NestedStack {
       partitionKey: { name: 'id', type: aws_dynamodb.AttributeType.STRING },
       removalPolicy: RemovalPolicy.DESTROY,
     });
+    const studentsTableParam = new StringParameter(this, 'StudentsTableParameter', {
+      parameterName: '/gen-assess/student-table-name',
+      stringValue: studentsTable.tableName,
+    });
+    const policy = new Policy(this, 'lambdaPolicyDdb', {
+      statements: [new PolicyStatement({
+        actions: ['dynamodb:*'],
+        resources: [studentsTable.tableArn],
+      })],
+    });
+    if (!props.postConfirmationLambda.role) {
+      throw new Error("err");
+    }
+    policy.attachToRole(props.postConfirmationLambda.role);
 
     const studentsDs = api.addDynamoDbDataSource('StudentsDataSource', studentsTable);
 
@@ -227,7 +243,7 @@ export class DataStack extends NestedStack {
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
         actions: ['bedrock:*'],
-      })
+      }),
     );
 
     // Creating the log group.

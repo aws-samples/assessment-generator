@@ -35,8 +35,7 @@ export const listCourses = /* GraphQL */ `query ListCourses {
 export const listStudents = /* GraphQL */ `query ListStudents {
   listStudents {
     id
-    firstName
-    lastName
+    name
     __typename
   }
 }
