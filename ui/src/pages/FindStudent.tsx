@@ -41,14 +41,9 @@ export default () => {
                 isRowHeader: true,
               },
               {
-                id: 'firstName',
-                header: 'First Name',
-                cell: (item) => item.firstName,
-              },
-              {
-                id: 'lastName',
-                header: 'Last Name',
-                cell: (item) => item.lastName,
+                id: 'name',
+                header: 'Name',
+                cell: (item) => item.name,
               },
               {
                 id: 'dashboards',
@@ -63,8 +58,7 @@ export default () => {
             ]}
             columnDisplay={[
               { id: 'id', visible: true },
-              { id: 'firstName', visible: true },
-              { id: 'lastName', visible: true },
+              { id: 'name', visible: true },
               { id: 'dashboards', visible: true },
               { id: 'download', visible: true },
             ]}

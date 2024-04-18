@@ -41,8 +41,7 @@ input CourseInput {
 
 type Student {
   id: ID!
-  firstName: String
-  lastName: String
+  name: String
 }
 
 type AssessTemplate {

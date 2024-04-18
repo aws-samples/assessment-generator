@@ -132,8 +132,7 @@ export type StudentAssessment = {
 export type Student = {
   __typename: "Student",
   id: string,
-  firstName?: string | null,
-  lastName?: string | null,
+  name?: string | null,
 };
 
 export type GenerateAssessmentInput = {
@@ -281,8 +280,7 @@ export type ListStudentsQuery = {
   listStudents?:  Array< {
     __typename: "Student",
     id: string,
-    firstName?: string | null,
-    lastName?: string | null,
+    name?: string | null,
   } | null > | null,
 };
 
