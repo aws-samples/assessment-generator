@@ -33,6 +33,8 @@ class Lambda implements LambdaInterface {
       default:
         throw new Error("Invalid role selected");
     }
+
+    return event;
   }
 
   async registerStudent(userAttributes) {
