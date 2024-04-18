@@ -1,9 +1,8 @@
 import { Construct } from 'constructs';
-import { CfnOutput, Stack, StackProps, aws_s3, RemovalPolicy, aws_iam } from 'aws-cdk-lib';
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib';
 import { AuthStack } from './auth-stack';
 import { DataStack } from './data-stack';
 import { FrontendStack } from './frontend-stack';
-import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import * as cr from 'aws-cdk-lib/custom-resources';
 import { RagPipelineStack } from './rag-pipeline/rag-pipeline-stack';
 
@@ -16,9 +15,10 @@ export class GenAssessStack extends Stack {
     const ragPipipelineStack = new RagPipelineStack(this, 'RagStack');
     const { api } = new DataStack(this, 'DataStack', {
       userPool: authStack.userPool,
+      postConfirmationLambda: authStack.postConfirmationLambda,
       artifactsUploadBucket: ragPipipelineStack.artifactsUploadBucket,
       documentProcessorLambda: ragPipipelineStack.documentProcessor,
-      kbTable: ragPipipelineStack.kbTable
+      kbTable: ragPipipelineStack.kbTable,
     });
 
     const frontendStack = new FrontendStack(this, 'FrontendStack', { ...props, graphqlUrl: api.graphqlUrl });
