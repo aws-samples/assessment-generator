@@ -7,6 +7,7 @@ import path from "path";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { StringAttribute } from "aws-cdk-lib/aws-cognito";
 
 export class AuthStack extends NestedStack {
   public userPool: aws_cognito.UserPool;
@@ -30,6 +31,9 @@ export class AuthStack extends NestedStack {
     const userPool = new aws_cognito.UserPool(this, 'pool', {
       selfSignUpEnabled: true,
       signInAliases: { username: false, email: true },
+      customAttributes: {
+        'role': new StringAttribute({ minLen: 8, maxLen: 8, mutable: false }),
+      },
       autoVerify: { email: true },
       removalPolicy: RemovalPolicy.DESTROY,
       lambdaTriggers: {
