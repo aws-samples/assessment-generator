@@ -102,7 +102,7 @@ export default () => {
                         uploadData({
                           key,
                           data: file,
-                        })
+                        }).result
                       )
                     );
                     //TODO implement validation
