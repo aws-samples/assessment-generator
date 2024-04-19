@@ -65,7 +65,7 @@ export default () => {
       <Wizard
         onSubmit={() => {
           const calculatedScore = Math.round(
-            (questions.reduce((correct, q, i) => (q.correctAnswer === +chosenAnswers[i] ? correct + 1 : correct), 0) * 100) / questions.length
+            (questions.reduce((correct, q, i) => (q.correctAnswer === (+chosenAnswers[i]+1) ? correct + 1 : correct), 0) * 100) / questions.length
           );
           client
             .graphql<any>({
@@ -74,7 +74,9 @@ export default () => {
                 input: {
                   parentAssessId: params.id!,
                   score: calculatedScore,
-                  chosenAnswers: chosenAnswers.map(Number),
+                  chosenAnswers: chosenAnswers.map((chosenAnswer) => {
+                    return +chosenAnswer+1;
+                  }),
                   completed: true,
                 },
               },

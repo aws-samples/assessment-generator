@@ -59,10 +59,10 @@ export default () => {
                   <div
                     style={{
                       border:
-                        correctAnswer === i
+                        (correctAnswer-1) === i
                           ? `3px solid green`
-                          : studentAssessment.chosenAnswers![activeStepIndex] === i &&
-                            studentAssessment.chosenAnswers![activeStepIndex] !== correctAnswer
+                          : studentAssessment.chosenAnswers![activeStepIndex] === i+1 &&
+                            studentAssessment.chosenAnswers![activeStepIndex] !== (correctAnswer)
                           ? `3px solid red`
                           : '',
                     }}
