@@ -84,6 +84,7 @@ export default () => {
               cell: (item) =>
                 item.status === AssessStatus.CREATED ? (
                   <Button
+                    wrapText={false}
                     disabled={!!item.published}
                     onClick={() =>
                       client
