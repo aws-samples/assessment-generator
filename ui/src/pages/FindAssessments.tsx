@@ -40,17 +40,17 @@ export default () => {
             {
               id: 'course',
               header: 'Course',
-              cell: (item) => item.course,
+              cell: (item) => item.course?.name,
             },
             {
               id: 'lectureDate',
               header: 'Lecture Date',
-              cell: (item) => item.lectureDate,
+              cell: (item) => new Date(item.lectureDate).toDateString(),
             },
             {
               id: 'deadline',
               header: 'Deadline',
-              cell: (item) => item.deadline,
+              cell: (item) => new Date(item.deadline).toDateString(),
             },
             {
               id: 'updatedAt',

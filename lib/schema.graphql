@@ -85,19 +85,20 @@ input QandAInput {
 type Assessment {
   id: ID!
   name: String!
-  course: String!
+  courseId: String!
   lectureDate: AWSDate!
   deadline: AWSDate!
   updatedAt: AWSDateTime!
   questions: [QandA!]!
   published: Boolean!
   status: AssessStatus!
+  course: Course
 }
 
 input AssessmentInput {
   id: ID!
   name: String!
-  course: String!
+  courseId: String!
   lectureDate: AWSDate!
   deadline: AWSDate!
   questions: [QandAInput!]!

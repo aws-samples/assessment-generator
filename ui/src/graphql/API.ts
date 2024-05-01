@@ -66,7 +66,7 @@ export type AssessTemplate = {
 export type AssessmentInput = {
   id: string,
   name: string,
-  course: string,
+  courseId: string,
   lectureDate: string,
   deadline: string,
   questions: Array< QandAInput >,
@@ -94,13 +94,14 @@ export type Assessment = {
   __typename: "Assessment",
   id: string,
   name: string,
-  course: string,
+  courseId: string,
   lectureDate: string,
   deadline: string,
   updatedAt: string,
   questions:  Array<QandA >,
   published: boolean,
   status: AssessStatus,
+  course?: Course | null,
 };
 
 export type QandA = {
@@ -198,7 +199,7 @@ export type UpsertAssessmentMutation = {
     __typename: "Assessment",
     id: string,
     name: string,
-    course: string,
+    courseId: string,
     lectureDate: string,
     deadline: string,
     updatedAt: string,
@@ -212,6 +213,12 @@ export type UpsertAssessmentMutation = {
     } >,
     published: boolean,
     status: AssessStatus,
+    course?:  {
+      __typename: "Course",
+      id: string,
+      name?: string | null,
+      description?: string | null,
+    } | null,
   } | null,
 };
 
@@ -227,7 +234,7 @@ export type UpsertStudentAssessmentMutation = {
       __typename: "Assessment",
       id: string,
       name: string,
-      course: string,
+      courseId: string,
       lectureDate: string,
       deadline: string,
       updatedAt: string,
@@ -241,15 +248,18 @@ export type UpsertStudentAssessmentMutation = {
       } >,
       published: boolean,
       status: AssessStatus,
+      course?:  {
+        __typename: "Course",
+        id: string,
+        name?: string | null,
+        description?: string | null,
+      } | null,
     } | null,
     chosenAnswers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
-};
-
-export type GetSettingsQueryVariables = {
 };
 
 export type GetSettingsQuery = {
@@ -261,9 +271,6 @@ export type GetSettingsQuery = {
   } | null,
 };
 
-export type ListCoursesQueryVariables = {
-};
-
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -271,9 +278,6 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
-};
-
-export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -293,7 +297,7 @@ export type GetAssessmentQuery = {
     __typename: "Assessment",
     id: string,
     name: string,
-    course: string,
+    courseId: string,
     lectureDate: string,
     deadline: string,
     updatedAt: string,
@@ -307,10 +311,13 @@ export type GetAssessmentQuery = {
     } >,
     published: boolean,
     status: AssessStatus,
+    course?:  {
+      __typename: "Course",
+      id: string,
+      name?: string | null,
+      description?: string | null,
+    } | null,
   } | null,
-};
-
-export type ListAssessmentsQueryVariables = {
 };
 
 export type ListAssessmentsQuery = {
@@ -318,7 +325,7 @@ export type ListAssessmentsQuery = {
     __typename: "Assessment",
     id: string,
     name: string,
-    course: string,
+    courseId: string,
     lectureDate: string,
     deadline: string,
     updatedAt: string,
@@ -332,10 +339,13 @@ export type ListAssessmentsQuery = {
     } >,
     published: boolean,
     status: AssessStatus,
+    course?:  {
+      __typename: "Course",
+      id: string,
+      name?: string | null,
+      description?: string | null,
+    } | null,
   } | null > | null,
-};
-
-export type ListAssessTemplatesQueryVariables = {
 };
 
 export type ListAssessTemplatesQuery = {
@@ -365,7 +375,7 @@ export type GetStudentAssessmentQuery = {
       __typename: "Assessment",
       id: string,
       name: string,
-      course: string,
+      courseId: string,
       lectureDate: string,
       deadline: string,
       updatedAt: string,
@@ -379,15 +389,18 @@ export type GetStudentAssessmentQuery = {
       } >,
       published: boolean,
       status: AssessStatus,
+      course?:  {
+        __typename: "Course",
+        id: string,
+        name?: string | null,
+        description?: string | null,
+      } | null,
     } | null,
     chosenAnswers?: Array< number | null > | null,
     completed?: boolean | null,
     score?: number | null,
     updatedAt?: string | null,
   } | null,
-};
-
-export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {
@@ -398,7 +411,7 @@ export type ListStudentAssessmentsQuery = {
       __typename: "Assessment",
       id: string,
       name: string,
-      course: string,
+      courseId: string,
       lectureDate: string,
       deadline: string,
       updatedAt: string,
@@ -412,6 +425,12 @@ export type ListStudentAssessmentsQuery = {
       } >,
       published: boolean,
       status: AssessStatus,
+      course?:  {
+        __typename: "Course",
+        id: string,
+        name?: string | null,
+        description?: string | null,
+      } | null,
     } | null,
     chosenAnswers?: Array< number | null > | null,
     completed?: boolean | null,

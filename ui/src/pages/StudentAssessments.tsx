@@ -34,17 +34,22 @@ export default () => {
         <Table
           columnDefinitions={[
             {
-              id: 'id',
-              header: 'Id',
-              cell: (item) => item.parentAssessId,
-              sortingField: 'id',
-              isRowHeader: true,
-            },
-            {
               id: 'name',
               header: 'Name',
               cell: (item) => item.assessment!.name,
               sortingField: 'name',
+            },
+            {
+              id: 'course',
+              header: 'Course',
+              cell: (item) => item.assessment!.course?.name,
+              sortingField: 'course',
+            },
+            {
+              id: 'deadline',
+              header: 'Deadline',
+              cell: (item) => new Date(item.assessment!.deadline).toDateString(),
+              sortingField: 'course',
             },
             {
               id: 'action',
@@ -63,8 +68,9 @@ export default () => {
             },
           ]}
           columnDisplay={[
-            { id: 'id', visible: true },
             { id: 'name', visible: true },
+            { id: 'course', visible: true },
+            { id: 'deadline', visible: true },
             { id: 'score', visible: true },
             { id: 'action', visible: true },
           ]}

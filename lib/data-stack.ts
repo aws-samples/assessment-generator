@@ -19,7 +19,7 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { ManagedPolicy, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
-import { StringParameter } from "aws-cdk-lib/aws-ssm";
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -100,6 +100,13 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
+    coursesDs.createResolver('AssessmentCourseResolver', {
+      typeName: 'Assessment',
+      fieldName: 'course',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/getCourse.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
     /////////// Students
 
     const studentsTable = new aws_dynamodb.TableV2(this, 'StudentsTable', {
@@ -111,13 +118,15 @@ export class DataStack extends NestedStack {
       stringValue: studentsTable.tableName,
     });
     const policy = new Policy(this, 'lambdaPolicyDdb', {
-      statements: [new PolicyStatement({
-        actions: ['dynamodb:*'],
-        resources: [studentsTable.tableArn],
-      })],
+      statements: [
+        new PolicyStatement({
+          actions: ['dynamodb:*'],
+          resources: [studentsTable.tableArn],
+        }),
+      ],
     });
     if (!props.postConfirmationLambda.role) {
-      throw new Error("err");
+      throw new Error('err');
     }
     policy.attachToRole(props.postConfirmationLambda.role);
 
@@ -243,7 +252,7 @@ export class DataStack extends NestedStack {
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
         actions: ['bedrock:*'],
-      }),
+      })
     );
 
     // Creating the log group.
