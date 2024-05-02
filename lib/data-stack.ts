@@ -20,6 +20,7 @@ import { ManagedPolicy, Policy, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { TableV2 } from 'aws-cdk-lib/aws-dynamodb';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { KeyCondition } from 'aws-cdk-lib/aws-appsync';
 
 export const feedbacksDbName = 'feedbacks';
 export const feedbacksTableName = 'feedbacks';
@@ -222,6 +223,13 @@ export class DataStack extends NestedStack {
       fieldName: 'listStudentAssessments',
       code: aws_appsync.Code.fromAsset('lib/resolvers/listStudentAssessments.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
+    studentAssessmentsDs.createResolver('QueryListMyStudentAssessmentsResolver', {
+      typeName: 'Query',
+      fieldName: 'listMyStudentAssessments',
+      requestMappingTemplate: aws_appsync.MappingTemplate.dynamoDbQuery(KeyCondition.eq('userId', 'studentId')),
+      responseMappingTemplate: aws_appsync.MappingTemplate.dynamoDbResultList(),
     });
 
     studentAssessmentsDs.createResolver('QueryStudentAssessmentResolver', {

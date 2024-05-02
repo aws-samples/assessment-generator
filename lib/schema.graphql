@@ -41,7 +41,8 @@ input CourseInput {
 
 type Student {
   id: ID!
-  name: String
+  firstName: String!
+  lastName: String!
 }
 
 type AssessTemplate {
@@ -148,6 +149,7 @@ type Query {
   listAssessTemplates: [AssessTemplate]
   getStudentAssessment(parentAssessId: ID!): StudentAssessment
   listStudentAssessments: [StudentAssessment]
+  listMyStudentAssessments(studentId: ID!): [StudentAssessment]
   publishAssessment(assessmentId: ID!): Boolean
   createKnowledgeBase(courseId: ID, locations: [String]): ID
   generateAssessment(input: GenerateAssessmentInput): ID

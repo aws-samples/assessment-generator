@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Table, Header, SpaceBetween, Container, ContentLayout, Button, Box, Pagination, Modal } from '@cloudscape-design/components';
-import Dashboard from '../components/Dashboard';
+import Dashboard, { DashboardProps } from '../components/Dashboard';
 import { generateClient } from 'aws-amplify/api';
-import { listStudents } from '../graphql/queries';
-import { Student } from '../graphql/API';
+import { listStudents, listMyStudentAssessments } from '../graphql/queries';
+import { Student, StudentAssessment } from '../graphql/API';
 
 const client = generateClient();
 
 export default () => {
-  const [showDashboard, setShowDashboard] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardProps['data']>();
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
@@ -18,10 +18,23 @@ export default () => {
       .catch(() => {});
   }, []);
 
+  function fetchStudentData(studentId: string) {
+    client
+      .graphql<any>({ query: listMyStudentAssessments, variables: { studentId } })
+      .then(({ data: result }) => {
+        const assessments: StudentAssessment[] = result.listMyStudentAssessments || [];
+        const data = assessments
+          .filter((assessment) => assessment.score)
+          .map((assessment) => ({ x: new Date(assessment.updatedAt!), y: assessment.score! }));
+        setDashboardData(data);
+      })
+      .catch(() => {});
+  }
+
   return (
     <>
-      <Modal onDismiss={() => setShowDashboard(false)} visible={showDashboard} header="Dashboard">
-        <Dashboard />
+      <Modal onDismiss={() => setDashboardData(undefined)} visible={!!dashboardData} header="Dashboard">
+        {dashboardData ? <Dashboard data={dashboardData} /> : null}
       </Modal>
       <ContentLayout>
         <Container
@@ -35,32 +48,32 @@ export default () => {
             columnDefinitions={[
               {
                 id: 'id',
-                header: 'Id',
+                header: 'Student Id',
                 cell: (item) => item.id,
                 sortingField: 'id',
                 isRowHeader: true,
               },
               {
-                id: 'name',
-                header: 'Name',
-                cell: (item) => item.name,
+                id: 'firstName',
+                header: 'First Name',
+                cell: (item) => item.firstName,
+              },
+              {
+                id: 'lastName',
+                header: 'Last Name',
+                cell: (item) => item.lastName,
               },
               {
                 id: 'dashboards',
                 header: 'Dashboards',
-                cell: (_item) => <Button onClick={() => setShowDashboard(true)}>Generate Dashboard</Button>,
-              },
-              {
-                id: 'download',
-                header: 'Downloads',
-                cell: (_item) => <Button iconName="download">Download Data</Button>,
+                cell: (item) => <Button onClick={() => fetchStudentData(item.id)}>Generate Dashboard</Button>,
               },
             ]}
             columnDisplay={[
               { id: 'id', visible: true },
-              { id: 'name', visible: true },
+              { id: 'firstName', visible: true },
+              { id: 'lastName', visible: true },
               { id: 'dashboards', visible: true },
-              { id: 'download', visible: true },
             ]}
             items={students}
             loadingText="Loading list"

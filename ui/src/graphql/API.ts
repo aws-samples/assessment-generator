@@ -133,7 +133,8 @@ export type StudentAssessment = {
 export type Student = {
   __typename: "Student",
   id: string,
-  name?: string | null,
+  firstName: string,
+  lastName: string,
 };
 
 export type GenerateAssessmentInput = {
@@ -284,7 +285,8 @@ export type ListStudentsQuery = {
   listStudents?:  Array< {
     __typename: "Student",
     id: string,
-    name?: string | null,
+    firstName: string,
+    lastName: string,
   } | null > | null,
 };
 
@@ -405,6 +407,46 @@ export type GetStudentAssessmentQuery = {
 
 export type ListStudentAssessmentsQuery = {
   listStudentAssessments?:  Array< {
+    __typename: "StudentAssessment",
+    parentAssessId: string,
+    assessment?:  {
+      __typename: "Assessment",
+      id: string,
+      name: string,
+      courseId: string,
+      lectureDate: string,
+      deadline: string,
+      updatedAt: string,
+      questions:  Array< {
+        __typename: "QandA",
+        title: string,
+        question: string,
+        answers: Array< string >,
+        correctAnswer: number,
+        explanation: string,
+      } >,
+      published: boolean,
+      status: AssessStatus,
+      course?:  {
+        __typename: "Course",
+        id: string,
+        name?: string | null,
+        description?: string | null,
+      } | null,
+    } | null,
+    chosenAnswers?: Array< number | null > | null,
+    completed?: boolean | null,
+    score?: number | null,
+    updatedAt?: string | null,
+  } | null > | null,
+};
+
+export type ListMyStudentAssessmentsQueryVariables = {
+  studentId: string,
+};
+
+export type ListMyStudentAssessmentsQuery = {
+  listMyStudentAssessments?:  Array< {
     __typename: "StudentAssessment",
     parentAssessId: string,
     assessment?:  {

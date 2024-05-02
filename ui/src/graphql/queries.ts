@@ -24,7 +24,8 @@ export const listStudents = /* GraphQL */ `
   query ListStudents {
     listStudents {
       id
-      name
+      firstName
+      lastName
     }
   }
 `;
@@ -131,6 +132,39 @@ export const getStudentAssessment = /* GraphQL */ `
 export const listStudentAssessments = /* GraphQL */ `
   query ListStudentAssessments {
     listStudentAssessments {
+      parentAssessId
+      assessment {
+        id
+        name
+        courseId
+        lectureDate
+        deadline
+        updatedAt
+        questions {
+          title
+          question
+          answers
+          correctAnswer
+          explanation
+        }
+        published
+        status
+        course {
+          id
+          name
+          description
+        }
+      }
+      chosenAnswers
+      completed
+      score
+      updatedAt
+    }
+  }
+`;
+export const listMyStudentAssessments = /* GraphQL */ `
+  query ListMyStudentAssessments($studentId: ID!) {
+    listMyStudentAssessments(studentId: $studentId) {
       parentAssessId
       assessment {
         id
