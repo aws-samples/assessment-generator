@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 import { ReferenceDocuments } from "../models/referenceDocuments";
 import { AssessmentTemplate } from "../models/assessmentTemplate";

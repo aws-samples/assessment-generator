@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { DynamoDBClient, BatchWriteItemCommand, UpdateItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
 import { AssessStatus } from "../../ui/src/graphql/API";

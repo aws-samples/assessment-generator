@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { util } from '@aws-appsync/utils';
 import * as ddb from '@aws-appsync/utils/dynamodb';
 

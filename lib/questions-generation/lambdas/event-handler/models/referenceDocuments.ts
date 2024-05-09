@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { AssessmentTemplate } from "./assessmentTemplate";
 import { GetObjectCommand, GetObjectCommandOutput, S3Client } from "@aws-sdk/client-s3";
 import { GenerateAssessmentInput } from "../../../../../ui/src/graphql/API";

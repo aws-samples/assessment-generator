@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { AssessType, Lang } from "../../../../../ui/src/graphql/API";
 import { DataService } from "../services/dataService";
 import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
