@@ -1,6 +1,3 @@
-// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
-// SPDX-License-Identifier: MIT-0
- 
 /* tslint:disable */
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
