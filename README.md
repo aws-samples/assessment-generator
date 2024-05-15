@@ -2,6 +2,8 @@
 
 To deploy this project in your own AWS account, please run the following commands.
 
+Change region to us-west-2
+
 ```bash
 npm ci
 npx cdk bootstrap --qualifier gen-assess
