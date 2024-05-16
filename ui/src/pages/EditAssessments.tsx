@@ -159,8 +159,9 @@ export default () => {
   return (
     <Wizard
       onSubmit={() => {
+        const { course, ...inputAssessment } = assessment;
         client
-          .graphql<any>({ query: upsertAssessment, variables: { input: assessment } })
+          .graphql<any>({ query: upsertAssessment, variables: { input: inputAssessment } })
           .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment updated successfully' }))
           .then(() => navigate('/assessments/find-assessments'))
           .catch(() => dispatchAlert({ type: AlertType.ERROR }));

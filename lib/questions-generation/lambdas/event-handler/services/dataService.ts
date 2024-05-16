@@ -49,7 +49,7 @@ export class DataService {
       TableName: ASSESSMENT_TABLE,
       Item: {
         name: assessmentInput.name,
-        course: assessmentInput.courseId,
+        courseId: assessmentInput.courseId,
         lectureDate: assessmentInput.lectureDate,
         deadline: assessmentInput.deadline,
         userId: userId,
