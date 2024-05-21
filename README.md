@@ -1,9 +1,21 @@
 # Welcome to GenAssess
 
-To deploy this project in your own AWS account, please run the following commands.
+## Prerequisites
 
-Change region to us-west-2
+Ensure you have the following installed:
+- Node and npm
+- Docker
+- CDK
 
+Request model access on Amazon Bedrock for the following:
+- Amazon Titan Embeddings G1 - Text
+- Anthropic Claude 3 Haiku
+
+## Deployment
+
+
+To deploy this project in your own AWS account, ensure your AWS region is set to the same region where you have Bedrock Model access. 
+Then, run the following commands:
 ```bash
 npm ci
 npx cdk bootstrap --qualifier gen-assess
