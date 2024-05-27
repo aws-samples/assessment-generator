@@ -30,7 +30,7 @@ Structure your response in this format and do not include any additional text, r
 \`\`\`xml
 <response>
     <questions>
-        <title>[Brief question title]</title>
+        <title>[Brief question title]([question difficulty: easy/medium/hard])</title>
         <question>
             [Question]
         </question>
@@ -86,7 +86,7 @@ ${xmlDocs}
 Structure your response in this format and do not include any additional imput. The response must be valid XML following this FORMAT:
 \`\`\`xml
 <question>
-    <title>[Brief question title]</title>
+    <title>[Brief question title]([question difficulty: easy/medium/hard])</title>
     <question>
         [Question]
     </question>
