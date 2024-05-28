@@ -1,36 +1,156 @@
-type Stat {
-  feedback: Int
-  count: Int
+enum Lang {
+  EN
+  FR
+  ES
 }
 
-type Summary {
+enum AssessType {
+  MultipleChoiceQuestionnaire
+}
+
+enum AssessStatus {
+  IN_PROGRESS
+  CREATED
+  FAILED
+  PUBLISHED
+}
+
+type Settings {
+  uiLang: Lang
+  docLang: Lang
+  assessType: AssessType
+}
+
+input UpsertSettingsInput {
+  uiLang: Lang!
+  docLang: Lang!
+  assessType: AssessType!
+}
+
+type Course {
   id: ID!
   name: String
-  contents: [String]
-  timestamp: String
-  stats: [Stat]
-  feedback: Feedback
+  description: String
 }
 
-type Feedback {
-  summaryid: ID!
-  feedback: Int
-  timestamp: String
-  summary: Summary
+input CourseInput {
+  id: ID
+  name: String!
+  description: String!
 }
 
-input CreateFeedbackInput {
-  summaryid: ID!
-  feedback: Int!
+type Student {
+  id: ID!
+  firstName: String!
+  lastName: String!
+}
+
+type AssessTemplate {
+  id: ID!
+  name: String
+  docLang: Lang
+  assessType: AssessType
+  totalQuestions: Int
+  easyQuestions: Int
+  mediumQuestions: Int
+  hardQuestions: Int
+  createdAt: AWSDateTime
+}
+
+input AssessTemplateInput {
+  name: String
+  docLang: Lang!
+  assessType: AssessType!
+  totalQuestions: Int!
+  easyQuestions: Int!
+  mediumQuestions: Int!
+  hardQuestions: Int!
+}
+
+type QandA {
+  title: String!
+  question: String!
+  answers: [String!]!
+  correctAnswer: Int!
+  explanation: String!
+}
+
+input QandAInput {
+  title: String!
+  question: String!
+  answers: [String]!
+  correctAnswer: Int!
+  explanation: String!
+}
+
+type Assessment {
+  id: ID!
+  name: String!
+  courseId: String!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
+  updatedAt: AWSDateTime!
+  questions: [QandA!]!
+  published: Boolean!
+  status: AssessStatus!
+  course: Course
+}
+
+input AssessmentInput {
+  id: ID!
+  name: String!
+  courseId: String!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
+  questions: [QandAInput!]!
+  published: Boolean
+  status: AssessStatus!
+}
+
+type StudentAssessment {
+  parentAssessId: ID!
+  assessment: Assessment
+  chosenAnswers: [Int]
+  completed: Boolean
+  score: Int
+  updatedAt: AWSDateTime
+}
+
+input StudentAssessmentInput {
+  parentAssessId: ID!
+  chosenAnswers: [Int]
+  score: Int
+  completed: Boolean
+}
+
+input GenerateAssessmentInput {
+  name: String!
+  courseId: String!
+  lectureDate: AWSDate!
+  deadline: AWSDate!
+  locations: [String]!
+  assessTemplateId: String
 }
 
 type Mutation {
-  createFeedback(input: CreateFeedbackInput!): Feedback
+  upsertSettings(input: UpsertSettingsInput): Settings
+  upsertCourse(input: CourseInput): Course
+  createAssessTemplate(input: AssessTemplateInput): AssessTemplate
+  upsertAssessment(input: AssessmentInput): Assessment
+  upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
 }
 
 type Query {
-  listSummaries: [Summary]
-  getSummary(id: ID): Summary
-  listFeedbacks: [Feedback]
-  getFeedback(summaryid: ID): Feedback
+  getSettings: Settings
+  listCourses: [Course]
+  listStudents: [Student]
+  getAssessment(id: ID!): Assessment
+  listAssessments: [Assessment]
+  listAssessTemplates: [AssessTemplate]
+  getStudentAssessment(parentAssessId: ID!): StudentAssessment
+  listStudentAssessments: [StudentAssessment]
+  listMyStudentAssessments(studentId: ID!): [StudentAssessment]
+  publishAssessment(assessmentId: ID!): Boolean
+  createKnowledgeBase(courseId: ID, locations: [String]): ID
+  generateAssessment(input: GenerateAssessmentInput): ID
 }

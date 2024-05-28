@@ -1,14 +1,37 @@
-# Welcome to your CDK TypeScript project
+# Welcome to GenAssess
 
-This is a blank project for CDK development with TypeScript.
+## Prerequisites
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+Ensure you have the following installed:
+- Node and npm
+- Docker
+- CDK
 
-## Useful commands
+Request model access on Amazon Bedrock for the following:
+- Amazon Titan Embeddings G1 - Text
+- Anthropic Claude 3 Haiku
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `cdk deploy`      deploy this stack to your default AWS account/region
-* `cdk diff`        compare deployed stack with current state
-* `cdk synth`       emits the synthesized CloudFormation template
+## Deployment
+
+
+To deploy this project in your own AWS account, ensure your AWS region is set to the same region where you have Bedrock Model access. 
+Then, run the following commands:
+```bash
+npm ci
+npx cdk bootstrap --qualifier gen-assess
+npm run cdk deploy
+```
+
+After successfully deploying, you will be able to access the Frontend UI with the CloudFront URL in the CDK outputs.
+Next:
+
+1. Create an account using the frontend
+2. Login to the AWS Console and assign the account to the "teachers" group
+
+## Security
+
+See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+
+## License
+
+This library is licensed under the MIT-0 License. See the LICENSE file.
