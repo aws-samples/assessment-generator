@@ -27,7 +27,7 @@ The architecture can be split into 3 key blocks:
 
 Architecture diagrams depicting key components in those blocks are provided below:
 
-[Front-end architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Front-End.png)
+![Front-end architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Front-End.png)
 
 Document ingestion architecture
 TODO: Insert image link here
