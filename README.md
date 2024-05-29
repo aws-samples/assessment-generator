@@ -29,11 +29,8 @@ Architecture diagrams depicting key components in those blocks are provided belo
 
 ![Front-end architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Front-End.png)
 
-Document ingestion architecture
 ![Document ingestion architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Document-Ingestion.png)
 
-
-Assessment generator architecture
 ![Assessment generator architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Assessment-Generator.png)
 
 ## Prerequisites
