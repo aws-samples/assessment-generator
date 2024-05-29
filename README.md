@@ -22,7 +22,7 @@ The architecture can be split into 3 key blocks:
 - Document ingestion architecture
 - Assessment generator architecture
 
-- Architecture diagrams depicting key components in those blocks are provided below:
+Architecture diagrams depicting key components in those blocks are provided below:
 Front-end architecture
 TODO: Insert image link here
 
