@@ -53,7 +53,7 @@ export default () => {
             },
             {
               id: 'description',
-              header: 'Descriptiont',
+              header: 'Description',
               cell: (item) => item.description,
             },
           ]}
