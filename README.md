@@ -16,7 +16,7 @@ Key features (Teacher)
 Key features (Student)
 - Assessments: Start and reviews assessment
 
-![Short clip depicting the student journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Student-Journey.mp4)
+[Short clip depicting the student journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Student-Journey.mp4)
 
 ## Architecture
 
