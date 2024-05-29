@@ -16,7 +16,7 @@ Key features (Teacher)
 Key features (Student)
 - Assessments: Start and reviews assessment
 
-TODO: Short clip depicting the student journey: Insert clip link here
+![Short clip depicting the student journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Student-Journey.mp4)
 
 ## Architecture
 
@@ -30,10 +30,11 @@ Architecture diagrams depicting key components in those blocks are provided belo
 ![Front-end architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Front-End.png)
 
 Document ingestion architecture
-TODO: Insert image link here
+![Document ingestion architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Document-Ingestion.png)
+
 
 Assessment generator architecture
-TODO: Insert image link here
+![Assessment generator architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Assessment-Generator.png)
 
 ## Prerequisites
 
