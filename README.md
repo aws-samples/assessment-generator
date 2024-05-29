@@ -10,7 +10,8 @@ Key features (Teacher)
 - Manage knowledge base: Teacher can upload reference material for a pre-defined course
 - Generate assessments: Teacher can generate assessments by using a predefined assessment template and course.
 
-TODO: Short clip depicting the teacher journey:  Insert clip link here
+[Short clip depicting the teacher journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Teacher-Journey.mp4)
+
 
 Key features (Student)
 - Assessments: Start and reviews assessment
@@ -26,8 +27,7 @@ The architecture can be split into 3 key blocks:
 
 Architecture diagrams depicting key components in those blocks are provided below:
 
-Front-end architecture
-TODO: Insert image link here
+[Front-end architecture](https://github.com/aws-samples/assessment-generator/blob/main/media/Arch-Front-End.png)
 
 Document ingestion architecture
 TODO: Insert image link here
