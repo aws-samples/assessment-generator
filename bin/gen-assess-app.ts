@@ -16,4 +16,4 @@ const app = new cdk.App({
   ],
 });
 
-new GenAssessStack(app, 'GenAssessStack', {});
+new GenAssessStack(app, 'GenAssessStack', { description: 'Assessment Generator (uksb-buf2grwawv)' });
