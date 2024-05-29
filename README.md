@@ -1,5 +1,37 @@
 # Welcome to GenAssess
 
+Assessment Generator is a sample application generating assessment questions for a provided reference material and lecture note(s).
+
+## Features Overview
+
+Key features (Teacher)
+- Course addition: Teacher can add a new course
+- Assessment template creation: Teacher can define an assessment set with the number of questions for each level (easy, medium, hard)
+- Manage knowledge base: Teacher can upload reference material for a pre-defined course
+- Generate assessments: Teacher can generate assessments by using a predefined assessment template and course.
+Short clip depicting the teacher journey:  Insert clip link here
+
+Key features (Student)
+- Assessments: Start and reviews assessment
+TODO: Short clip depicting the student journey: Insert clip link here
+
+## Architecture
+
+The architecture can be split into 3 key blocks:
+- Front-end architecture
+- Document ingestion architecture
+- Assessment generator architecture
+
+- Architecture diagrams depicting key components in those blocks are provided below:
+Front-end architecture
+TODO: Insert image link here
+
+Document ingestion architecture
+TODO: Insert image link here
+
+Assessment generator architecture
+TODO: Insert image link here
+
 ## Prerequisites
 
 Ensure you have the following installed:
@@ -17,6 +49,8 @@ Request model access on Amazon Bedrock for the following:
 To deploy this project in your own AWS account, ensure your AWS region is set to the same region where you have Bedrock Model access. 
 Then, run the following commands:
 ```bash
+git clone git@github.com:aws-samples/assessment-generator.git
+cd assessment-generator
 npm ci
 npx cdk bootstrap --qualifier gen-assess
 npm run cdk deploy
@@ -25,8 +59,11 @@ npm run cdk deploy
 After successfully deploying, you will be able to access the Frontend UI with the CloudFront URL in the CDK outputs.
 Next:
 
-1. Create an account using the frontend
-2. Login to the AWS Console and assign the account to the "teachers" group
+1. Create an account for student using the frontend with "Create Account" tab and Role as "students"
+2. Create an account for teacher using the frontend with "Create Account" tab and Role as "teachers"
+3. For teacher journey: Login with the created teacher account
+4. For student journey: Login with the created student account
+
 
 ## Security
 
