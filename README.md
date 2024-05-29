@@ -9,10 +9,12 @@ Key features (Teacher)
 - Assessment template creation: Teacher can define an assessment set with the number of questions for each level (easy, medium, hard)
 - Manage knowledge base: Teacher can upload reference material for a pre-defined course
 - Generate assessments: Teacher can generate assessments by using a predefined assessment template and course.
-Short clip depicting the teacher journey:  Insert clip link here
+
+TODO: Short clip depicting the teacher journey:  Insert clip link here
 
 Key features (Student)
 - Assessments: Start and reviews assessment
+
 TODO: Short clip depicting the student journey: Insert clip link here
 
 ## Architecture
