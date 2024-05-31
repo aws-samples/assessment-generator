@@ -10,13 +10,15 @@ Key features (Teacher)
 - Manage knowledge base: Teacher can upload reference material for a pre-defined course
 - Generate assessments: Teacher can generate assessments by using a predefined assessment template and course.
 
-[Short clip depicting the teacher journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Teacher-Journey.mp4)
+Short clip depicting the teacher journey
+https://raw.githubusercontent.com/aws-samples/assessment-generator/main/media/Teacher-Journey.mp4
 
 
 Key features (Student)
 - Assessments: Start and reviews assessment
 
-[Short clip depicting the student journey](https://github.com/aws-samples/assessment-generator/blob/main/media/Student-Journey.mp4)
+Short clip depicting the student journey
+https://raw.githubusercontent.com/aws-samples/assessment-generator/main/media/Student-Journey.mp4
 
 ## Architecture
 
