@@ -11,14 +11,17 @@ Key features (Teacher)
 - Generate assessments: Teacher can generate assessments by using a predefined assessment template and course.
 
 Short clip depicting the teacher journey
-https://raw.githubusercontent.com/aws-samples/assessment-generator/main/media/Teacher-Journey.mp4
+https://github.com/aws-samples/assessment-generator/assets/5655093/d4b135a2-5b89-492e-8296-8038ac1b3c1d
+
 
 
 Key features (Student)
 - Assessments: Start and reviews assessment
 
 Short clip depicting the student journey
-https://raw.githubusercontent.com/aws-samples/assessment-generator/main/media/Student-Journey.mp4
+https://github.com/aws-samples/assessment-generator/assets/5655093/706730e0-b167-4bd2-aa35-ce82e908a7aa
+
+
 
 ## Architecture
 
