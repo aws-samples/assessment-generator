@@ -7,7 +7,7 @@ import FindAssessments from './pages/FindAssessments';
 import StudentAssessments from './pages/StudentAssessments';
 import GenerateAssessments from './pages/GenerateAssessments';
 import EditAssessments from './pages/EditAssessments';
-import FindStudent from './pages/FindStudent';
+// import FindStudent from './pages/FindStudent';
 import MyDashboard from './pages/MyDashboard';
 import StudentAssessment from './pages/StudentAssessment';
 import ReviewAssessment from './pages/ReviewAssessment';
