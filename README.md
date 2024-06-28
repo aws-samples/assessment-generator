@@ -5,6 +5,7 @@ Assessment Generator is a sample application generating assessment questions for
 ## Features Overview
 
 Key features (Teacher)
+
 - Course addition: Teacher can add a new course
 - Assessment template creation: Teacher can define an assessment set with the number of questions for each level (easy, medium, hard)
 - Manage knowledge base: Teacher can upload reference material for a pre-defined course
@@ -14,20 +15,18 @@ Short clip depicting the teacher journey
 
 https://github.com/aws-samples/assessment-generator/assets/5655093/d4b135a2-5b89-492e-8296-8038ac1b3c1d
 
-
-
 Key features (Student)
+
 - Assessments: Start and reviews assessment
 
 Short clip depicting the student journey
 
 https://github.com/aws-samples/assessment-generator/assets/5655093/706730e0-b167-4bd2-aa35-ce82e908a7aa
 
-
-
 ## Architecture
 
 The architecture can be split into 3 key blocks:
+
 - Front-end architecture
 - Document ingestion architecture
 - Assessment generator architecture
@@ -43,19 +42,21 @@ Architecture diagrams depicting key components in those blocks are provided belo
 ## Prerequisites
 
 Ensure you have the following installed:
+
 - Node and npm
 - Docker
 - CDK
 
 Request model access on Amazon Bedrock for the following:
+
 - Amazon Titan Embeddings G1 - Text
 - Anthropic Claude 3 Haiku
 
 ## Deployment
 
-
-To deploy this project in your own AWS account, ensure your AWS region is set to the same region where you have Bedrock Model access. 
+To deploy this project in your own AWS account, ensure your AWS region is set to the same region where you have Bedrock Model access.
 Then, run the following commands:
+
 ```bash
 git clone git@github.com:aws-samples/assessment-generator.git
 cd assessment-generator
@@ -71,7 +72,6 @@ Next:
 2. Create an account for teacher using the frontend with "Create Account" tab and Role as "teachers"
 3. For teacher journey: Login with the created teacher account
 4. For student journey: Login with the created student account
-
 
 ## Security
 

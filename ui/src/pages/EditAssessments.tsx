@@ -64,7 +64,7 @@ export default () => {
   }, []);
 
   const steps =
-    (assessment as Assessment).questions?.map(({ title, question, answers, correctAnswer, explanation }) => ({
+    (assessment as Assessment).questions?.map(({ title, question, answerChoices, correctAnswer, explanation }) => ({
       title,
       content: (
         <SpaceBetween size="l">
@@ -76,74 +76,78 @@ export default () => {
               value={question}
             />
           </Container>
-          <Container header={<Header variant="h2">Edit Answers</Header>}>
-            <SpaceBetween size="l" direction="horizontal" alignItems="center">
-              {answers.map((answer, answerIndex) => (
-                <Container
-                  key={`answer-${answerIndex}`}
-                  header={
-                    <Header
-                      variant="h2"
-                      actions={
-                        <Button
-                          iconName="close"
-                          variant="icon"
-                          onClick={() =>
-                            updateAssessment({
-                              type: ActionTypes.Update,
-                              stepIndex: activeStepIndex,
-                              key: 'answers',
-                              content: answers.filter((_a, i) => answerIndex !== i),
-                            })
+          {answerChoices?.length ? (
+            <>
+              <Container header={<Header variant="h2">Edit Answers</Header>}>
+                <SpaceBetween size="l" direction="horizontal" alignItems="center">
+                  {answerChoices?.map((answerChoice, answerIndex) => (
+                    <Container
+                      key={`answer-${answerIndex}`}
+                      header={
+                        <Header
+                          variant="h2"
+                          actions={
+                            <Button
+                              iconName="close"
+                              variant="icon"
+                              onClick={() =>
+                                updateAssessment({
+                                  type: ActionTypes.Update,
+                                  stepIndex: activeStepIndex,
+                                  key: 'answerChoice',
+                                  content: answerChoices.filter((_a, i) => answerIndex !== i),
+                                })
+                              }
+                            />
                           }
                         />
                       }
+                    >
+                      <Textarea
+                        onChange={({ detail }) =>
+                          updateAssessment({
+                            type: ActionTypes.Update,
+                            stepIndex: activeStepIndex,
+                            key: 'answerChoice',
+                            content: answerChoices?.map((answerChoice, i) => (answerIndex === i ? detail.value : answerChoice)),
+                          })
+                        }
+                        value={answerChoice!}
+                      />
+                    </Container>
+                  ))}
+                  <Container>
+                    <Button
+                      iconName="add-plus"
+                      variant="icon"
+                      onClick={() =>
+                        updateAssessment({
+                          type: ActionTypes.Update,
+                          stepIndex: activeStepIndex,
+                          key: 'answerChoice',
+                          content: [...(answerChoices || []), ''],
+                        })
+                      }
                     />
-                  }
-                >
-                  <Textarea
-                    onChange={({ detail }) =>
-                      updateAssessment({
-                        type: ActionTypes.Update,
-                        stepIndex: activeStepIndex,
-                        key: 'answers',
-                        content: answers.map((answer: string, i: number) => (answerIndex === i ? detail.value : answer)),
-                      })
-                    }
-                    value={answer}
-                  />
-                </Container>
-              ))}
-              <Container>
-                <Button
-                  iconName="add-plus"
-                  variant="icon"
-                  onClick={() =>
+                  </Container>
+                </SpaceBetween>
+              </Container>
+              <Container header={<Header variant="h2">Choose Correct Answer</Header>}>
+                <Tiles
+                  value={(correctAnswer! - 1).toString()}
+                  items={answerChoices?.map((answerChoice, i) => ({ label: answerChoice, value: i.toString() }))}
+                  onChange={({ detail }) =>
                     updateAssessment({
                       type: ActionTypes.Update,
                       stepIndex: activeStepIndex,
-                      key: 'answers',
-                      content: [...answers, ''],
+                      key: 'correctAnswer',
+                      content: +detail.value + 1,
                     })
                   }
                 />
               </Container>
-            </SpaceBetween>
-          </Container>
-          <Container header={<Header variant="h2">Choose Correct Answer</Header>}>
-            <Tiles
-              value={(correctAnswer - 1).toString()}
-              items={answers.map((answer, i) => ({ label: answer, value: i.toString() }))}
-              onChange={({ detail }) =>
-                updateAssessment({
-                  type: ActionTypes.Update,
-                  stepIndex: activeStepIndex,
-                  key: 'correctAnswer',
-                  content: +detail.value + 1,
-                })
-              }
-            />
-          </Container>
+            </>
+          ) : null}
           <Container header={<Header variant="h2">Explanation</Header>}>
             <Textarea
               onChange={({ detail }) =>

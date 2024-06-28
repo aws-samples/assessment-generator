@@ -1,10 +1,9 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
-import { AssessType, Lang } from "../../../../../ui/src/graphql/API";
-import { DataService } from "../services/dataService";
-import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
 
+import { AssessType, Lang } from '../../../../../ui/src/graphql/API';
+import { DataService } from '../services/dataService';
+import { logger } from '../../../../rag-pipeline/lambdas/event-handler/utils/pt';
 
 const dataService = new DataService();
 export class AssessmentTemplate {
@@ -25,7 +24,7 @@ export class AssessmentTemplate {
   }
 
   static async fromId(assessmentTemplateId: string | undefined, userId: string) {
-    if (!assessmentTemplateId){
+    if (!assessmentTemplateId) {
       return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.MultipleChoiceQuestionnaire, 10, 5, 3, 2));
     }
     // TODO read data from DDB

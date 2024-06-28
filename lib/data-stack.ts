@@ -1,6 +1,5 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import {
@@ -249,16 +248,16 @@ export class DataStack extends NestedStack {
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
-    const NAMESPACE = 'genassess-rag';
     const QUESTIONS_GENERATOR_NAME = 'QuestionsGenerator';
-    const questionGeneratorRole = new aws_iam.Role(this, `${QUESTIONS_GENERATOR_NAME}Role`, {
+    const NAMESPACE = 'genassess-rag';
+    const assessmentLambdaRole = new aws_iam.Role(this, `AssessmentLambdaRole`, {
       assumedBy: new aws_iam.ServicePrincipal('lambda.amazonaws.com'),
       managedPolicies: [ManagedPolicy.fromAwsManagedPolicyName('service-role/AWSLambdaBasicExecutionRole')],
     });
 
     //Add Bedrock permissions on the Lambda function
     //TODO scope it down to what's required
-    questionGeneratorRole.addToPolicy(
+    assessmentLambdaRole.addToPolicy(
       new PolicyStatement({
         effect: aws_iam.Effect.ALLOW,
         resources: ['*'],
@@ -277,7 +276,7 @@ export class DataStack extends NestedStack {
       description: 'Generates questions',
       entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'event-handler', 'index.ts'),
       memorySize: 512,
-      role: questionGeneratorRole,
+      role: assessmentLambdaRole,
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
       tracing: Tracing.ACTIVE,
@@ -368,6 +367,74 @@ export class DataStack extends NestedStack {
       fieldName: 'generateAssessment',
       code: aws_appsync.Code.fromAsset('lib/resolvers/lambdaResolver.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+    });
+
+    /////////// Grade Assessment
+
+    const gradeAssessmentFn = new NodejsFunction(this, 'GradeAssessmentFn', {
+      description: 'Grade Assessment',
+      entry: 'lib/lambdas/gradeAssessment.ts',
+      memorySize: 512,
+      role: assessmentLambdaRole,
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      tracing: Tracing.ACTIVE,
+      timeout: Duration.minutes(15),
+      environment: {
+        POWERTOOLS_SERVICE_NAME: 'assessment-grader',
+        POWERTOOLS_METRICS_NAMESPACE: NAMESPACE,
+      },
+      bundling: {
+        minify: true,
+      },
+    });
+    gradeAssessmentFn.addToRolePolicy(
+      new PolicyStatement({
+        effect: aws_iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: ['bedrock:InvokeModel'],
+      })
+    );
+
+    const gradeAssessmentDs = api.addLambdaDataSource('GradeAssessmentDs', gradeAssessmentFn);
+
+    new aws_appsync.Resolver(this, 'GradeStudentAssessmentResolver', {
+      api,
+      typeName: 'Mutation',
+      fieldName: 'gradeStudentAssessment',
+      code: aws_appsync.Code.fromInline(`
+          export function request(ctx) {
+          return {};
+        }
+
+        export function response(ctx) {
+          return ctx.prev.result;
+        }
+      `),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+      pipelineConfig: [
+        new aws_appsync.AppsyncFunction(this, 'GetParentAssessmentFn', {
+          api,
+          name: 'getParentAssessmentFn',
+          dataSource: assessmentsDs,
+          code: aws_appsync.Code.fromAsset('lib/resolvers/getParentAssessment.ts'),
+          runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+        }),
+        new aws_appsync.AppsyncFunction(this, 'GradeStudentAssessmentFn', {
+          api,
+          name: 'gradeStudentAssessment',
+          dataSource: gradeAssessmentDs,
+          requestMappingTemplate: aws_appsync.MappingTemplate.lambdaRequest(),
+          responseMappingTemplate: aws_appsync.MappingTemplate.lambdaResult(),
+        }),
+        new aws_appsync.AppsyncFunction(this, 'UpsertStudentAssessmentFn', {
+          api,
+          name: 'upsertStudentAssessmentFn',
+          dataSource: studentAssessmentsDs,
+          code: aws_appsync.Code.fromAsset('lib/resolvers/upsertStudentAssessment.ts'),
+          runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+        }),
+      ],
     });
 
     this.api = api;

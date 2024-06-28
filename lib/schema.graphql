@@ -5,7 +5,9 @@ enum Lang {
 }
 
 enum AssessType {
-  MultipleChoiceQuestionnaire
+  Multiple_Choice
+  Free_Text
+  Multiple_Choice_And_Free_Text
 }
 
 enum AssessStatus {
@@ -70,16 +72,16 @@ input AssessTemplateInput {
 type QandA {
   title: String!
   question: String!
-  answers: [String!]!
-  correctAnswer: Int!
+  answerChoices: [String]
+  correctAnswer: Int
   explanation: String!
 }
 
 input QandAInput {
   title: String!
   question: String!
-  answers: [String]!
-  correctAnswer: Int!
+  answerChoices: [String]
+  correctAnswer: Int
   explanation: String!
 }
 
@@ -110,15 +112,16 @@ input AssessmentInput {
 type StudentAssessment {
   parentAssessId: ID!
   assessment: Assessment
-  chosenAnswers: [Int]
+  answers: AWSJSON!
   completed: Boolean
   score: Int
+  analyses: AWSJSON
   updatedAt: AWSDateTime
 }
 
 input StudentAssessmentInput {
   parentAssessId: ID!
-  chosenAnswers: [Int]
+  answers: AWSJSON!
   score: Int
   completed: Boolean
 }
@@ -138,6 +141,7 @@ type Mutation {
   createAssessTemplate(input: AssessTemplateInput): AssessTemplate
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
+  gradeStudentAssessment(input: StudentAssessmentInput): StudentAssessment
 }
 
 type Query {

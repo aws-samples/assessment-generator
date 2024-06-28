@@ -3,10 +3,12 @@ import { Wizard, Container, Header, SpaceBetween, Box } from '@cloudscape-design
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { StudentAssessment } from '../graphql/API';
+import { StudentAssessment as RawStudentAssessment } from '../graphql/API';
 import { getStudentAssessment } from '../graphql/queries';
 
 const client = generateClient();
+
+type StudentAssessment = Omit<RawStudentAssessment, 'answers'> & { answers: [string | number] };
 
 export default () => {
   const params = useParams();
@@ -19,9 +21,10 @@ export default () => {
     client
       .graphql<any>({ query: getStudentAssessment, variables: { parentAssessId: params.id! } })
       .then(({ data }) => {
-        const result = data.getStudentAssessment;
+        const result: RawStudentAssessment = data.getStudentAssessment;
         if (!result) throw new Error();
-        setStudentAssessment(result);
+        const parsedResult: StudentAssessment = { ...result, answers: JSON.parse(result.answers) };
+        setStudentAssessment(parsedResult);
       })
       .catch(() => {});
   }, []);
@@ -46,7 +49,7 @@ export default () => {
       }}
       activeStepIndex={activeStepIndex}
       allowSkipTo
-      steps={studentAssessment.assessment.questions.map(({ title, question, answers, correctAnswer, explanation }) => ({
+      steps={studentAssessment.assessment.questions.map(({ title, question, answerChoices, correctAnswer, explanation }) => ({
         title,
         content: (
           <SpaceBetween size="l">
@@ -55,28 +58,37 @@ export default () => {
             </Container>
             <Container header={<Header variant="h2">Answer</Header>}>
               <SpaceBetween size="l">
-                {answers.map((answer, i) => (
-                  <div
-                    style={{
-                      border:
-                        (correctAnswer-1) === i
-                          ? `3px solid green`
-                          : studentAssessment.chosenAnswers![activeStepIndex] === i+1 &&
-                            studentAssessment.chosenAnswers![activeStepIndex] !== (correctAnswer)
-                          ? `3px solid red`
-                          : '',
-                    }}
-                  >
-                    <Container>
-                      <Box variant="p">{answer}</Box>
-                    </Container>
-                  </div>
-                ))}
+                {answerChoices ? (
+                  answerChoices?.map((answerChoice, i) => (
+                    <div
+                      style={{
+                        border:
+                          correctAnswer! - 1 === i
+                            ? `3px solid green`
+                            : studentAssessment.answers![activeStepIndex] === i + 1 && studentAssessment.answers![activeStepIndex] !== correctAnswer
+                            ? `3px solid red`
+                            : '',
+                      }}
+                    >
+                      <Container>
+                        <Box variant="p">{answerChoice}</Box>
+                      </Container>
+                    </div>
+                  ))
+                ) : (
+                  <Box variant="p">{studentAssessment.answers[activeStepIndex]}</Box>
+                )}
               </SpaceBetween>
             </Container>
-            <Container header={<Header variant="h2">Explanation</Header>}>
-              <Box variant="p">{explanation}</Box>
-            </Container>
+            {JSON.parse(studentAssessment.analyses || '{}')[activeStepIndex] ? (
+              <Container header={<Header variant="h2">Grade - {JSON.parse(studentAssessment.analyses!)[activeStepIndex].rate}%</Header>}>
+                <Box variant="p">{JSON.parse(studentAssessment.analyses!)[activeStepIndex].analysis}</Box>
+              </Container>
+            ) : (
+              <Container header={<Header variant="h2">Explanation</Header>}>
+                <Box variant="p">{explanation}</Box>
+              </Container>
+            )}
           </SpaceBetween>
         ),
       }))}

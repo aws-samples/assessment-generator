@@ -41,7 +41,7 @@ export const getAssessment = /* GraphQL */ `
       questions {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
       }
@@ -67,7 +67,7 @@ export const listAssessments = /* GraphQL */ `
       questions {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
       }
@@ -110,7 +110,7 @@ export const getStudentAssessment = /* GraphQL */ `
         questions {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
         }
@@ -122,9 +122,10 @@ export const getStudentAssessment = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      analyses
       updatedAt
     }
   }
@@ -143,7 +144,7 @@ export const listStudentAssessments = /* GraphQL */ `
         questions {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
         }
@@ -155,9 +156,10 @@ export const listStudentAssessments = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      analyses
       updatedAt
     }
   }
@@ -176,7 +178,7 @@ export const listMyStudentAssessments = /* GraphQL */ `
         questions {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
         }
@@ -188,9 +190,10 @@ export const listMyStudentAssessments = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      analyses
       updatedAt
     }
   }

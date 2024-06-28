@@ -47,7 +47,7 @@ export const upsertAssessment = /* GraphQL */ `
       questions {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
       }
@@ -75,7 +75,7 @@ export const upsertStudentAssessment = /* GraphQL */ `
         questions {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
         }
@@ -87,9 +87,44 @@ export const upsertStudentAssessment = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      analyses
+      updatedAt
+    }
+  }
+`;
+export const gradeStudentAssessment = /* GraphQL */ `
+  mutation GradeStudentAssessment($input: StudentAssessmentInput) {
+    gradeStudentAssessment(input: $input) {
+      parentAssessId
+      assessment {
+        id
+        name
+        courseId
+        lectureDate
+        deadline
+        updatedAt
+        questions {
+          title
+          question
+          answerChoices
+          correctAnswer
+          explanation
+        }
+        published
+        status
+        course {
+          id
+          name
+          description
+        }
+      }
+      answers
+      completed
+      score
+      analyses
       updatedAt
     }
   }
