@@ -1,3 +1,6 @@
+// Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+// SPDX-License-Identifier: MIT-0
+ 
 import { DockerImage, Duration, Fn, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
@@ -12,7 +15,7 @@ import * as fsExtra from 'fs-extra';
 import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
-import { NagSuppressions } from "cdk-nag";
+import { NagSuppressions } from 'cdk-nag';
 
 export interface FrontendStackProps extends NestedStackProps {
   isDev?: boolean;
@@ -35,7 +38,7 @@ export class FrontendStack extends NestedStack {
     let hostedZone: route53.PublicHostedZone | undefined;
 
     NagSuppressions.addStackSuppressions(this, [
-      {id: 'AwsSolutions-IAM4', reason: 'Using standard managed policies (AWSLambdaBasicExecutionRole)'}
+      { id: 'AwsSolutions-IAM4', reason: 'Using standard managed policies (AWSLambdaBasicExecutionRole)' },
     ]);
 
     const frontS3AccessLogBucket = new s3.Bucket(this, 'frontS3AccessLogBucket', {
@@ -43,7 +46,7 @@ export class FrontendStack extends NestedStack {
       removalPolicy: RemovalPolicy.DESTROY,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
-      versioned: true
+      versioned: true,
     });
 
     this.bucket = new s3.Bucket(this, 'frontendBucket', {
@@ -51,7 +54,7 @@ export class FrontendStack extends NestedStack {
       autoDeleteObjects: true,
       blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
-      serverAccessLogsBucket: frontS3AccessLogBucket
+      serverAccessLogsBucket: frontS3AccessLogBucket,
     });
 
     const accessLogBucket = new s3.Bucket(this, 'frontAccessLogBucket', {
@@ -61,14 +64,15 @@ export class FrontendStack extends NestedStack {
       objectOwnership: s3.ObjectOwnership.BUCKET_OWNER_PREFERRED,
       accessControl: BucketAccessControl.PRIVATE,
       enforceSSL: true,
-      versioned: true
+      versioned: true,
     });
 
     const responseHeadersPolicy = new cloudfront.ResponseHeadersPolicy(this, 'FrontResponsePolicy', {
       securityHeadersBehavior: {
         strictTransportSecurity: { accessControlMaxAge: Duration.seconds(47304000), includeSubdomains: true, preload: true, override: true },
         contentSecurityPolicy: {
-          contentSecurityPolicy: "default-src 'self' *.amazoncognito.com *.amazonaws.com; font-src 'self' data:; img-src 'self' data: https://internal-cdn.amazon.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests;",
+          contentSecurityPolicy:
+            "default-src 'self' *.amazoncognito.com *.amazonaws.com; font-src 'self' data:; img-src 'self' data: https://internal-cdn.amazon.com; style-src 'self' 'unsafe-inline'; upgrade-insecure-requests;",
           override: true,
         },
         contentTypeOptions: { override: true },
@@ -78,11 +82,11 @@ export class FrontendStack extends NestedStack {
     });
 
     const distribution = new cloudfront.Distribution(this, 'dist', {
-      comment: 'Planning Pipeline Distribution',
+      comment: 'Gen Assess Distribution',
       defaultBehavior: {
         origin: new origins.S3Origin(this.bucket),
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        responseHeadersPolicy: responseHeadersPolicy
+        responseHeadersPolicy: responseHeadersPolicy,
       },
       minimumProtocolVersion: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
       errorResponses: [
@@ -97,21 +101,21 @@ export class FrontendStack extends NestedStack {
     distribution.addBehavior('/graphql', new HttpOrigin(Fn.select(2, Fn.split('/', graphqlUrl))), {
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.HTTPS_ONLY,
       allowedMethods: AllowedMethods.ALLOW_ALL, // allow POST for graphql
-      responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, 'APIResponsePolicy', {
+      responseHeadersPolicy: new cloudfront.ResponseHeadersPolicy(this, `APIResponsePolicy${this.node.addr}`, {
         securityHeadersBehavior: {
           strictTransportSecurity: { accessControlMaxAge: Duration.seconds(47304000), includeSubdomains: true, preload: true, override: true },
           contentTypeOptions: { override: true },
           xssProtection: { protection: true, modeBlock: true, override: true },
-          referrerPolicy: {referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true }
+          referrerPolicy: { referrerPolicy: HeadersReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN, override: true },
         },
         corsBehavior: {
           accessControlAllowHeaders: ['*'],
           accessControlAllowMethods: ['GET', 'HEAD', 'PUT', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
           accessControlAllowCredentials: false,
           originOverride: true,
-          accessControlAllowOrigins: [domain ? `https://${domain}` : '*'] // '*' is for dev / localhost
+          accessControlAllowOrigins: [domain ? `https://${domain}` : '*'], // '*' is for dev / localhost
         },
-      })
+      }),
     });
 
     const execOptions: childProcess.ExecSyncOptions = { stdio: 'inherit' };
@@ -129,7 +133,7 @@ export class FrontendStack extends NestedStack {
                   childProcess.execSync('cd ui/node_modules || (cd ui && npm ci)', execOptions);
                   childProcess.execSync('cd ui && npm run build', execOptions);
 
-                  fsExtra.copySync('ui/build', outputDir);
+                  fsExtra.copySync('ui/dist', outputDir);
                   return true;
                 } catch {
                   return false;

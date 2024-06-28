@@ -1,0 +1,14 @@
+Performing Policy Validations
+
+Validation Report
+-----------------
+
+Policy Validation Report Summary
+
+╔════════════════════════╤═════════╗
+║ Plugin                 │ Status  ║
+╟────────────────────────┼─────────╢
+║ cdk-validator-cfnguard │ success ║
+╚════════════════════════╧═════════╝
+
+Policy Validation Successful!

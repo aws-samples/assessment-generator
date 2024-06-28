@@ -1,10 +1,12 @@
 *.js
-!lib/resolvers/*.js
 !jest.config.js
 *.d.ts
 node_modules
+dist/
 
 # CDK asset staging directory
 .cdk.staging
 cdk.out
 /.idea/
+/dist/
+/ui/build/
