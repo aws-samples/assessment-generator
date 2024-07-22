@@ -22,6 +22,7 @@ import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { Tracer } from '@aws-lambda-powertools/tracer';
 import { BedrockRuntime } from '@aws-sdk/client-bedrock-runtime';
+import exp from 'constants';
 
 const tracer = new Tracer();
 const logger = new Logger({
@@ -41,38 +42,48 @@ class Lambda implements LambdaInterface {
   async handler(event: AppSyncResolverEvent<any>, context: Context): Promise<any> {
     logger.info('Received event:', event as any);
 
-    const questions = event.prev?.result.questions;
+    const multiChoiceAssessment = event.prev?.result.multiChoiceAssessment;
+    const freeTextAssessment = event.prev?.result.freeTextAssessment;
     const answers = event.arguments.input.answers;
-    const analyses: any = {};
 
-    let score = 0;
-
-    for (let i = 0; i < questions.length; i++) {
-      const question = questions[i];
-      const answer = answers[i];
-      if (question.answerChoices) {
-        if (question.correctAnswer == answer) score++;
-      } else {
-        const { rate, analysis } = await freeTextMarking(question, answer);
-        analyses['' + i] = { rate, analysis };
-        if (rate >= 50) score++;
-      }
-    }
-
-    return { analyses, score: Math.round((score / questions.length) * 100) };
+    if (multiChoiceAssessment) return gradeMultiChoice(multiChoiceAssessment, answers);
+    if (freeTextAssessment) return gradeFreeText(freeTextAssessment, answers);
   }
 }
 
-async function freeTextMarking(question: any, answer: any) {
+async function gradeFreeText(freeTextAssessment: any, answers: any) {
+  const report: any = {};
+  let score = 0;
+  for (let i = 0; i < freeTextAssessment.length; i++) {
+    const assessment = freeTextAssessment[i];
+    const answer = answers[i];
+    const { rate, explanation } = await freeTextMarking(assessment, answer);
+    report['' + i] = { rate, explanation };
+    if (rate >= 50) score++;
+  }
+  return { score: Math.round((score / freeTextAssessment.length) * 100), report };
+}
+
+function gradeMultiChoice(mulichoiceAssessment: any, answers: any) {
+  let score = 0;
+  for (let i = 0; i < mulichoiceAssessment.length; i++) {
+    const assessment = mulichoiceAssessment[i];
+    const answer = answers[i];
+    if (assessment.correctAnswer == answer) score++;
+  }
+  return { score: Math.round((score / mulichoiceAssessment.length) * 100) };
+}
+
+async function freeTextMarking(assessment: any, answer: any) {
   const response = await callLLM(`
-      Give a 0-100 rate to the answer provided for the question in <rate> tag, and use the explanation to help judge the score, also give an explanation on why you gave that score in <analysis> tag. But first make sure that the answer does not contradict the explanation or the best answer, otherwise the score should be fail. And in the analysis DON'T mention or reference the explanation. And in the analysis DON'T mention or reference the best answer
-      <question>${question.question}</question>
+      Give a 0-100 rate in <rate> tag to the answer provided for the question, and use the rubric to help judge the score, also give an explanation on why you gave that score in <explanation> tag. And in the explanation DON'T mention or reference the rubric. If you cannot provide a meaningful assessment or score then just put score as 0 and put in explanation that the answer provided is not satisfactory.
+      <question>${assessment.question}</question>
       <answer>${answer}</answer>
-      <explanation>${question.explanation}</explanation>
+      <rubric>${assessment.rubric}</rubric>
     `);
   const [, rate] = response.match(/<rate>(.*?)<\/rate>/);
-  const [, analysis] = response.match(/<analysis>(.*?)<\/analysis>/);
-  return { rate: +rate, analysis };
+  const [, explanation] = response.match(/<explanation>(.*?)<\/explanation>/);
+  return { rate: +rate, explanation };
 }
 
 async function callLLM(prompt: string) {

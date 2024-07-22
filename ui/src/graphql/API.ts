@@ -15,9 +15,8 @@ export enum Lang {
 }
 
 export enum AssessType {
-  Multiple_Choice = 'Multiple_Choice',
-  Free_Text = 'Free_Text',
-  Multiple_Choice_And_Free_Text = 'Multiple_Choice_And_Free_Text',
+  multiChoiceAssessment = 'multiChoiceAssessment',
+  freeTextAssessment = 'freeTextAssessment',
 }
 
 export type Settings = {
@@ -69,17 +68,25 @@ export type AssessmentInput = {
   courseId: string;
   lectureDate: string;
   deadline: string;
-  questions: Array<QandAInput>;
+  assessType: AssessType;
+  multiChoiceAssessment?: Array<MultiChoiceInput | null> | null;
+  freeTextAssessment?: Array<FreeTextInput | null> | null;
   published?: boolean | null;
   status: AssessStatus;
 };
 
-export type QandAInput = {
+export type MultiChoiceInput = {
   title: string;
   question: string;
   answerChoices?: Array<string | null> | null;
   correctAnswer?: number | null;
   explanation: string;
+};
+
+export type FreeTextInput = {
+  title: string;
+  question: string;
+  rubric: string;
 };
 
 export enum AssessStatus {
@@ -97,19 +104,28 @@ export type Assessment = {
   lectureDate: string;
   deadline: string;
   updatedAt: string;
-  questions: Array<QandA>;
+  assessType: AssessType;
+  multiChoiceAssessment?: Array<MultiChoice> | null;
+  freeTextAssessment?: Array<FreeText> | null;
   published: boolean;
   status: AssessStatus;
   course?: Course | null;
 };
 
-export type QandA = {
-  __typename: 'QandA';
+export type MultiChoice = {
+  __typename: 'MultiChoice';
   title: string;
   question: string;
-  answerChoices?: Array<string | null> | null;
-  correctAnswer?: number | null;
+  answerChoices: Array<string>;
+  correctAnswer: number;
   explanation: string;
+};
+
+export type FreeText = {
+  __typename: 'FreeText';
+  title: string;
+  question: string;
+  rubric: string;
 };
 
 export type StudentAssessmentInput = {
@@ -126,7 +142,7 @@ export type StudentAssessment = {
   answers: string;
   completed?: boolean | null;
   score?: number | null;
-  analyses?: string | null;
+  report?: string | null;
   updatedAt?: string | null;
 };
 
@@ -204,14 +220,21 @@ export type UpsertAssessmentMutation = {
     lectureDate: string;
     deadline: string;
     updatedAt: string;
-    questions: Array<{
-      __typename: 'QandA';
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
       title: string;
       question: string;
-      answerChoices?: Array<string | null> | null;
-      correctAnswer?: number | null;
+      answerChoices: Array<string>;
+      correctAnswer: number;
       explanation: string;
-    }>;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: string;
+    }> | null;
     published: boolean;
     status: AssessStatus;
     course?: {
@@ -239,14 +262,21 @@ export type UpsertStudentAssessmentMutation = {
       lectureDate: string;
       deadline: string;
       updatedAt: string;
-      questions: Array<{
-        __typename: 'QandA';
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
         title: string;
         question: string;
-        answerChoices?: Array<string | null> | null;
-        correctAnswer?: number | null;
+        answerChoices: Array<string>;
+        correctAnswer: number;
         explanation: string;
-      }>;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: string;
+      }> | null;
       published: boolean;
       status: AssessStatus;
       course?: {
@@ -259,7 +289,7 @@ export type UpsertStudentAssessmentMutation = {
     answers: string;
     completed?: boolean | null;
     score?: number | null;
-    analyses?: string | null;
+    report?: string | null;
     updatedAt?: string | null;
   } | null;
 };
@@ -280,14 +310,21 @@ export type GradeStudentAssessmentMutation = {
       lectureDate: string;
       deadline: string;
       updatedAt: string;
-      questions: Array<{
-        __typename: 'QandA';
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
         title: string;
         question: string;
-        answerChoices?: Array<string | null> | null;
-        correctAnswer?: number | null;
+        answerChoices: Array<string>;
+        correctAnswer: number;
         explanation: string;
-      }>;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: string;
+      }> | null;
       published: boolean;
       status: AssessStatus;
       course?: {
@@ -300,7 +337,7 @@ export type GradeStudentAssessmentMutation = {
     answers: string;
     completed?: boolean | null;
     score?: number | null;
-    analyses?: string | null;
+    report?: string | null;
     updatedAt?: string | null;
   } | null;
 };
@@ -345,14 +382,21 @@ export type GetAssessmentQuery = {
     lectureDate: string;
     deadline: string;
     updatedAt: string;
-    questions: Array<{
-      __typename: 'QandA';
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
       title: string;
       question: string;
-      answerChoices?: Array<string | null> | null;
-      correctAnswer?: number | null;
+      answerChoices: Array<string>;
+      correctAnswer: number;
       explanation: string;
-    }>;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: string;
+    }> | null;
     published: boolean;
     status: AssessStatus;
     course?: {
@@ -373,14 +417,21 @@ export type ListAssessmentsQuery = {
     lectureDate: string;
     deadline: string;
     updatedAt: string;
-    questions: Array<{
-      __typename: 'QandA';
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
       title: string;
       question: string;
-      answerChoices?: Array<string | null> | null;
-      correctAnswer?: number | null;
+      answerChoices: Array<string>;
+      correctAnswer: number;
       explanation: string;
-    }>;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: string;
+    }> | null;
     published: boolean;
     status: AssessStatus;
     course?: {
@@ -423,14 +474,21 @@ export type GetStudentAssessmentQuery = {
       lectureDate: string;
       deadline: string;
       updatedAt: string;
-      questions: Array<{
-        __typename: 'QandA';
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
         title: string;
         question: string;
-        answerChoices?: Array<string | null> | null;
-        correctAnswer?: number | null;
+        answerChoices: Array<string>;
+        correctAnswer: number;
         explanation: string;
-      }>;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: string;
+      }> | null;
       published: boolean;
       status: AssessStatus;
       course?: {
@@ -443,7 +501,7 @@ export type GetStudentAssessmentQuery = {
     answers: string;
     completed?: boolean | null;
     score?: number | null;
-    analyses?: string | null;
+    report?: string | null;
     updatedAt?: string | null;
   } | null;
 };
@@ -460,14 +518,21 @@ export type ListStudentAssessmentsQuery = {
       lectureDate: string;
       deadline: string;
       updatedAt: string;
-      questions: Array<{
-        __typename: 'QandA';
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
         title: string;
         question: string;
-        answerChoices?: Array<string | null> | null;
-        correctAnswer?: number | null;
+        answerChoices: Array<string>;
+        correctAnswer: number;
         explanation: string;
-      }>;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: string;
+      }> | null;
       published: boolean;
       status: AssessStatus;
       course?: {
@@ -480,7 +545,7 @@ export type ListStudentAssessmentsQuery = {
     answers: string;
     completed?: boolean | null;
     score?: number | null;
-    analyses?: string | null;
+    report?: string | null;
     updatedAt?: string | null;
   } | null> | null;
 };
@@ -501,14 +566,21 @@ export type ListMyStudentAssessmentsQuery = {
       lectureDate: string;
       deadline: string;
       updatedAt: string;
-      questions: Array<{
-        __typename: 'QandA';
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
         title: string;
         question: string;
-        answerChoices?: Array<string | null> | null;
-        correctAnswer?: number | null;
+        answerChoices: Array<string>;
+        correctAnswer: number;
         explanation: string;
-      }>;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: string;
+      }> | null;
       published: boolean;
       status: AssessStatus;
       course?: {
@@ -521,7 +593,7 @@ export type ListMyStudentAssessmentsQuery = {
     answers: string;
     completed?: boolean | null;
     score?: number | null;
-    analyses?: string | null;
+    report?: string | null;
     updatedAt?: string | null;
   } | null> | null;
 };

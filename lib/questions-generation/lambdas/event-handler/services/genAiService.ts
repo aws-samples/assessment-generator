@@ -8,7 +8,7 @@ import { GeneratedQuestions } from '../models/generatedQuestions';
 import { BedrockAgentRuntime, KnowledgeBaseRetrievalResult } from '@aws-sdk/client-bedrock-agent-runtime';
 import { BedrockRuntime } from '@aws-sdk/client-bedrock-runtime';
 import { XMLBuilder, XMLParser } from 'fast-xml-parser';
-import { QandA } from '../../../../../ui/src/graphql/API';
+import { MultiChoice, FreeText } from '../../../../../ui/src/graphql/API';
 import { getInitialQuestionsPrompt, getRelevantDocumentsPrompt, getTopicsPrompt, improveQuestionPrompt } from './prompts';
 
 const CLAUDE_3_HAIKU = 'anthropic.claude-3-haiku-20240307-v1:0';
@@ -40,7 +40,7 @@ export class GenAiService {
     return llmResponse;
   }
 
-  public async getRelevantDocuments(question: QandA) {
+  public async getRelevantDocuments(question: MultiChoice | FreeText) {
     //logger.info(question as any);
 
     const kbQuery = getRelevantDocumentsPrompt(question);
@@ -59,7 +59,7 @@ export class GenAiService {
   public async improveQuestions(generatedQuestions: string, assessmentTemplate: AssessmentTemplate) {
     logger.debug(generatedQuestions);
     const parsedQuestions: GeneratedQuestions = parser.parse(generatedQuestions);
-    let improvedQuestions: QandA[] = [];
+    let improvedQuestions: MultiChoice | FreeText[] = [];
 
     for (let i = 0; i < parsedQuestions.response.questions.length; i++) {
       const question = parsedQuestions.response.questions[i];
@@ -100,9 +100,9 @@ export class GenAiService {
 
   private async improveQuestion(
     assessmentTemplate: AssessmentTemplate,
-    originalQuestion: QandA,
+    originalQuestion: MultiChoice | FreeText,
     relevantDocs: KnowledgeBaseRetrievalResult[] | undefined
-  ): Promise<QandA> {
+  ): Promise<MultiChoice | FreeText> {
     if (!(relevantDocs && relevantDocs.length > 0)) {
       return originalQuestion;
     }
@@ -117,7 +117,7 @@ export class GenAiService {
     logger.debug(prompt);
     const llmResponse = await this.callLLM(CLAUDE_3_HAIKU, prompt);
     logger.debug(llmResponse);
-    const { question }: { question: QandA } = parser.parse(llmResponse);
+    const { question }: { question: MultiChoice | FreeText } = parser.parse(llmResponse);
     return question;
   }
 }

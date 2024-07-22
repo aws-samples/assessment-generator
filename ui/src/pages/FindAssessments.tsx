@@ -14,12 +14,14 @@ export default () => {
   const dispatchAlert = useContext(DispatchAlertContext);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
 
-  useEffect(() => {
+  const getAssessments = () => {
     client
       .graphql<any>({ query: listAssessments })
       .then(({ data }) => setAssessments(data.listAssessments || []))
       .catch(() => dispatchAlert({ type: AlertType.ERROR }));
-  }, []);
+  };
+
+  useEffect(getAssessments, []);
 
   return (
     <ContentLayout>
@@ -90,6 +92,7 @@ export default () => {
                       client
                         .graphql<any>({ query: publishAssessment, variables: { assessmentId: item.id } })
                         .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Published successfully to students' }))
+                        .then(getAssessments)
                         .catch(() => dispatchAlert({ type: AlertType.ERROR }))
                     }
                   >

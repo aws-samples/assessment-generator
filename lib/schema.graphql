@@ -5,9 +5,8 @@ enum Lang {
 }
 
 enum AssessType {
-  Multiple_Choice
-  Free_Text
-  Multiple_Choice_And_Free_Text
+  multiChoiceAssessment
+  freeTextAssessment
 }
 
 enum AssessStatus {
@@ -69,15 +68,27 @@ input AssessTemplateInput {
   hardQuestions: Int!
 }
 
-type QandA {
+type FreeText {
   title: String!
   question: String!
-  answerChoices: [String]
-  correctAnswer: Int
+  rubric: String!
+}
+
+input FreeTextInput {
+  title: String!
+  question: String!
+  rubric: String!
+}
+
+type MultiChoice {
+  title: String!
+  question: String!
+  answerChoices: [String!]!
+  correctAnswer: Int!
   explanation: String!
 }
 
-input QandAInput {
+input MultiChoiceInput {
   title: String!
   question: String!
   answerChoices: [String]
@@ -92,7 +103,9 @@ type Assessment {
   lectureDate: AWSDate!
   deadline: AWSDate!
   updatedAt: AWSDateTime!
-  questions: [QandA!]!
+  assessType: AssessType!
+  multiChoiceAssessment: [MultiChoice!]
+  freeTextAssessment: [FreeText!]
   published: Boolean!
   status: AssessStatus!
   course: Course
@@ -104,7 +117,9 @@ input AssessmentInput {
   courseId: String!
   lectureDate: AWSDate!
   deadline: AWSDate!
-  questions: [QandAInput!]!
+  assessType: AssessType!
+  multiChoiceAssessment: [MultiChoiceInput]
+  freeTextAssessment: [FreeTextInput]
   published: Boolean
   status: AssessStatus!
 }
@@ -115,7 +130,7 @@ type StudentAssessment {
   answers: AWSJSON!
   completed: Boolean
   score: Int
-  analyses: AWSJSON
+  report: AWSJSON
   updatedAt: AWSDateTime
 }
 

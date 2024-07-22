@@ -44,12 +44,18 @@ export const upsertAssessment = /* GraphQL */ `
       lectureDate
       deadline
       updatedAt
-      questions {
+      assessType
+      multiChoiceAssessment {
         title
         question
         answerChoices
         correctAnswer
         explanation
+      }
+      freeTextAssessment {
+        title
+        question
+        rubric
       }
       published
       status
@@ -72,12 +78,18 @@ export const upsertStudentAssessment = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
           answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric
         }
         published
         status
@@ -90,7 +102,7 @@ export const upsertStudentAssessment = /* GraphQL */ `
       answers
       completed
       score
-      analyses
+      report
       updatedAt
     }
   }
@@ -106,12 +118,18 @@ export const gradeStudentAssessment = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
           answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric
         }
         published
         status
@@ -124,7 +142,7 @@ export const gradeStudentAssessment = /* GraphQL */ `
       answers
       completed
       score
-      analyses
+      report
       updatedAt
     }
   }

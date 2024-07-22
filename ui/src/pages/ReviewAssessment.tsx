@@ -3,7 +3,7 @@ import { Wizard, Container, Header, SpaceBetween, Box } from '@cloudscape-design
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { StudentAssessment as RawStudentAssessment } from '../graphql/API';
+import { StudentAssessment as RawStudentAssessment, AssessType, MultiChoice } from '../graphql/API';
 import { getStudentAssessment } from '../graphql/queries';
 
 const client = generateClient();
@@ -31,6 +31,8 @@ export default () => {
 
   if (!studentAssessment?.assessment) return null;
 
+  const assessType = studentAssessment.assessment.assessType;
+
   return (
     <Wizard
       onSubmit={() => navigate('/assessments')}
@@ -49,49 +51,52 @@ export default () => {
       }}
       activeStepIndex={activeStepIndex}
       allowSkipTo
-      steps={studentAssessment.assessment.questions.map(({ title, question, answerChoices, correctAnswer, explanation }) => ({
-        title,
-        content: (
-          <SpaceBetween size="l">
-            <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
-              <Box variant="p">{question}</Box>
-            </Container>
-            <Container header={<Header variant="h2">Answer</Header>}>
-              <SpaceBetween size="l">
-                {answerChoices ? (
-                  answerChoices?.map((answerChoice, i) => (
-                    <div
-                      style={{
-                        border:
-                          correctAnswer! - 1 === i
-                            ? `3px solid green`
-                            : studentAssessment.answers![activeStepIndex] === i + 1 && studentAssessment.answers![activeStepIndex] !== correctAnswer
-                            ? `3px solid red`
-                            : '',
-                      }}
-                    >
-                      <Container>
-                        <Box variant="p">{answerChoice}</Box>
-                      </Container>
-                    </div>
-                  ))
-                ) : (
-                  <Box variant="p">{studentAssessment.answers[activeStepIndex]}</Box>
-                )}
-              </SpaceBetween>
-            </Container>
-            {JSON.parse(studentAssessment.analyses || '{}')[activeStepIndex] ? (
-              <Container header={<Header variant="h2">Grade - {JSON.parse(studentAssessment.analyses!)[activeStepIndex].rate}%</Header>}>
-                <Box variant="p">{JSON.parse(studentAssessment.analyses!)[activeStepIndex].analysis}</Box>
+      steps={
+        studentAssessment.assessment[assessType]?.map((assessment) => ({
+          title: assessment.title,
+          content: (
+            <SpaceBetween size="l">
+              <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
+                <Box variant="p">{assessment.question}</Box>
               </Container>
-            ) : (
-              <Container header={<Header variant="h2">Explanation</Header>}>
-                <Box variant="p">{explanation}</Box>
+              <Container header={<Header variant="h2">Answer</Header>}>
+                <SpaceBetween size="l">
+                  {assessType === AssessType.multiChoiceAssessment ? (
+                    (assessment as MultiChoice).answerChoices.map((answerChoice, i) => (
+                      <div
+                        style={{
+                          border:
+                            (assessment as MultiChoice).correctAnswer! - 1 === i
+                              ? `3px solid green`
+                              : studentAssessment.answers![activeStepIndex] === i + 1 &&
+                                studentAssessment.answers![activeStepIndex] !== (assessment as MultiChoice).correctAnswer
+                              ? `3px solid red`
+                              : '',
+                        }}
+                      >
+                        <Container>
+                          <Box variant="p">{answerChoice}</Box>
+                        </Container>
+                      </div>
+                    ))
+                  ) : (
+                    <Box variant="p">{studentAssessment.answers[activeStepIndex]}</Box>
+                  )}
+                </SpaceBetween>
               </Container>
-            )}
-          </SpaceBetween>
-        ),
-      }))}
+              {JSON.parse(studentAssessment.report || '{}')[activeStepIndex] ? (
+                <Container header={<Header variant="h2">Grade - {JSON.parse(studentAssessment.report!)[activeStepIndex].rate}%</Header>}>
+                  <Box variant="p">{JSON.parse(studentAssessment.report!)[activeStepIndex].explanation}</Box>
+                </Container>
+              ) : (
+                <Container header={<Header variant="h2">Explanation</Header>}>
+                  <Box variant="p">{(assessment as MultiChoice).explanation}</Box>
+                </Container>
+              )}
+            </SpaceBetween>
+          ),
+        })) || []
+      }
     />
   );
 };

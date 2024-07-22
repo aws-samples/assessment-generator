@@ -1,17 +1,16 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
+
 import { v4 as uuidv4 } from 'uuid';
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb";
-import { logger } from "../../../../rag-pipeline/lambdas/event-handler/utils/pt";
-import { Assessment, AssessStatus, GenerateAssessmentInput, QandA } from "../../../../../ui/src/graphql/API";
-import { AssessmentTemplate } from "../models/assessmentTemplate";
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { logger } from '../../../../rag-pipeline/lambdas/event-handler/utils/pt';
+import { Assessment, AssessStatus, GenerateAssessmentInput, MultiChoice, FreeText, AssessType } from '../../../../../ui/src/graphql/API';
+import { AssessmentTemplate } from '../models/assessmentTemplate';
 
 const ASSESSMENT_TABLE = process.env.ASSESSMENTS_TABLE;
 const KB_TABLE = process.env.KB_TABLE;
 const ASSESS_TEMPLATE_TABLE = process.env.ASSESS_TEMPLATE_TABLE;
-
 
 export class DataService {
   private docClient: DynamoDBDocumentClient;
@@ -21,13 +20,12 @@ export class DataService {
     this.docClient = DynamoDBDocumentClient.from(client);
   }
 
-  async updateAssessment(improvedQuestions: QandA[], userId: string, assessmentId: string) {
-
+  async updateAssessment(improvedQuestions: MultiChoice[] | FreeText[], userId: string, assessmentId: string) {
     const currentAssessment = await this.getExistingAssessment(userId, assessmentId);
-    currentAssessment.questions = improvedQuestions;
+    currentAssessment[currentAssessment.assessType] = improvedQuestions;
     currentAssessment.status = AssessStatus.CREATED;
     currentAssessment.published = false;
-    currentAssessment.updatedAt = (new Date()).toISOString();
+    currentAssessment.updatedAt = new Date().toISOString();
 
     const command = new PutCommand({
       TableName: ASSESSMENT_TABLE,
@@ -45,6 +43,10 @@ export class DataService {
     const assessmentId = uuidv4();
     logger.info(`Storing empty assessment assessmentId: ${assessmentId}`);
 
+    const assessType = assessmentInput.assessTemplateId
+      ? (await this.getExistingAssessmentTemplate(assessmentInput.assessTemplateId, userId)).assessType
+      : AssessType.multiChoiceAssessment;
+
     const command = new PutCommand({
       TableName: ASSESSMENT_TABLE,
       Item: {
@@ -54,10 +56,10 @@ export class DataService {
         deadline: assessmentInput.deadline,
         userId: userId,
         id: assessmentId,
+        assessType,
         status: AssessStatus.IN_PROGRESS,
-        questions: [],
         published: false,
-        updatedAt: (new Date()).toISOString(),
+        updatedAt: new Date().toISOString(),
       },
     });
 
@@ -83,7 +85,6 @@ export class DataService {
     return ddbResponse.Item as Assessment;
   }
 
-
   async getExistingKnowledgeBase(courseId: string, userId: string) {
     // noinspection TypeScriptValidateTypes
     const command = new GetCommand({
@@ -100,7 +101,7 @@ export class DataService {
     return ddbResponse.Item;
   }
 
-  async getExistingAssessmentTemplate(assessTemplateId:string,  userId: string):Promise<AssessmentTemplate>{
+  async getExistingAssessmentTemplate(assessTemplateId: string, userId: string): Promise<AssessmentTemplate> {
     // noinspection TypeScriptValidateTypes
     const command = new GetCommand({
       Key: {
@@ -117,22 +118,20 @@ export class DataService {
   }
 
   async updateFailedAssessment(userId: string, assessmentId: string) {
-
     const command = new UpdateCommand({
       Key: {
         userId: userId,
         id: assessmentId,
       },
-      UpdateExpression: "set #st=:status, updatedAt=:updatedAt",
-      ExpressionAttributeNames:{
-        "#st":"status"
+      UpdateExpression: 'set #st=:status, updatedAt=:updatedAt',
+      ExpressionAttributeNames: {
+        '#st': 'status',
       },
-      ExpressionAttributeValues:{
-        ":status": AssessStatus.FAILED,
-        ":updatedAt": (new Date()).toISOString()
+      ExpressionAttributeValues: {
+        ':status': AssessStatus.FAILED,
+        ':updatedAt': new Date().toISOString(),
       },
       TableName: ASSESSMENT_TABLE,
-
     });
     logger.info(command as any);
     let ddbResponse = await this.docClient.send(command);

@@ -3,7 +3,7 @@ import { Wizard, Container, Header, SpaceBetween, FormField, Button, Box, PieCha
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { QandA } from '../graphql/API';
+import { MultiChoice, FreeText, AssessType, StudentAssessment } from '../graphql/API';
 import { getStudentAssessment } from '../graphql/queries';
 import { gradeStudentAssessment } from '../graphql/mutations';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
@@ -16,7 +16,8 @@ export default () => {
   const dispatchAlert = useContext(DispatchAlertContext);
 
   const [assessmentId, setAssessmentId] = useState<string>();
-  const [questions, setQuestions] = useState<QandA[]>([]);
+  const [questions, setQuestions] = useState<MultiChoice[] | FreeText[]>([]);
+  const [assessType, setAssessType] = useState<AssessType>();
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [score, setScore] = useState<number>();
@@ -25,10 +26,10 @@ export default () => {
     client
       .graphql<any>({ query: getStudentAssessment, variables: { parentAssessId: params.id! } })
       .then(({ data }) => {
-        const result = data.getStudentAssessment;
-        if (!result?.assessment?.questions) throw new Error();
+        const result: StudentAssessment = data.getStudentAssessment;
         setAssessmentId(result.parentAssessId);
-        setQuestions(result.assessment.questions);
+        setAssessType(result.assessment?.assessType);
+        setQuestions(result.assessment![result.assessment!.assessType]!);
       })
       .catch(() => {});
   }, []);
@@ -96,43 +97,45 @@ export default () => {
         }}
         activeStepIndex={activeStepIndex}
         allowSkipTo
-        steps={questions.map(({ title, question, answerChoices }) => ({
-          title,
-          content: (
-            <SpaceBetween size="l">
-              <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
-                <Box variant="p">{question}</Box>
-              </Container>
-              <Container header={<Header variant="h2">Answer</Header>}>
-                {!answerChoices?.length ? (
-                  <FormField label={'Provide:'}>
-                    <Textarea
-                      value={answers[activeStepIndex]}
-                      onChange={({ detail }) => {
-                        const newAnswers = [...answers];
-                        newAnswers[activeStepIndex] = detail.value;
-                        setAnswers(newAnswers);
-                      }}
-                    />
-                  </FormField>
-                ) : (
-                  <FormField label={'Choose:'}>
-                    <Tiles
-                      columns={1}
-                      value={answers[activeStepIndex]}
-                      items={answerChoices!.map((answerChoice, i) => ({ label: answerChoice, value: i.toString() }))}
-                      onChange={({ detail }) => {
-                        const newAnswers = [...answers];
-                        newAnswers[activeStepIndex] = detail.value;
-                        setAnswers(newAnswers);
-                      }}
-                    />
-                  </FormField>
-                )}
-              </Container>
-            </SpaceBetween>
-          ),
-        }))}
+        steps={questions.map((q) => {
+          return {
+            title: q.title,
+            content: (
+              <SpaceBetween size="l">
+                <Container header={<Header variant="h2">Question {activeStepIndex + 1}</Header>}>
+                  <Box variant="p">{q.question}</Box>
+                </Container>
+                <Container header={<Header variant="h2">Answer</Header>}>
+                  {assessType === AssessType.freeTextAssessment ? (
+                    <FormField label={'Provide:'}>
+                      <Textarea
+                        value={answers[activeStepIndex]}
+                        onChange={({ detail }) => {
+                          const newAnswers = [...answers];
+                          newAnswers[activeStepIndex] = detail.value;
+                          setAnswers(newAnswers);
+                        }}
+                      />
+                    </FormField>
+                  ) : (
+                    <FormField label={'Choose:'}>
+                      <Tiles
+                        columns={1}
+                        value={answers[activeStepIndex]}
+                        items={(q as MultiChoice).answerChoices!.map((answerChoice, i) => ({ label: answerChoice, value: i.toString() }))}
+                        onChange={({ detail }) => {
+                          const newAnswers = [...answers];
+                          newAnswers[activeStepIndex] = detail.value;
+                          setAnswers(newAnswers);
+                        }}
+                      />
+                    </FormField>
+                  )}
+                </Container>
+              </SpaceBetween>
+            ),
+          };
+        })}
       />
     </>
   );

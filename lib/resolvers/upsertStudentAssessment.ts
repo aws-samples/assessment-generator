@@ -6,18 +6,18 @@ import * as ddb from '@aws-appsync/utils/dynamodb';
 export function request(ctx) {
   const userId = ctx.identity.sub;
   const score = ctx.prev?.result?.score;
-  const analyses = ctx.prev?.result?.analyses;
+  const report = ctx.prev?.result?.report;
   const { parentAssessId, ...args } = ctx.args.input;
 
   const item = { ...args, updatedAt: util.time.nowISO8601() };
 
-  if (typeof score === 'number') {
+  if (score) {
     item.score = score;
     item.completed = true;
   }
 
-  if (Object.keys(analyses).length) {
-    item.analyses = analyses;
+  if (report) {
+    item.report = report;
   }
 
   return ddb.put({ key: { userId, parentAssessId }, item });

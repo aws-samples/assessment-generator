@@ -76,8 +76,6 @@ class Lambda implements LambdaInterface {
     // Refine questions/answers and include relevant documents
     const improvedQuestions = await genAiService.improveQuestions(generatedQuestions, referenceDocuments.assessmentTemplate);
 
-    logger.info(improvedQuestions as any);
-
     assessmentId = await this.dataService.updateAssessment(improvedQuestions, userId, assessmentId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;

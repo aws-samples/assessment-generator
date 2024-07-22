@@ -1,9 +1,9 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
+
 import { DynamoDBClient, BatchWriteItemCommand, UpdateItemCommand, ScanCommand } from '@aws-sdk/client-dynamodb';
 import { Handler } from 'aws-lambda';
-import { AssessStatus } from "../../ui/src/graphql/API";
+import { AssessStatus } from '../../ui/src/graphql/API';
 
 const region = process.env.region!;
 const studentsTable = process.env.studentsTable!;
@@ -18,8 +18,6 @@ export const handler: Handler = async (event) => {
 
   const { Items: students }: any = await dynamoClient.send(new ScanCommand({ TableName: studentsTable }));
   if (!students || students.length === 0) return;
-
-  console.log('students ==== ', students);
 
   // noinspection TypeScriptValidateTypes
   await dynamoClient.send(
@@ -57,8 +55,8 @@ export const handler: Handler = async (event) => {
         ':published': { BOOL: 'true' },
         ':status': { S: AssessStatus.PUBLISHED },
       },
-      ExpressionAttributeNames:{
-        "#st":"status"
+      ExpressionAttributeNames: {
+        '#st': 'status',
       },
       ReturnValues: 'ALL_NEW',
     } as any)

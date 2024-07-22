@@ -25,7 +25,7 @@ export class AssessmentTemplate {
 
   static async fromId(assessmentTemplateId: string | undefined, userId: string) {
     if (!assessmentTemplateId) {
-      return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.MultipleChoiceQuestionnaire, 10, 5, 3, 2));
+      return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.multiChoiceAssessment, 10, 5, 3, 2));
     }
     // TODO read data from DDB
     const existingAssessmentTemplate = dataService.getExistingAssessmentTemplate(assessmentTemplateId, userId);

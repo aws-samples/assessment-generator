@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: MIT-0
 
 import { AssessmentTemplate } from '../models/assessmentTemplate';
-import { QandA, AssessType } from '../../../../../ui/src/graphql/API';
+import { AssessType, MultiChoice, FreeText } from '../../../../../ui/src/graphql/API';
 import { ReferenceDocuments } from '../models/referenceDocuments';
 
 export function getInitialQuestionsPrompt(assessmentTemplate: AssessmentTemplate, topicsExtractionOutput: string) {
@@ -19,9 +19,9 @@ The questionnaire should be in the ISO 639-2 Code: ${assessmentTemplate.docLang}
 The text below is a summarised transcript of the lecture that the teacher provided today
 
 ${
-  assessmentTemplate.assessType !== AssessType.Free_Text
+  assessmentTemplate.assessType === AssessType.multiChoiceAssessment
     ? `
-  For muliple choice questions:
+  The questions are muliple choice questions.
   The answer choices must be around the topics covered in the lecture.
   Ensure that only one answer is correct.
   Indicate the correct answer labeled as 'answer'.
@@ -31,9 +31,9 @@ ${
 }
 
 ${
-  assessmentTemplate.assessType !== AssessType.Multiple_Choice
+  assessmentTemplate.assessType === AssessType.freeTextAssessment
     ? `
-  For free text questions that are NOT multiple choice, mention in explanation what the expected ideal answer should be.
+  The questions are free text questions. for every question create a rubric grading guidance in a <rubric> tag.
 `
     : ''
 }
@@ -53,19 +53,24 @@ Structure your response in this format and do not include any additional text, r
             [Question]
         </question>
     ${
-      assessmentTemplate.assessType !== AssessType.Free_Text
+      assessmentTemplate.assessType === AssessType.multiChoiceAssessment
         ? `
-        <!-- for multiple choice questions only -->
             <answerChoices>[Option 1]</answerChoices>
             <answerChoices>[Option 2]</answerChoices>
             <answerChoices>[Option 3]</answerChoices>
             <answerChoices>[Option 4]</answerChoices>
             <correctAnswer>[Correct Answer Number]</correctAnswer>
-        <!-- for multiple choice questions only -->
+            <explanation>[Explanation for Correctness]</explanation>
     `
         : ''
     }
-        <explanation>[Explanation for Correctness]</explanation>
+    ${
+      assessmentTemplate.assessType === AssessType.freeTextAssessment
+        ? `
+            <rubric>[Rubric Grading Guidance]</rubric>
+    `
+        : ''
+    }
     </questions>
     <!-- all other questions below   -->
 </response>
@@ -91,7 +96,7 @@ For each topic, include a brief description of what was covered.
   return prompt;
 }
 
-export function getRelevantDocumentsPrompt(question: QandA) {
+export function getRelevantDocumentsPrompt(question: MultiChoice | FreeText) {
   const kbQuery = `Find the relevant documents for the following quiz question:\n${JSON.stringify(question)}`;
   return kbQuery;
 }
@@ -117,7 +122,7 @@ Structure your response in this format and do not include any additional imput. 
         [Question]
     </question>
     ${
-      assessmentTemplate.assessType !== AssessType.Free_Text
+      assessmentTemplate.assessType === AssessType.multiChoiceAssessment
         ? `
         <!-- for multiple choice questions only -->
             <answerChoices>[Option 1]</answerChoices>
@@ -126,10 +131,17 @@ Structure your response in this format and do not include any additional imput. 
             <answerChoices>[Option 4]</answerChoices>
             <correctAnswer>[Correct Answer Number]</correctAnswer>
         <!-- for multiple choice questions only -->
+        <explanation>[Explanation for Correctness]</explanation>
     `
         : ''
     }
-    <explanation>[Explanation for Correctness]</explanation>
+    ${
+      assessmentTemplate.assessType === AssessType.freeTextAssessment
+        ? `
+            <rubric>[Rubric Grading Guidance]</rubric>
+    `
+        : ''
+    }
 </question>
 \`\`\`
     `;
