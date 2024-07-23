@@ -33,7 +33,7 @@ ${
 ${
   assessmentTemplate.assessType === AssessType.freeTextAssessment
     ? `
-  The questions are free text questions. for every question create a rubric grading guidance in a <rubric> tag.
+  The questions are free text questions. for every question create a rubric weight grading guidance in a <rubric> tag.
 `
     : ''
 }
@@ -67,7 +67,15 @@ Structure your response in this format and do not include any additional text, r
     ${
       assessmentTemplate.assessType === AssessType.freeTextAssessment
         ? `
-            <rubric>[Rubric Grading Guidance]</rubric>
+          <rubric>
+            <weight>[weight_value]</weight>
+            <point>[Point 1]</point>
+          </rubric>
+          <rubric>
+            <weight>[weight_value]</weight>
+            <point>[Point 2]</point>
+          </rubric>
+          <!-- all other rubric points below   -->
     `
         : ''
     }
@@ -138,7 +146,15 @@ Structure your response in this format and do not include any additional imput. 
     ${
       assessmentTemplate.assessType === AssessType.freeTextAssessment
         ? `
-            <rubric>[Rubric Grading Guidance]</rubric>
+          <rubric>
+            <weight>[weight_value]</weight>
+            <point>[Point 1]</point>
+          </rubric>
+          <rubric>
+            <weight>[weight_value]</weight>
+            <point>[Point 2]</point>
+          </rubric>
+          <!-- all other rubric points below   -->
     `
         : ''
     }

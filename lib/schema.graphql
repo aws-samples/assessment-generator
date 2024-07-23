@@ -68,16 +68,26 @@ input AssessTemplateInput {
   hardQuestions: Int!
 }
 
+type Rubric {
+  weight: Int!
+  point: String!
+}
+
+input RubricInput {
+  weight: Int!
+  point: String!
+}
+
 type FreeText {
   title: String!
   question: String!
-  rubric: String!
+  rubric: [Rubric!]!
 }
 
 input FreeTextInput {
   title: String!
   question: String!
-  rubric: String!
+  rubric: [RubricInput!]!
 }
 
 type MultiChoice {

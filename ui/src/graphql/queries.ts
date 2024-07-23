@@ -49,7 +49,10 @@ export const getAssessment = /* GraphQL */ `
       freeTextAssessment {
         title
         question
-        rubric
+        rubric {
+          weight
+          point
+        }
       }
       published
       status
@@ -81,7 +84,10 @@ export const listAssessments = /* GraphQL */ `
       freeTextAssessment {
         title
         question
-        rubric
+        rubric {
+          weight
+          point
+        }
       }
       published
       status
@@ -130,7 +136,10 @@ export const getStudentAssessment = /* GraphQL */ `
         freeTextAssessment {
           title
           question
-          rubric
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -170,7 +179,10 @@ export const listStudentAssessments = /* GraphQL */ `
         freeTextAssessment {
           title
           question
-          rubric
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -210,7 +222,10 @@ export const listMyStudentAssessments = /* GraphQL */ `
         freeTextAssessment {
           title
           question
-          rubric
+          rubric {
+            weight
+            point
+          }
         }
         published
         status

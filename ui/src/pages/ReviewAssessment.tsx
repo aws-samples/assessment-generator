@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wizard, Container, Header, SpaceBetween, Box } from '@cloudscape-design/components';
+import { Wizard, Container, Header, SpaceBetween, Box, Table } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
@@ -85,9 +85,28 @@ export default () => {
                 </SpaceBetween>
               </Container>
               {JSON.parse(studentAssessment.report || '{}')[activeStepIndex] ? (
-                <Container header={<Header variant="h2">Grade - {JSON.parse(studentAssessment.report!)[activeStepIndex].rate}%</Header>}>
-                  <Box variant="p">{JSON.parse(studentAssessment.report!)[activeStepIndex].explanation}</Box>
-                </Container>
+                <>
+                  <Container header={<Header variant="h2">Rubric</Header>}>
+                    <Table
+                      columnDefinitions={[
+                        {
+                          id: 'weight',
+                          header: 'Weight',
+                          cell: (item) => item.weight,
+                        },
+                        {
+                          id: 'point',
+                          header: 'Point',
+                          cell: (item) => item.point,
+                        },
+                      ]}
+                      items={studentAssessment.assessment!.freeTextAssessment![activeStepIndex].rubric}
+                    />
+                  </Container>
+                  <Container header={<Header variant="h2">Points - {JSON.parse(studentAssessment.report!)[activeStepIndex].rate}</Header>}>
+                    <Box variant="p">{JSON.parse(studentAssessment.report!)[activeStepIndex].explanation}</Box>
+                  </Container>
+                </>
               ) : (
                 <Container header={<Header variant="h2">Explanation</Header>}>
                   <Box variant="p">{(assessment as MultiChoice).explanation}</Box>

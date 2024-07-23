@@ -86,7 +86,12 @@ export type MultiChoiceInput = {
 export type FreeTextInput = {
   title: string;
   question: string;
-  rubric: string;
+  rubric: Array<RubricInput>;
+};
+
+export type RubricInput = {
+  weight: number;
+  point: string;
 };
 
 export enum AssessStatus {
@@ -125,7 +130,13 @@ export type FreeText = {
   __typename: 'FreeText';
   title: string;
   question: string;
-  rubric: string;
+  rubric: Array<Rubric>;
+};
+
+export type Rubric = {
+  __typename: 'Rubric';
+  weight: number;
+  point: string;
 };
 
 export type StudentAssessmentInput = {
@@ -233,7 +244,11 @@ export type UpsertAssessmentMutation = {
       __typename: 'FreeText';
       title: string;
       question: string;
-      rubric: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
     }> | null;
     published: boolean;
     status: AssessStatus;
@@ -275,7 +290,11 @@ export type UpsertStudentAssessmentMutation = {
         __typename: 'FreeText';
         title: string;
         question: string;
-        rubric: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
       }> | null;
       published: boolean;
       status: AssessStatus;
@@ -323,7 +342,11 @@ export type GradeStudentAssessmentMutation = {
         __typename: 'FreeText';
         title: string;
         question: string;
-        rubric: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
       }> | null;
       published: boolean;
       status: AssessStatus;
@@ -395,7 +418,11 @@ export type GetAssessmentQuery = {
       __typename: 'FreeText';
       title: string;
       question: string;
-      rubric: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
     }> | null;
     published: boolean;
     status: AssessStatus;
@@ -430,7 +457,11 @@ export type ListAssessmentsQuery = {
       __typename: 'FreeText';
       title: string;
       question: string;
-      rubric: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
     }> | null;
     published: boolean;
     status: AssessStatus;
@@ -487,7 +518,11 @@ export type GetStudentAssessmentQuery = {
         __typename: 'FreeText';
         title: string;
         question: string;
-        rubric: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
       }> | null;
       published: boolean;
       status: AssessStatus;
@@ -531,7 +566,11 @@ export type ListStudentAssessmentsQuery = {
         __typename: 'FreeText';
         title: string;
         question: string;
-        rubric: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
       }> | null;
       published: boolean;
       status: AssessStatus;
@@ -579,7 +618,11 @@ export type ListMyStudentAssessmentsQuery = {
         __typename: 'FreeText';
         title: string;
         question: string;
-        rubric: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
       }> | null;
       published: boolean;
       status: AssessStatus;

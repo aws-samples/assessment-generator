@@ -22,13 +22,16 @@ import { AppSyncResolverEvent, Context } from 'aws-lambda';
 import { Logger } from '@aws-lambda-powertools/logger';
 import { Tracer } from '@aws-lambda-powertools/tracer';
 import { BedrockRuntime } from '@aws-sdk/client-bedrock-runtime';
-import exp from 'constants';
+import { FreeText, MultiChoice } from '../../ui/src/graphql/API';
+import { XMLParser } from 'fast-xml-parser';
 
 const tracer = new Tracer();
 const logger = new Logger({
   serviceName: process.env.POWERTOOLS_SERVICE_NAME,
   logLevel: 'DEBUG',
 });
+
+const parser = new XMLParser();
 
 const bedrock = new BedrockRuntime();
 
@@ -51,7 +54,7 @@ class Lambda implements LambdaInterface {
   }
 }
 
-async function gradeFreeText(freeTextAssessment: any, answers: any) {
+async function gradeFreeText(freeTextAssessment: FreeText[], answers: any) {
   const report: any = {};
   let score = 0;
   for (let i = 0; i < freeTextAssessment.length; i++) {
@@ -59,12 +62,13 @@ async function gradeFreeText(freeTextAssessment: any, answers: any) {
     const answer = answers[i];
     const { rate, explanation } = await freeTextMarking(assessment, answer);
     report['' + i] = { rate, explanation };
-    if (rate >= 50) score++;
+    const totalWeights = assessment.rubric.reduce((acc, curr) => acc + curr.weight, 0);
+    score = score + rate / totalWeights;
   }
   return { score: Math.round((score / freeTextAssessment.length) * 100), report };
 }
 
-function gradeMultiChoice(mulichoiceAssessment: any, answers: any) {
+function gradeMultiChoice(mulichoiceAssessment: MultiChoice[], answers: any) {
   let score = 0;
   for (let i = 0; i < mulichoiceAssessment.length; i++) {
     const assessment = mulichoiceAssessment[i];
@@ -74,15 +78,15 @@ function gradeMultiChoice(mulichoiceAssessment: any, answers: any) {
   return { score: Math.round((score / mulichoiceAssessment.length) * 100) };
 }
 
-async function freeTextMarking(assessment: any, answer: any) {
+async function freeTextMarking(assessment: FreeText, answer: any) {
   const response = await callLLM(`
-      Give a 0-100 rate in <rate> tag to the answer provided for the question, and use the rubric to help judge the score, also give an explanation on why you gave that score in <explanation> tag. And in the explanation DON'T mention or reference the rubric. If you cannot provide a meaningful assessment or score then just put score as 0 and put in explanation that the answer provided is not satisfactory.
-      <question>${assessment.question}</question>
-      <answer>${answer}</answer>
-      <rubric>${assessment.rubric}</rubric>
-    `);
-  const [, rate] = response.match(/<rate>(.*?)<\/rate>/);
-  const [, explanation] = response.match(/<explanation>(.*?)<\/explanation>/);
+    check if each point in rubric was addressed, for every point addressed add its weight to the total score and then place the total score in <rate> tag, also in <explanation> tag only explain what points were addressed and what points wer not addressed. Dont mention anything about points, scores or the rubric items. If you cannot provide a meaningful assessment or score then just put score as 0 and put in explanation that the answer provided is not satisfactory.
+    <question>${assessment.question}</question>
+    <answer>${answer}</answer>
+    <rubric>${JSON.stringify(assessment.rubric)}</rubric>
+  `);
+  const parsedResponse = parser.parse(response);
+  const { rate, explanation } = parsedResponse;
   return { rate: +rate, explanation };
 }
 

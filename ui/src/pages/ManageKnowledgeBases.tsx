@@ -47,7 +47,7 @@ export default () => {
           file,
         }));
         try {
-          const uploadResult = await Promise.all(
+          await Promise.all(
             data.map(
               ({ key, file }) =>
                 uploadData({
