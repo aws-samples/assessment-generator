@@ -1,4 +1,4 @@
-import { Container, Header, SpaceBetween, Textarea, Table, Input } from '@cloudscape-design/components';
+import { Container, Header, SpaceBetween, Textarea, Table, Input, Button } from '@cloudscape-design/components';
 import { FreeText } from '../graphql/API';
 import { ActionTypes } from '../pages/EditAssessments';
 
@@ -12,6 +12,11 @@ export const FreeTextView = ({ activeStepIndex, freetextAssessment, updateAssess
   const { question, rubric } = freetextAssessment;
   const rubrics = rubric.map((val, i) => ({ index: i, ...val }));
 
+  const submitRubricChanges = (key: string, item: any, newValue: string | number) => {
+    const newRubric = rubrics.map(({ index, ...val }) => (item.index === index ? { ...val, [key]: newValue } : val));
+    updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'rubric', content: newRubric });
+  };
+
   return (
     <SpaceBetween size="l">
       <Container header={<Header variant="h2">Edit Question {activeStepIndex + 1}</Header>}>
@@ -24,34 +29,55 @@ export const FreeTextView = ({ activeStepIndex, freetextAssessment, updateAssess
       </Container>
       <Container header={<Header variant="h2">Rubric</Header>}>
         <Table
+          wrapLines
           columnDefinitions={[
             {
+              id: 'delete',
+              header: (
+                <Header
+                  actions={
+                    <Button
+                      iconName="add-plus"
+                      variant="primary"
+                      onClick={() =>
+                        updateAssessment({
+                          type: ActionTypes.Update,
+                          stepIndex: activeStepIndex,
+                          key: 'rubric',
+                          content: [...rubric, { weight: 0, point: '' }],
+                        })
+                      }
+                    />
+                  }
+                />
+              ),
+              maxWidth: 20,
+              cell: (item) => (
+                <Button
+                  iconName="close"
+                  onClick={() =>
+                    updateAssessment({
+                      type: ActionTypes.Update,
+                      stepIndex: activeStepIndex,
+                      key: 'rubric',
+                      content: rubrics.filter((_, i) => item.index !== i).map(({ index, ...val }) => val),
+                    })
+                  }
+                />
+              ),
+            },
+            {
               id: 'weight',
-              header: 'Weight',
-              cell: (item) => item.weight,
-              editConfig: {
-                editingCell: (item, { currentValue, setValue }) => (
-                  <Input autoFocus={true} value={currentValue ?? item.weight} onChange={(event) => setValue(event.detail.value)} />
-                ),
-              },
+              header: 'Weights',
+              maxWidth: 30,
+              cell: (item) => <Input value={'' + item.weight} onChange={(event) => submitRubricChanges('weight', item, +event.detail.value)} />,
             },
             {
               id: 'point',
-              header: 'Point',
-              cell: (item) => item.point,
-              editConfig: {
-                editingCell: (item, { currentValue, setValue }) => (
-                  <Textarea autoFocus={true} value={currentValue ?? item.point} onChange={(event) => setValue(event.detail.value)} />
-                ),
-              },
+              header: 'Points',
+              cell: (item) => <Textarea value={'' + item.point} onChange={(event) => submitRubricChanges('point', item, event.detail.value)} />,
             },
           ]}
-          submitEdit={(item, column, newValue) => {
-            const newRubric = rubrics.map(({ index, ...val }) =>
-              item.index === index ? { ...val, [column.id!]: column.id === 'weight' ? +(newValue as string) : newValue } : val
-            );
-            updateAssessment({ type: ActionTypes.Update, stepIndex: activeStepIndex, key: 'rubric', content: newRubric });
-          }}
           items={rubrics}
         />
       </Container>
