@@ -43,11 +43,21 @@ export type AssessTemplateInput = {
   name?: string | null;
   docLang: Lang;
   assessType: AssessType;
+  taxonomy: Taxonomy;
   totalQuestions: number;
   easyQuestions: number;
   mediumQuestions: number;
   hardQuestions: number;
 };
+
+export enum Taxonomy {
+  Knowledge = 'Knowledge',
+  Comprehension = 'Comprehension',
+  Application = 'Application',
+  Analysis = 'Analysis',
+  Synthesis = 'Synthesis',
+  Evaluation = 'Evaluation',
+}
 
 export type AssessTemplate = {
   __typename: 'AssessTemplate';
@@ -55,6 +65,7 @@ export type AssessTemplate = {
   name?: string | null;
   docLang?: Lang | null;
   assessType?: AssessType | null;
+  taxonomy?: Taxonomy | null;
   totalQuestions?: number | null;
   easyQuestions?: number | null;
   mediumQuestions?: number | null;
@@ -210,6 +221,7 @@ export type CreateAssessTemplateMutation = {
     name?: string | null;
     docLang?: Lang | null;
     assessType?: AssessType | null;
+    taxonomy?: Taxonomy | null;
     totalQuestions?: number | null;
     easyQuestions?: number | null;
     mediumQuestions?: number | null;
@@ -481,6 +493,7 @@ export type ListAssessTemplatesQuery = {
     name?: string | null;
     docLang?: Lang | null;
     assessType?: AssessType | null;
+    taxonomy?: Taxonomy | null;
     totalQuestions?: number | null;
     easyQuestions?: number | null;
     mediumQuestions?: number | null;

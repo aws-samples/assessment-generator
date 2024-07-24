@@ -4,6 +4,15 @@ enum Lang {
   ES
 }
 
+enum Taxonomy {
+  Knowledge
+  Comprehension
+  Application
+  Analysis
+  Synthesis
+  Evaluation
+}
+
 enum AssessType {
   multiChoiceAssessment
   freeTextAssessment
@@ -51,6 +60,7 @@ type AssessTemplate {
   name: String
   docLang: Lang
   assessType: AssessType
+  taxonomy: Taxonomy
   totalQuestions: Int
   easyQuestions: Int
   mediumQuestions: Int
@@ -62,6 +72,7 @@ input AssessTemplateInput {
   name: String
   docLang: Lang!
   assessType: AssessType!
+  taxonomy: Taxonomy!
   totalQuestions: Int!
   easyQuestions: Int!
   mediumQuestions: Int!

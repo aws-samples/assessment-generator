@@ -1,7 +1,7 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
 
-import { AssessType, Lang } from '../../../../../ui/src/graphql/API';
+import { AssessType, Lang, Taxonomy } from '../../../../../ui/src/graphql/API';
 import { DataService } from '../services/dataService';
 import { logger } from '../../../../rag-pipeline/lambdas/event-handler/utils/pt';
 
@@ -9,14 +9,24 @@ const dataService = new DataService();
 export class AssessmentTemplate {
   docLang: Lang;
   assessType: AssessType;
+  taxonomy: Taxonomy;
   totalQuestions: number;
   easyQuestions: number;
   mediumQuestions: number;
   hardQuestions: number;
 
-  constructor(docLang: Lang, assessType: AssessType, totalQuestions: number, easyQuestions: number, mediumQuestions: number, hardQuestions: number) {
+  constructor(
+    docLang: Lang,
+    assessType: AssessType,
+    taxonomy: Taxonomy,
+    totalQuestions: number,
+    easyQuestions: number,
+    mediumQuestions: number,
+    hardQuestions: number
+  ) {
     this.docLang = docLang;
     this.assessType = assessType;
+    this.taxonomy = taxonomy;
     this.totalQuestions = totalQuestions;
     this.easyQuestions = easyQuestions;
     this.mediumQuestions = mediumQuestions;
@@ -25,7 +35,7 @@ export class AssessmentTemplate {
 
   static async fromId(assessmentTemplateId: string | undefined, userId: string) {
     if (!assessmentTemplateId) {
-      return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.multiChoiceAssessment, 10, 5, 3, 2));
+      return Promise.resolve(new AssessmentTemplate(Lang.EN, AssessType.multiChoiceAssessment, Taxonomy.Knowledge, 10, 5, 3, 2));
     }
     // TODO read data from DDB
     const existingAssessmentTemplate = dataService.getExistingAssessmentTemplate(assessmentTemplateId, userId);

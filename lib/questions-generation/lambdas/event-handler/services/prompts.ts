@@ -16,6 +16,11 @@ Do not make references to the transcript or the lecture, the quiz should be clea
 Do not ask questions on whether the topic was covered or not in the lecture.
 Build ${assessmentTemplate.easyQuestions} easy, ${assessmentTemplate.mediumQuestions} medium, and ${assessmentTemplate.hardQuestions} hard questions.
 The questionnaire should be in the ISO 639-2 Code: ${assessmentTemplate.docLang}
+
+The questionnaire should follow the Bloom's Taxonomy and make sure that the questionaire will use the taxonomy category ${
+    assessmentTemplate.taxonomy
+  } to generate the questions.
+
 The text below is a summarised transcript of the lecture that the teacher provided today
 
 ${

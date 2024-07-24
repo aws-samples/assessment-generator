@@ -106,6 +106,7 @@ export const listAssessTemplates = /* GraphQL */ `
       name
       docLang
       assessType
+      taxonomy
       totalQuestions
       easyQuestions
       mediumQuestions
