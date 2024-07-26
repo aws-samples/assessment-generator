@@ -60,6 +60,7 @@ export class GenAiService {
     logger.debug(generatedQuestions);
     const parsedQuestions: GeneratedQuestions = parser.parse(generatedQuestions);
     let improvedQuestions: MultiChoice | FreeText[] = [];
+    logger.debug(JSON.stringify(parsedQuestions));
 
     for (let i = 0; i < parsedQuestions.response.questions.length; i++) {
       const question = parsedQuestions.response.questions[i];
@@ -67,6 +68,7 @@ export class GenAiService {
       const improvedQuestion = await this.improveQuestion(assessmentTemplate, question, relevantDocs);
       improvedQuestions.push(improvedQuestion);
     }
+    logger.debug(JSON.stringify(improvedQuestions));
     return Promise.resolve(improvedQuestions);
   }
 

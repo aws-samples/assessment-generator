@@ -80,7 +80,7 @@ export default () => {
                       </div>
                     ))
                   ) : (
-                    <Box variant="p">{studentAssessment.answers[activeStepIndex]}</Box>
+                    <p style={{ whiteSpace: 'pre-wrap' }}>{studentAssessment.answers[activeStepIndex]}</p>
                   )}
                 </SpaceBetween>
               </Container>

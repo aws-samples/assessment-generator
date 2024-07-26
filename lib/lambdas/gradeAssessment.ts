@@ -80,7 +80,7 @@ function gradeMultiChoice(mulichoiceAssessment: MultiChoice[], answers: any) {
 
 async function freeTextMarking(assessment: FreeText, answer: any) {
   const response = await callLLM(`
-    check if each point in rubric was addressed, for every point addressed add its weight to the total score and then place the total score in <rate> tag, also in <explanation> tag only explain what points were addressed and what points wer not addressed. Dont mention anything about points, scores or the rubric items. If you cannot provide a meaningful assessment or score then just put score as 0 and put in explanation that the answer provided is not satisfactory.
+    grade the answer provided for the question. Go through each rubric point and check if each point was addressed in the answer and for every point addressed add its weight to the total score and then place the total score in <rate> tag, and for every point that was not addressed in the answer don't add its weight and mention it in the explanation tag, also in <explanation> tag explain how you gave that score by explaining both what points were addressed and what points were not addressed in the answer, make sure that you highlight what points were not addressed and is missing from answer. Dont mention anything about weights, scores or the rubric items. If you cannot provide a meaningful assessment or score then just put score as 0 and put in explanation that the answer provided is not satisfactory.
     <question>${assessment.question}</question>
     <answer>${answer}</answer>
     <rubric>${JSON.stringify(assessment.rubric)}</rubric>

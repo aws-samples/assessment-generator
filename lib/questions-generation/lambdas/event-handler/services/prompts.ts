@@ -17,9 +17,11 @@ Do not ask questions on whether the topic was covered or not in the lecture.
 Build ${assessmentTemplate.easyQuestions} easy, ${assessmentTemplate.mediumQuestions} medium, and ${assessmentTemplate.hardQuestions} hard questions.
 The questionnaire should be in the ISO 639-2 Code: ${assessmentTemplate.docLang}
 
-The questionnaire should follow the Bloom's Taxonomy and make sure that the questionaire will use the taxonomy category ${
+Use the Bloom's Taxonomy of category ${
     assessmentTemplate.taxonomy
-  } to generate the questions.
+  } to generate the questionaire and make sure the questions generated satisfy the description of the category ${
+    assessmentTemplate.taxonomy
+  } in the Bloom's Taxonomy.
 
 The text below is a summarised transcript of the lecture that the teacher provided today
 
@@ -38,7 +40,7 @@ ${
 ${
   assessmentTemplate.assessType === AssessType.freeTextAssessment
     ? `
-  The questions are free text questions. for every question create a rubric weight grading guidance in a <rubric> tag.
+  The questions are free text questions. for every question create a rubric weight grading guidance in a <rubric> tag. In <rubric> there should be a list of expected point to be covered in the answer and the weight associated with this point, only use integer values for weights.
 `
     : ''
 }
@@ -49,7 +51,7 @@ Follow these guidelines:
 
 Formulate a question that probes knowledge of the Core Concepts.
 
-Structure your response in this format and do not include any additional text, respond with the XML content only. The response must be valid XML following this format:
+Structure your response in this format and do not include any additional text, respond with the XML content only. The response must be valid XML following this format and please ensure you follow below format:
 \`\`\`xml
 <response>
     <questions>

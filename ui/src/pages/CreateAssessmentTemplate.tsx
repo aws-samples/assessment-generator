@@ -36,6 +36,7 @@ export default () => {
                 name,
                 docLang: docLang?.value as Lang,
                 assessType: assessType?.value as AssessType,
+                taxonomy: taxonomy?.value as Taxonomy,
                 totalQuestions: +totalQuestions,
                 easyQuestions: +easyQuestions,
                 mediumQuestions: +mediumQuestions,
@@ -53,7 +54,10 @@ export default () => {
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary" disabled={!docLang || !assessType || !totalQuestions || !easyQuestions || !mediumQuestions || !hardQuestions}>
+            <Button
+              variant="primary"
+              disabled={!docLang || !assessType || !taxonomy || !totalQuestions || !easyQuestions || !mediumQuestions || !hardQuestions}
+            >
               Submit
             </Button>
           </SpaceBetween>
