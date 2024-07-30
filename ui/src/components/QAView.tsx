@@ -37,7 +37,7 @@ export const QAView = ({ activeStepIndex, multiChoiceAssessment, updateAssessmen
                         updateAssessment({
                           type: ActionTypes.Update,
                           stepIndex: activeStepIndex,
-                          key: 'answerChoice',
+                          key: 'answerChoices',
                           content: answerChoices.filter((_a, i) => answerIndex !== i),
                         })
                       }
@@ -51,7 +51,7 @@ export const QAView = ({ activeStepIndex, multiChoiceAssessment, updateAssessmen
                   updateAssessment({
                     type: ActionTypes.Update,
                     stepIndex: activeStepIndex,
-                    key: 'answerChoice',
+                    key: 'answerChoices',
                     content: answerChoices.map((answerChoice, i) => (answerIndex === i ? detail.value : answerChoice)),
                   })
                 }
@@ -67,7 +67,7 @@ export const QAView = ({ activeStepIndex, multiChoiceAssessment, updateAssessmen
                 updateAssessment({
                   type: ActionTypes.Update,
                   stepIndex: activeStepIndex,
-                  key: 'answerChoice',
+                  key: 'answerChoices',
                   content: [...(answerChoices || []), ''],
                 })
               }
