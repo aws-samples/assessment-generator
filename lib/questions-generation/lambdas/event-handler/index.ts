@@ -1,6 +1,5 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
 /*
  * Copyright (C) 2023 Amazon.com, Inc. or its affiliates.
  *
@@ -17,15 +16,14 @@
  * limitations under the License.
  */
 
-
 import { LambdaInterface } from '@aws-lambda-powertools/commons/types';
 import { AppSyncResolverEvent, Context } from 'aws-lambda';
-import { logger, tracer } from "../../../rag-pipeline/lambdas/event-handler/utils/pt";
-import { ReferenceDocuments } from "./models/referenceDocuments";
-import { DataService } from "./services/dataService";
-import { GenAiService } from "./services/genAiService";
-import { GenerateAssessmentInput, GenerateAssessmentQueryVariables } from "../../../../ui/src/graphql/API";
-import { AppSyncIdentityCognito } from "aws-lambda/trigger/appsync-resolver";
+import { logger, tracer } from '../../../rag-pipeline/lambdas/event-handler/utils/pt';
+import { ReferenceDocuments } from './models/referenceDocuments';
+import { DataService } from './services/dataService';
+import { GenAiService } from './services/genAiService';
+import { GenerateAssessmentInput, GenerateAssessmentQueryVariables } from '../../../../ui/src/graphql/API';
+import { AppSyncIdentityCognito } from 'aws-lambda/trigger/appsync-resolver';
 
 class WrappedAppSyncEvent {
   assessmentId: string;
@@ -44,7 +42,6 @@ class Lambda implements LambdaInterface {
   @logger.injectLambdaContext({ logEvent: true })
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async handler(event: WrappedAppSyncEvent, lambdaContext: Context): Promise<string> {
-
     let assessmentId = event.assessmentId;
     const ctx = event.ctx;
     const generateAssessmentInput = ctx.arguments.input;
@@ -54,7 +51,7 @@ class Lambda implements LambdaInterface {
     const userId = identity.sub;
 
     if (!generateAssessmentInput) {
-      throw new Error("Unable to process the request");
+      throw new Error('Unable to process the request');
     }
     try {
       return await this.processEvent(generateAssessmentInput, userId, assessmentId);
@@ -77,16 +74,13 @@ class Lambda implements LambdaInterface {
 
     // Query knowledge base for relevant documents
     // Refine questions/answers and include relevant documents
-    const improvedQuestions = await genAiService.improveQuestions(generatedQuestions);
-
-    logger.info(improvedQuestions as any);
+    const improvedQuestions = await genAiService.improveQuestions(generatedQuestions, referenceDocuments.assessmentTemplate);
 
     assessmentId = await this.dataService.updateAssessment(improvedQuestions, userId, assessmentId);
     logger.info(`Assessment generated: ${assessmentId}`);
     return assessmentId;
   }
 }
-
 
 // The Lambda handler class.
 const handlerClass = new Lambda();

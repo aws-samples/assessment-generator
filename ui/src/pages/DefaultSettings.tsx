@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Box, Select, SelectProps } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
-import { Lang, AssessType } from '../graphql/API';
+import { Lang, AssessType, Taxonomy } from '../graphql/API';
 import { getSettings } from '../graphql/queries';
 import { upsertSettings } from '../graphql/mutations';
 import { optionise } from '../helpers';
@@ -11,6 +11,7 @@ const client = generateClient();
 
 const langs = Object.values(Lang).map(optionise);
 const assessTypes = Object.values(AssessType).map(optionise);
+const taxonomies = Object.values(Taxonomy).map(optionise);
 
 export default () => {
   const dispatchAlert = useContext(DispatchAlertContext);
@@ -18,6 +19,7 @@ export default () => {
   const [uiLang, setUiLang] = useState<SelectProps.Option | null>(null);
   const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
   const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
+  const [taxonomy, setTaxonomy] = useState<SelectProps.Option | null>(null);
 
   useEffect(() => {
     client.graphql<any>({ query: getSettings }).then(({ data }) => {
@@ -64,6 +66,9 @@ export default () => {
               </FormField>
               <FormField label="Default Assessment Type">
                 <Select options={assessTypes} selectedOption={assessType} onChange={({ detail }) => setAssessType(detail.selectedOption)} />
+              </FormField>
+              <FormField label="Default Taxonomy">
+                <Select options={taxonomies} selectedOption={taxonomy} onChange={({ detail }) => setTaxonomy(detail.selectedOption)} />
               </FormField>
             </SpaceBetween>
           </Box>

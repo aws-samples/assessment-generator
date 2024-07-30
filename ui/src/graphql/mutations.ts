@@ -27,6 +27,7 @@ export const createAssessTemplate = /* GraphQL */ `
       name
       docLang
       assessType
+      taxonomy
       totalQuestions
       easyQuestions
       mediumQuestions
@@ -44,12 +45,21 @@ export const upsertAssessment = /* GraphQL */ `
       lectureDate
       deadline
       updatedAt
-      questions {
+      assessType
+      multiChoiceAssessment {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
+      }
+      freeTextAssessment {
+        title
+        question
+        rubric {
+          weight
+          point
+        }
       }
       published
       status
@@ -72,12 +82,21 @@ export const upsertStudentAssessment = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -87,9 +106,53 @@ export const upsertStudentAssessment = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      report
+      updatedAt
+    }
+  }
+`;
+export const gradeStudentAssessment = /* GraphQL */ `
+  mutation GradeStudentAssessment($input: StudentAssessmentInput) {
+    gradeStudentAssessment(input: $input) {
+      parentAssessId
+      assessment {
+        id
+        name
+        courseId
+        lectureDate
+        deadline
+        updatedAt
+        assessType
+        multiChoiceAssessment {
+          title
+          question
+          answerChoices
+          correctAnswer
+          explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric {
+            weight
+            point
+          }
+        }
+        published
+        status
+        course {
+          id
+          name
+          description
+        }
+      }
+      answers
+      completed
+      score
+      report
       updatedAt
     }
   }

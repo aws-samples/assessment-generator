@@ -3,505 +3,678 @@
 //  This file was automatically generated and should not be edited.
 
 export type UpsertSettingsInput = {
-  uiLang: Lang,
-  docLang: Lang,
-  assessType: AssessType,
+  uiLang: Lang;
+  docLang: Lang;
+  assessType: AssessType;
 };
 
 export enum Lang {
-  EN = "EN",
-  FR = "FR",
-  ES = "ES",
+  EN = 'EN',
+  FR = 'FR',
+  ES = 'ES',
 }
-
 
 export enum AssessType {
-  MultipleChoiceQuestionnaire = "MultipleChoiceQuestionnaire",
+  multiChoiceAssessment = 'multiChoiceAssessment',
+  freeTextAssessment = 'freeTextAssessment',
 }
 
-
 export type Settings = {
-  __typename: "Settings",
-  uiLang?: Lang | null,
-  docLang?: Lang | null,
-  assessType?: AssessType | null,
+  __typename: 'Settings';
+  uiLang?: Lang | null;
+  docLang?: Lang | null;
+  assessType?: AssessType | null;
 };
 
 export type CourseInput = {
-  id?: string | null,
-  name: string,
-  description: string,
+  id?: string | null;
+  name: string;
+  description: string;
 };
 
 export type Course = {
-  __typename: "Course",
-  id: string,
-  name?: string | null,
-  description?: string | null,
+  __typename: 'Course';
+  id: string;
+  name?: string | null;
+  description?: string | null;
 };
 
 export type AssessTemplateInput = {
-  name?: string | null,
-  docLang: Lang,
-  assessType: AssessType,
-  totalQuestions: number,
-  easyQuestions: number,
-  mediumQuestions: number,
-  hardQuestions: number,
+  name?: string | null;
+  docLang: Lang;
+  assessType: AssessType;
+  taxonomy: Taxonomy;
+  totalQuestions: number;
+  easyQuestions: number;
+  mediumQuestions: number;
+  hardQuestions: number;
 };
 
+export enum Taxonomy {
+  Knowledge = 'Knowledge',
+  Comprehension = 'Comprehension',
+  Application = 'Application',
+  Analysis = 'Analysis',
+  Synthesis = 'Synthesis',
+  Evaluation = 'Evaluation',
+}
+
 export type AssessTemplate = {
-  __typename: "AssessTemplate",
-  id: string,
-  name?: string | null,
-  docLang?: Lang | null,
-  assessType?: AssessType | null,
-  totalQuestions?: number | null,
-  easyQuestions?: number | null,
-  mediumQuestions?: number | null,
-  hardQuestions?: number | null,
-  createdAt?: string | null,
+  __typename: 'AssessTemplate';
+  id: string;
+  name?: string | null;
+  docLang?: Lang | null;
+  assessType?: AssessType | null;
+  taxonomy?: Taxonomy | null;
+  totalQuestions?: number | null;
+  easyQuestions?: number | null;
+  mediumQuestions?: number | null;
+  hardQuestions?: number | null;
+  createdAt?: string | null;
 };
 
 export type AssessmentInput = {
-  id: string,
-  name: string,
-  courseId: string,
-  lectureDate: string,
-  deadline: string,
-  questions: Array< QandAInput >,
-  published?: boolean | null,
-  status: AssessStatus,
+  id: string;
+  name: string;
+  courseId: string;
+  lectureDate: string;
+  deadline: string;
+  assessType: AssessType;
+  multiChoiceAssessment?: Array<MultiChoiceInput | null> | null;
+  freeTextAssessment?: Array<FreeTextInput | null> | null;
+  published?: boolean | null;
+  status: AssessStatus;
 };
 
-export type QandAInput = {
-  title: string,
-  question: string,
-  answers: Array< string | null >,
-  correctAnswer: number,
-  explanation: string,
+export type MultiChoiceInput = {
+  title: string;
+  question: string;
+  answerChoices?: Array<string | null> | null;
+  correctAnswer?: number | null;
+  explanation: string;
+};
+
+export type FreeTextInput = {
+  title: string;
+  question: string;
+  rubric: Array<RubricInput>;
+};
+
+export type RubricInput = {
+  weight: number;
+  point: string;
 };
 
 export enum AssessStatus {
-  IN_PROGRESS = "IN_PROGRESS",
-  CREATED = "CREATED",
-  FAILED = "FAILED",
-  PUBLISHED = "PUBLISHED",
+  IN_PROGRESS = 'IN_PROGRESS',
+  CREATED = 'CREATED',
+  FAILED = 'FAILED',
+  PUBLISHED = 'PUBLISHED',
 }
 
-
 export type Assessment = {
-  __typename: "Assessment",
-  id: string,
-  name: string,
-  courseId: string,
-  lectureDate: string,
-  deadline: string,
-  updatedAt: string,
-  questions:  Array<QandA >,
-  published: boolean,
-  status: AssessStatus,
-  course?: Course | null,
+  __typename: 'Assessment';
+  id: string;
+  name: string;
+  courseId: string;
+  lectureDate: string;
+  deadline: string;
+  updatedAt: string;
+  assessType: AssessType;
+  multiChoiceAssessment?: Array<MultiChoice> | null;
+  freeTextAssessment?: Array<FreeText> | null;
+  published: boolean;
+  status: AssessStatus;
+  course?: Course | null;
 };
 
-export type QandA = {
-  __typename: "QandA",
-  title: string,
-  question: string,
-  answers: Array< string >,
-  correctAnswer: number,
-  explanation: string,
+export type MultiChoice = {
+  __typename: 'MultiChoice';
+  title: string;
+  question: string;
+  answerChoices: Array<string>;
+  correctAnswer: number;
+  explanation: string;
+};
+
+export type FreeText = {
+  __typename: 'FreeText';
+  title: string;
+  question: string;
+  rubric: Array<Rubric>;
+};
+
+export type Rubric = {
+  __typename: 'Rubric';
+  weight: number;
+  point: string;
 };
 
 export type StudentAssessmentInput = {
-  parentAssessId: string,
-  chosenAnswers?: Array< number | null > | null,
-  score?: number | null,
-  completed?: boolean | null,
+  parentAssessId: string;
+  answers: string;
+  score?: number | null;
+  completed?: boolean | null;
 };
 
 export type StudentAssessment = {
-  __typename: "StudentAssessment",
-  parentAssessId: string,
-  assessment?: Assessment | null,
-  chosenAnswers?: Array< number | null > | null,
-  completed?: boolean | null,
-  score?: number | null,
-  updatedAt?: string | null,
+  __typename: 'StudentAssessment';
+  parentAssessId: string;
+  assessment?: Assessment | null;
+  answers: string;
+  completed?: boolean | null;
+  score?: number | null;
+  report?: string | null;
+  updatedAt?: string | null;
 };
 
 export type Student = {
-  __typename: "Student",
-  id: string,
-  firstName: string,
-  lastName: string,
+  __typename: 'Student';
+  id: string;
+  firstName: string;
+  lastName: string;
 };
 
 export type GenerateAssessmentInput = {
-  name: string,
-  courseId: string,
-  lectureDate: string,
-  deadline: string,
-  locations: Array< string | null >,
-  assessTemplateId?: string | null,
+  name: string;
+  courseId: string;
+  lectureDate: string;
+  deadline: string;
+  locations: Array<string | null>;
+  assessTemplateId?: string | null;
 };
 
 export type UpsertSettingsMutationVariables = {
-  input?: UpsertSettingsInput | null,
+  input?: UpsertSettingsInput | null;
 };
 
 export type UpsertSettingsMutation = {
-  upsertSettings?:  {
-    __typename: "Settings",
-    uiLang?: Lang | null,
-    docLang?: Lang | null,
-    assessType?: AssessType | null,
-  } | null,
+  upsertSettings?: {
+    __typename: 'Settings';
+    uiLang?: Lang | null;
+    docLang?: Lang | null;
+    assessType?: AssessType | null;
+  } | null;
 };
 
 export type UpsertCourseMutationVariables = {
-  input?: CourseInput | null,
+  input?: CourseInput | null;
 };
 
 export type UpsertCourseMutation = {
-  upsertCourse?:  {
-    __typename: "Course",
-    id: string,
-    name?: string | null,
-    description?: string | null,
-  } | null,
+  upsertCourse?: {
+    __typename: 'Course';
+    id: string;
+    name?: string | null;
+    description?: string | null;
+  } | null;
 };
 
 export type CreateAssessTemplateMutationVariables = {
-  input?: AssessTemplateInput | null,
+  input?: AssessTemplateInput | null;
 };
 
 export type CreateAssessTemplateMutation = {
-  createAssessTemplate?:  {
-    __typename: "AssessTemplate",
-    id: string,
-    name?: string | null,
-    docLang?: Lang | null,
-    assessType?: AssessType | null,
-    totalQuestions?: number | null,
-    easyQuestions?: number | null,
-    mediumQuestions?: number | null,
-    hardQuestions?: number | null,
-    createdAt?: string | null,
-  } | null,
+  createAssessTemplate?: {
+    __typename: 'AssessTemplate';
+    id: string;
+    name?: string | null;
+    docLang?: Lang | null;
+    assessType?: AssessType | null;
+    taxonomy?: Taxonomy | null;
+    totalQuestions?: number | null;
+    easyQuestions?: number | null;
+    mediumQuestions?: number | null;
+    hardQuestions?: number | null;
+    createdAt?: string | null;
+  } | null;
 };
 
 export type UpsertAssessmentMutationVariables = {
-  input?: AssessmentInput | null,
+  input?: AssessmentInput | null;
 };
 
 export type UpsertAssessmentMutation = {
-  upsertAssessment?:  {
-    __typename: "Assessment",
-    id: string,
-    name: string,
-    courseId: string,
-    lectureDate: string,
-    deadline: string,
-    updatedAt: string,
-    questions:  Array< {
-      __typename: "QandA",
-      title: string,
-      question: string,
-      answers: Array< string >,
-      correctAnswer: number,
-      explanation: string,
-    } >,
-    published: boolean,
-    status: AssessStatus,
-    course?:  {
-      __typename: "Course",
-      id: string,
-      name?: string | null,
-      description?: string | null,
-    } | null,
-  } | null,
+  upsertAssessment?: {
+    __typename: 'Assessment';
+    id: string;
+    name: string;
+    courseId: string;
+    lectureDate: string;
+    deadline: string;
+    updatedAt: string;
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
+      title: string;
+      question: string;
+      answerChoices: Array<string>;
+      correctAnswer: number;
+      explanation: string;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
+    }> | null;
+    published: boolean;
+    status: AssessStatus;
+    course?: {
+      __typename: 'Course';
+      id: string;
+      name?: string | null;
+      description?: string | null;
+    } | null;
+  } | null;
 };
 
 export type UpsertStudentAssessmentMutationVariables = {
-  input?: StudentAssessmentInput | null,
+  input?: StudentAssessmentInput | null;
 };
 
 export type UpsertStudentAssessmentMutation = {
-  upsertStudentAssessment?:  {
-    __typename: "StudentAssessment",
-    parentAssessId: string,
-    assessment?:  {
-      __typename: "Assessment",
-      id: string,
-      name: string,
-      courseId: string,
-      lectureDate: string,
-      deadline: string,
-      updatedAt: string,
-      questions:  Array< {
-        __typename: "QandA",
-        title: string,
-        question: string,
-        answers: Array< string >,
-        correctAnswer: number,
-        explanation: string,
-      } >,
-      published: boolean,
-      status: AssessStatus,
-      course?:  {
-        __typename: "Course",
-        id: string,
-        name?: string | null,
-        description?: string | null,
-      } | null,
-    } | null,
-    chosenAnswers?: Array< number | null > | null,
-    completed?: boolean | null,
-    score?: number | null,
-    updatedAt?: string | null,
-  } | null,
+  upsertStudentAssessment?: {
+    __typename: 'StudentAssessment';
+    parentAssessId: string;
+    assessment?: {
+      __typename: 'Assessment';
+      id: string;
+      name: string;
+      courseId: string;
+      lectureDate: string;
+      deadline: string;
+      updatedAt: string;
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
+        title: string;
+        question: string;
+        answerChoices: Array<string>;
+        correctAnswer: number;
+        explanation: string;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
+      }> | null;
+      published: boolean;
+      status: AssessStatus;
+      course?: {
+        __typename: 'Course';
+        id: string;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null;
+    answers: string;
+    completed?: boolean | null;
+    score?: number | null;
+    report?: string | null;
+    updatedAt?: string | null;
+  } | null;
+};
+
+export type GradeStudentAssessmentMutationVariables = {
+  input?: StudentAssessmentInput | null;
+};
+
+export type GradeStudentAssessmentMutation = {
+  gradeStudentAssessment?: {
+    __typename: 'StudentAssessment';
+    parentAssessId: string;
+    assessment?: {
+      __typename: 'Assessment';
+      id: string;
+      name: string;
+      courseId: string;
+      lectureDate: string;
+      deadline: string;
+      updatedAt: string;
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
+        title: string;
+        question: string;
+        answerChoices: Array<string>;
+        correctAnswer: number;
+        explanation: string;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
+      }> | null;
+      published: boolean;
+      status: AssessStatus;
+      course?: {
+        __typename: 'Course';
+        id: string;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null;
+    answers: string;
+    completed?: boolean | null;
+    score?: number | null;
+    report?: string | null;
+    updatedAt?: string | null;
+  } | null;
 };
 
 export type GetSettingsQuery = {
-  getSettings?:  {
-    __typename: "Settings",
-    uiLang?: Lang | null,
-    docLang?: Lang | null,
-    assessType?: AssessType | null,
-  } | null,
+  getSettings?: {
+    __typename: 'Settings';
+    uiLang?: Lang | null;
+    docLang?: Lang | null;
+    assessType?: AssessType | null;
+  } | null;
 };
 
 export type ListCoursesQuery = {
-  listCourses?:  Array< {
-    __typename: "Course",
-    id: string,
-    name?: string | null,
-    description?: string | null,
-  } | null > | null,
+  listCourses?: Array<{
+    __typename: 'Course';
+    id: string;
+    name?: string | null;
+    description?: string | null;
+  } | null> | null;
 };
 
 export type ListStudentsQuery = {
-  listStudents?:  Array< {
-    __typename: "Student",
-    id: string,
-    firstName: string,
-    lastName: string,
-  } | null > | null,
+  listStudents?: Array<{
+    __typename: 'Student';
+    id: string;
+    firstName: string;
+    lastName: string;
+  } | null> | null;
 };
 
 export type GetAssessmentQueryVariables = {
-  id: string,
+  id: string;
 };
 
 export type GetAssessmentQuery = {
-  getAssessment?:  {
-    __typename: "Assessment",
-    id: string,
-    name: string,
-    courseId: string,
-    lectureDate: string,
-    deadline: string,
-    updatedAt: string,
-    questions:  Array< {
-      __typename: "QandA",
-      title: string,
-      question: string,
-      answers: Array< string >,
-      correctAnswer: number,
-      explanation: string,
-    } >,
-    published: boolean,
-    status: AssessStatus,
-    course?:  {
-      __typename: "Course",
-      id: string,
-      name?: string | null,
-      description?: string | null,
-    } | null,
-  } | null,
+  getAssessment?: {
+    __typename: 'Assessment';
+    id: string;
+    name: string;
+    courseId: string;
+    lectureDate: string;
+    deadline: string;
+    updatedAt: string;
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
+      title: string;
+      question: string;
+      answerChoices: Array<string>;
+      correctAnswer: number;
+      explanation: string;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
+    }> | null;
+    published: boolean;
+    status: AssessStatus;
+    course?: {
+      __typename: 'Course';
+      id: string;
+      name?: string | null;
+      description?: string | null;
+    } | null;
+  } | null;
 };
 
 export type ListAssessmentsQuery = {
-  listAssessments?:  Array< {
-    __typename: "Assessment",
-    id: string,
-    name: string,
-    courseId: string,
-    lectureDate: string,
-    deadline: string,
-    updatedAt: string,
-    questions:  Array< {
-      __typename: "QandA",
-      title: string,
-      question: string,
-      answers: Array< string >,
-      correctAnswer: number,
-      explanation: string,
-    } >,
-    published: boolean,
-    status: AssessStatus,
-    course?:  {
-      __typename: "Course",
-      id: string,
-      name?: string | null,
-      description?: string | null,
-    } | null,
-  } | null > | null,
+  listAssessments?: Array<{
+    __typename: 'Assessment';
+    id: string;
+    name: string;
+    courseId: string;
+    lectureDate: string;
+    deadline: string;
+    updatedAt: string;
+    assessType: AssessType;
+    multiChoiceAssessment?: Array<{
+      __typename: 'MultiChoice';
+      title: string;
+      question: string;
+      answerChoices: Array<string>;
+      correctAnswer: number;
+      explanation: string;
+    }> | null;
+    freeTextAssessment?: Array<{
+      __typename: 'FreeText';
+      title: string;
+      question: string;
+      rubric: Array<{
+        __typename: 'Rubric';
+        weight: number;
+        point: string;
+      }>;
+    }> | null;
+    published: boolean;
+    status: AssessStatus;
+    course?: {
+      __typename: 'Course';
+      id: string;
+      name?: string | null;
+      description?: string | null;
+    } | null;
+  } | null> | null;
 };
 
 export type ListAssessTemplatesQuery = {
-  listAssessTemplates?:  Array< {
-    __typename: "AssessTemplate",
-    id: string,
-    name?: string | null,
-    docLang?: Lang | null,
-    assessType?: AssessType | null,
-    totalQuestions?: number | null,
-    easyQuestions?: number | null,
-    mediumQuestions?: number | null,
-    hardQuestions?: number | null,
-    createdAt?: string | null,
-  } | null > | null,
+  listAssessTemplates?: Array<{
+    __typename: 'AssessTemplate';
+    id: string;
+    name?: string | null;
+    docLang?: Lang | null;
+    assessType?: AssessType | null;
+    taxonomy?: Taxonomy | null;
+    totalQuestions?: number | null;
+    easyQuestions?: number | null;
+    mediumQuestions?: number | null;
+    hardQuestions?: number | null;
+    createdAt?: string | null;
+  } | null> | null;
 };
 
 export type GetStudentAssessmentQueryVariables = {
-  parentAssessId: string,
+  parentAssessId: string;
 };
 
 export type GetStudentAssessmentQuery = {
-  getStudentAssessment?:  {
-    __typename: "StudentAssessment",
-    parentAssessId: string,
-    assessment?:  {
-      __typename: "Assessment",
-      id: string,
-      name: string,
-      courseId: string,
-      lectureDate: string,
-      deadline: string,
-      updatedAt: string,
-      questions:  Array< {
-        __typename: "QandA",
-        title: string,
-        question: string,
-        answers: Array< string >,
-        correctAnswer: number,
-        explanation: string,
-      } >,
-      published: boolean,
-      status: AssessStatus,
-      course?:  {
-        __typename: "Course",
-        id: string,
-        name?: string | null,
-        description?: string | null,
-      } | null,
-    } | null,
-    chosenAnswers?: Array< number | null > | null,
-    completed?: boolean | null,
-    score?: number | null,
-    updatedAt?: string | null,
-  } | null,
+  getStudentAssessment?: {
+    __typename: 'StudentAssessment';
+    parentAssessId: string;
+    assessment?: {
+      __typename: 'Assessment';
+      id: string;
+      name: string;
+      courseId: string;
+      lectureDate: string;
+      deadline: string;
+      updatedAt: string;
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
+        title: string;
+        question: string;
+        answerChoices: Array<string>;
+        correctAnswer: number;
+        explanation: string;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
+      }> | null;
+      published: boolean;
+      status: AssessStatus;
+      course?: {
+        __typename: 'Course';
+        id: string;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null;
+    answers: string;
+    completed?: boolean | null;
+    score?: number | null;
+    report?: string | null;
+    updatedAt?: string | null;
+  } | null;
 };
 
 export type ListStudentAssessmentsQuery = {
-  listStudentAssessments?:  Array< {
-    __typename: "StudentAssessment",
-    parentAssessId: string,
-    assessment?:  {
-      __typename: "Assessment",
-      id: string,
-      name: string,
-      courseId: string,
-      lectureDate: string,
-      deadline: string,
-      updatedAt: string,
-      questions:  Array< {
-        __typename: "QandA",
-        title: string,
-        question: string,
-        answers: Array< string >,
-        correctAnswer: number,
-        explanation: string,
-      } >,
-      published: boolean,
-      status: AssessStatus,
-      course?:  {
-        __typename: "Course",
-        id: string,
-        name?: string | null,
-        description?: string | null,
-      } | null,
-    } | null,
-    chosenAnswers?: Array< number | null > | null,
-    completed?: boolean | null,
-    score?: number | null,
-    updatedAt?: string | null,
-  } | null > | null,
+  listStudentAssessments?: Array<{
+    __typename: 'StudentAssessment';
+    parentAssessId: string;
+    assessment?: {
+      __typename: 'Assessment';
+      id: string;
+      name: string;
+      courseId: string;
+      lectureDate: string;
+      deadline: string;
+      updatedAt: string;
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
+        title: string;
+        question: string;
+        answerChoices: Array<string>;
+        correctAnswer: number;
+        explanation: string;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
+      }> | null;
+      published: boolean;
+      status: AssessStatus;
+      course?: {
+        __typename: 'Course';
+        id: string;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null;
+    answers: string;
+    completed?: boolean | null;
+    score?: number | null;
+    report?: string | null;
+    updatedAt?: string | null;
+  } | null> | null;
 };
 
 export type ListMyStudentAssessmentsQueryVariables = {
-  studentId: string,
+  studentId: string;
 };
 
 export type ListMyStudentAssessmentsQuery = {
-  listMyStudentAssessments?:  Array< {
-    __typename: "StudentAssessment",
-    parentAssessId: string,
-    assessment?:  {
-      __typename: "Assessment",
-      id: string,
-      name: string,
-      courseId: string,
-      lectureDate: string,
-      deadline: string,
-      updatedAt: string,
-      questions:  Array< {
-        __typename: "QandA",
-        title: string,
-        question: string,
-        answers: Array< string >,
-        correctAnswer: number,
-        explanation: string,
-      } >,
-      published: boolean,
-      status: AssessStatus,
-      course?:  {
-        __typename: "Course",
-        id: string,
-        name?: string | null,
-        description?: string | null,
-      } | null,
-    } | null,
-    chosenAnswers?: Array< number | null > | null,
-    completed?: boolean | null,
-    score?: number | null,
-    updatedAt?: string | null,
-  } | null > | null,
+  listMyStudentAssessments?: Array<{
+    __typename: 'StudentAssessment';
+    parentAssessId: string;
+    assessment?: {
+      __typename: 'Assessment';
+      id: string;
+      name: string;
+      courseId: string;
+      lectureDate: string;
+      deadline: string;
+      updatedAt: string;
+      assessType: AssessType;
+      multiChoiceAssessment?: Array<{
+        __typename: 'MultiChoice';
+        title: string;
+        question: string;
+        answerChoices: Array<string>;
+        correctAnswer: number;
+        explanation: string;
+      }> | null;
+      freeTextAssessment?: Array<{
+        __typename: 'FreeText';
+        title: string;
+        question: string;
+        rubric: Array<{
+          __typename: 'Rubric';
+          weight: number;
+          point: string;
+        }>;
+      }> | null;
+      published: boolean;
+      status: AssessStatus;
+      course?: {
+        __typename: 'Course';
+        id: string;
+        name?: string | null;
+        description?: string | null;
+      } | null;
+    } | null;
+    answers: string;
+    completed?: boolean | null;
+    score?: number | null;
+    report?: string | null;
+    updatedAt?: string | null;
+  } | null> | null;
 };
 
 export type PublishAssessmentQueryVariables = {
-  assessmentId: string,
+  assessmentId: string;
 };
 
 export type PublishAssessmentQuery = {
-  publishAssessment?: boolean | null,
+  publishAssessment?: boolean | null;
 };
 
 export type CreateKnowledgeBaseQueryVariables = {
-  courseId?: string | null,
-  locations?: Array< string | null > | null,
+  courseId?: string | null;
+  locations?: Array<string | null> | null;
 };
 
 export type CreateKnowledgeBaseQuery = {
-  createKnowledgeBase?: string | null,
+  createKnowledgeBase?: string | null;
 };
 
 export type GenerateAssessmentQueryVariables = {
-  input?: GenerateAssessmentInput | null,
+  input?: GenerateAssessmentInput | null;
 };
 
 export type GenerateAssessmentQuery = {
-  generateAssessment?: string | null,
+  generateAssessment?: string | null;
 };

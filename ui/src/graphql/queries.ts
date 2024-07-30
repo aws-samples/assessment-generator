@@ -38,12 +38,21 @@ export const getAssessment = /* GraphQL */ `
       lectureDate
       deadline
       updatedAt
-      questions {
+      assessType
+      multiChoiceAssessment {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
+      }
+      freeTextAssessment {
+        title
+        question
+        rubric {
+          weight
+          point
+        }
       }
       published
       status
@@ -64,12 +73,21 @@ export const listAssessments = /* GraphQL */ `
       lectureDate
       deadline
       updatedAt
-      questions {
+      assessType
+      multiChoiceAssessment {
         title
         question
-        answers
+        answerChoices
         correctAnswer
         explanation
+      }
+      freeTextAssessment {
+        title
+        question
+        rubric {
+          weight
+          point
+        }
       }
       published
       status
@@ -88,6 +106,7 @@ export const listAssessTemplates = /* GraphQL */ `
       name
       docLang
       assessType
+      taxonomy
       totalQuestions
       easyQuestions
       mediumQuestions
@@ -107,12 +126,21 @@ export const getStudentAssessment = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -122,9 +150,10 @@ export const getStudentAssessment = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      report
       updatedAt
     }
   }
@@ -140,12 +169,21 @@ export const listStudentAssessments = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -155,9 +193,10 @@ export const listStudentAssessments = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      report
       updatedAt
     }
   }
@@ -173,12 +212,21 @@ export const listMyStudentAssessments = /* GraphQL */ `
         lectureDate
         deadline
         updatedAt
-        questions {
+        assessType
+        multiChoiceAssessment {
           title
           question
-          answers
+          answerChoices
           correctAnswer
           explanation
+        }
+        freeTextAssessment {
+          title
+          question
+          rubric {
+            weight
+            point
+          }
         }
         published
         status
@@ -188,9 +236,10 @@ export const listMyStudentAssessments = /* GraphQL */ `
           description
         }
       }
-      chosenAnswers
+      answers
       completed
       score
+      report
       updatedAt
     }
   }

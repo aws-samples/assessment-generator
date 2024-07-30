@@ -1,7 +1,7 @@
 import { useState, useContext } from 'react';
 import { Container, Header, SpaceBetween, Button, Form, FormField, Input, Select, SelectProps, Box } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
-import { Lang, AssessType } from '../graphql/API';
+import { Lang, AssessType, Taxonomy } from '../graphql/API';
 import { createAssessTemplate } from '../graphql/mutations';
 import { optionise } from '../helpers';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
@@ -10,6 +10,7 @@ const client = generateClient();
 
 const langs = Object.values(Lang).map(optionise);
 const assessTypes = Object.values(AssessType).map(optionise);
+const taxonomies = Object.values(Taxonomy).map(optionise);
 
 export default () => {
   const dispatchAlert = useContext(DispatchAlertContext);
@@ -17,6 +18,7 @@ export default () => {
   const [name, setName] = useState('');
   const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
   const [assessType, setAssessType] = useState<SelectProps.Option | null>(null);
+  const [taxonomy, setTaxonomy] = useState<SelectProps.Option | null>(null);
   const [totalQuestions, setTotalQuestions] = useState('');
   const [easyQuestions, setEasyQuestions] = useState('');
   const [mediumQuestions, setMediumQuestions] = useState('');
@@ -34,6 +36,7 @@ export default () => {
                 name,
                 docLang: docLang?.value as Lang,
                 assessType: assessType?.value as AssessType,
+                taxonomy: taxonomy?.value as Taxonomy,
                 totalQuestions: +totalQuestions,
                 easyQuestions: +easyQuestions,
                 mediumQuestions: +mediumQuestions,
@@ -51,7 +54,10 @@ export default () => {
             <Button formAction="none" variant="link">
               Cancel
             </Button>
-            <Button variant="primary" disabled={!docLang || !assessType || !totalQuestions || !easyQuestions || !mediumQuestions || !hardQuestions}>
+            <Button
+              variant="primary"
+              disabled={!docLang || !assessType || !taxonomy || !totalQuestions || !easyQuestions || !mediumQuestions || !hardQuestions}
+            >
               Submit
             </Button>
           </SpaceBetween>
@@ -70,6 +76,9 @@ export default () => {
                 </FormField>
                 <FormField label="Default Assessment Type">
                   <Select options={assessTypes} selectedOption={assessType} onChange={({ detail }) => setAssessType(detail.selectedOption)} />
+                </FormField>
+                <FormField label="Default Taxonomy">
+                  <Select options={taxonomies} selectedOption={taxonomy} onChange={({ detail }) => setTaxonomy(detail.selectedOption)} />
                 </FormField>
                 <FormField label="Number of Questions">
                   <Input value={totalQuestions} onChange={({ detail }) => setTotalQuestions(detail.value)} />

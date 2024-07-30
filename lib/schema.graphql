@@ -4,8 +4,18 @@ enum Lang {
   ES
 }
 
+enum Taxonomy {
+  Knowledge
+  Comprehension
+  Application
+  Analysis
+  Synthesis
+  Evaluation
+}
+
 enum AssessType {
-  MultipleChoiceQuestionnaire
+  multiChoiceAssessment
+  freeTextAssessment
 }
 
 enum AssessStatus {
@@ -50,6 +60,7 @@ type AssessTemplate {
   name: String
   docLang: Lang
   assessType: AssessType
+  taxonomy: Taxonomy
   totalQuestions: Int
   easyQuestions: Int
   mediumQuestions: Int
@@ -61,25 +72,48 @@ input AssessTemplateInput {
   name: String
   docLang: Lang!
   assessType: AssessType!
+  taxonomy: Taxonomy!
   totalQuestions: Int!
   easyQuestions: Int!
   mediumQuestions: Int!
   hardQuestions: Int!
 }
 
-type QandA {
+type Rubric {
+  weight: Int!
+  point: String!
+}
+
+input RubricInput {
+  weight: Int!
+  point: String!
+}
+
+type FreeText {
   title: String!
   question: String!
-  answers: [String!]!
+  rubric: [Rubric!]!
+}
+
+input FreeTextInput {
+  title: String!
+  question: String!
+  rubric: [RubricInput!]!
+}
+
+type MultiChoice {
+  title: String!
+  question: String!
+  answerChoices: [String!]!
   correctAnswer: Int!
   explanation: String!
 }
 
-input QandAInput {
+input MultiChoiceInput {
   title: String!
   question: String!
-  answers: [String]!
-  correctAnswer: Int!
+  answerChoices: [String]
+  correctAnswer: Int
   explanation: String!
 }
 
@@ -90,7 +124,9 @@ type Assessment {
   lectureDate: AWSDate!
   deadline: AWSDate!
   updatedAt: AWSDateTime!
-  questions: [QandA!]!
+  assessType: AssessType!
+  multiChoiceAssessment: [MultiChoice!]
+  freeTextAssessment: [FreeText!]
   published: Boolean!
   status: AssessStatus!
   course: Course
@@ -102,7 +138,9 @@ input AssessmentInput {
   courseId: String!
   lectureDate: AWSDate!
   deadline: AWSDate!
-  questions: [QandAInput!]!
+  assessType: AssessType!
+  multiChoiceAssessment: [MultiChoiceInput]
+  freeTextAssessment: [FreeTextInput]
   published: Boolean
   status: AssessStatus!
 }
@@ -110,15 +148,16 @@ input AssessmentInput {
 type StudentAssessment {
   parentAssessId: ID!
   assessment: Assessment
-  chosenAnswers: [Int]
+  answers: AWSJSON!
   completed: Boolean
   score: Int
+  report: AWSJSON
   updatedAt: AWSDateTime
 }
 
 input StudentAssessmentInput {
   parentAssessId: ID!
-  chosenAnswers: [Int]
+  answers: AWSJSON!
   score: Int
   completed: Boolean
 }
@@ -138,6 +177,7 @@ type Mutation {
   createAssessTemplate(input: AssessTemplateInput): AssessTemplate
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
+  gradeStudentAssessment(input: StudentAssessmentInput): StudentAssessment
 }
 
 type Query {

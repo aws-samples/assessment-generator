@@ -14,7 +14,7 @@ projects:
         apiId: null
         frontend: javascript
         framework: react
-        maxDepth: 3
+        maxDepth: 4
 extensions:
   amplify:
     version: 3
