@@ -91,12 +91,12 @@ export default () => {
                       columnDefinitions={[
                         {
                           id: 'weight',
-                          header: 'Weight',
+                          header: 'Points',
                           cell: (item) => item.weight,
                         },
                         {
                           id: 'point',
-                          header: 'Point',
+                          header: 'Description',
                           cell: (item) => item.point,
                         },
                       ]}

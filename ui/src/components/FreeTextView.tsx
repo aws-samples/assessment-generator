@@ -68,13 +68,13 @@ export const FreeTextView = ({ activeStepIndex, freetextAssessment, updateAssess
             },
             {
               id: 'weight',
-              header: 'Weights',
+              header: 'Points',
               maxWidth: 30,
               cell: (item) => <Input value={'' + item.weight} onChange={(event) => submitRubricChanges('weight', item, +event.detail.value)} />,
             },
             {
               id: 'point',
-              header: 'Points',
+              header: 'Description',
               cell: (item) => <Textarea value={'' + item.point} onChange={(event) => submitRubricChanges('point', item, event.detail.value)} />,
             },
           ]}
