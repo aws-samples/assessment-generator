@@ -26,8 +26,6 @@ import { UserProfileContext } from '../contexts/userProfile';
 
 const client = generateClient();
 
-// const assessTemplates = ['template1', 'template2', 'template3'].map((temp) => ({ value: temp }));
-
 export default () => {
   const navigate = useNavigate();
   const dispatchAlert = useContext(DispatchAlertContext);
@@ -43,7 +41,6 @@ export default () => {
   const [assessId, setAssessId] = useState('');
   const [assessTemplates, setAssessTemplates] = useState<SelectProps.Option[]>([]);
   const [assessTemplate, setAssessTemplate] = useState<SelectProps.Option | null>(null);
-
 
   useEffect(() => {
     client.graphql<any>({ query: listAssessTemplates }).then(({ data }) => {
@@ -98,11 +95,12 @@ export default () => {
                   }));
                   try {
                     await Promise.all(
-                      data.map(({ key, file }) =>
-                        uploadData({
-                          key,
-                          data: file,
-                        }).result
+                      data.map(
+                        ({ key, file }) =>
+                          uploadData({
+                            key,
+                            data: file,
+                          }).result
                       )
                     );
                     //TODO implement validation
@@ -111,7 +109,16 @@ export default () => {
                     }
                     const res = await client.graphql<any>({
                       query: generateAssessment,
-                      variables: { input: { name, lectureDate, deadline, courseId: course.value, assessTemplateId: assessTemplate?.value, locations: data.map(({ key }) => key) } },
+                      variables: {
+                        input: {
+                          name,
+                          lectureDate,
+                          deadline,
+                          courseId: course.value,
+                          assessTemplateId: assessTemplate?.value,
+                          locations: data.map(({ key }) => key),
+                        },
+                      },
                     });
                     const id = res.data.generateAssessment;
                     setAssessId(id);

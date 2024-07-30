@@ -11,6 +11,8 @@ import {
   Form,
   Button,
   SelectProps,
+  Modal,
+  Spinner,
 } from '@cloudscape-design/components';
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
@@ -25,6 +27,7 @@ export default () => {
   const dispatchAlert = useContext(DispatchAlertContext);
   const userProfile = useContext(UserProfileContext);
 
+  const [showSpinner, setShowSpinner] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [courses, setCourses] = useState<SelectProps.Option[]>([]);
   const [course, setCourse] = useState<SelectProps.Option | null>(null);
@@ -39,79 +42,88 @@ export default () => {
   }, []);
 
   return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        const data = files.map((file) => ({
-          key: `KnowledgeBases/${userProfile?.userId}/${course?.value}/${file.name}`,
-          file,
-        }));
-        try {
-          await Promise.all(
-            data.map(
-              ({ key, file }) =>
-                uploadData({
-                  key,
-                  data: file,
-                }).result
-            )
-          );
-          client.graphql({ query: createKnowledgeBase, variables: { courseId: course?.value, locations: data.map(({ key }) => key) } });
-          await dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
-        } catch (_e) {
-          dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' });
-        }
-      }}
-    >
-      <Form
-        actions={
-          <SpaceBetween direction="horizontal" size="xs">
-            <Button formAction="none" variant="link">
-              Cancel
-            </Button>
-            <Button variant="primary" disabled={!course || !files.length}>
-              Submit
-            </Button>
-          </SpaceBetween>
-        }
-        header={<Header variant="h1">Manage Knowledge Bases</Header>}
+    <>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setShowSpinner(true);
+          const data = files.map((file) => ({
+            key: `KnowledgeBases/${userProfile?.userId}/${course?.value}/${file.name}`,
+            file,
+          }));
+          try {
+            await Promise.all(
+              data.map(
+                ({ key, file }) =>
+                  uploadData({
+                    key,
+                    data: file,
+                  }).result
+              )
+            );
+            await client.graphql({ query: createKnowledgeBase, variables: { courseId: course?.value, locations: data.map(({ key }) => key) } });
+            dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
+            setShowSpinner(false);
+          } catch (_e) {
+            dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' });
+          }
+        }}
       >
-        <ContentLayout>
-          <Container
-            header={
-              <SpaceBetween size="l">
-                <Header variant="h1">Upload Document:</Header>
-              </SpaceBetween>
-            }
-          >
-            <Box padding="xxxl">
-              <SpaceBetween size="l" direction="horizontal" alignItems="end">
-                <FormField label="Choose Course:">
-                  <Select options={courses} selectedOption={course} onChange={({ detail }) => setCourse(detail.selectedOption)} />
-                </FormField>
-                <FormField>
-                  <FileUpload
-                    onChange={({ detail }) => setFiles(detail.value)}
-                    value={files}
-                    i18nStrings={{
-                      uploadButtonText: (e) => (e ? 'Choose files' : 'Choose file'),
-                      dropzoneText: (e) => (e ? 'Drop files to upload' : 'Drop file to upload'),
-                      removeFileAriaLabel: (e) => `Remove file ${e + 1}`,
-                      limitShowFewer: 'Show fewer files',
-                      limitShowMore: 'Show more files',
-                      errorIconAriaLabel: 'Error',
-                    }}
-                    showFileLastModified
-                    showFileSize
-                    showFileThumbnail
-                    tokenLimit={3}
-                  />
-                </FormField>
-              </SpaceBetween>
-            </Box>
-          </Container>
-        </ContentLayout>
-      </Form>
-    </form>
+        <Form
+          actions={
+            <SpaceBetween direction="horizontal" size="xs">
+              <Button formAction="none" variant="link">
+                Cancel
+              </Button>
+              <Button variant="primary" disabled={!course || !files.length}>
+                Submit
+              </Button>
+            </SpaceBetween>
+          }
+          header={<Header variant="h1">Manage Knowledge Bases</Header>}
+        >
+          <ContentLayout>
+            <Container
+              header={
+                <SpaceBetween size="l">
+                  <Header variant="h1">Upload Document:</Header>
+                </SpaceBetween>
+              }
+            >
+              <Box padding="xxxl">
+                <SpaceBetween size="l" direction="horizontal" alignItems="start">
+                  <FormField label="Choose Course:">
+                    <Select options={courses} selectedOption={course} onChange={({ detail }) => setCourse(detail.selectedOption)} />
+                  </FormField>
+                  <FormField>
+                    <FileUpload
+                      onChange={({ detail }) => setFiles(detail.value)}
+                      value={files}
+                      i18nStrings={{
+                        uploadButtonText: (e) => (e ? 'Choose files' : 'Choose file'),
+                        dropzoneText: (e) => (e ? 'Drop files to upload' : 'Drop file to upload'),
+                        removeFileAriaLabel: (e) => `Remove file ${e + 1}`,
+                        limitShowFewer: 'Show fewer files',
+                        limitShowMore: 'Show more files',
+                        errorIconAriaLabel: 'Error',
+                      }}
+                      showFileLastModified
+                      showFileSize
+                      showFileThumbnail
+                      tokenLimit={3}
+                    />
+                  </FormField>
+                </SpaceBetween>
+              </Box>
+            </Container>
+          </ContentLayout>
+        </Form>
+      </form>
+      <Modal visible={showSpinner} header={<Header>Creating...</Header>}>
+        <SpaceBetween size="s" alignItems="center">
+          <Spinner size="big" />
+        </SpaceBetween>
+      </Modal>
+    </>
   );
 };
