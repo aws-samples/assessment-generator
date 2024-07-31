@@ -51,7 +51,7 @@ export const FreeTextView = ({ activeStepIndex, freetextAssessment, updateAssess
                   }
                 />
               ),
-              maxWidth: 20,
+              width: 30,
               cell: (item) => (
                 <Button
                   iconName="close"
@@ -69,7 +69,7 @@ export const FreeTextView = ({ activeStepIndex, freetextAssessment, updateAssess
             {
               id: 'weight',
               header: 'Points',
-              maxWidth: 30,
+              width: 90,
               cell: (item) => <Input value={'' + item.weight} onChange={(event) => submitRubricChanges('weight', item, +event.detail.value)} />,
             },
             {

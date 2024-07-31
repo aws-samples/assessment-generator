@@ -8,6 +8,7 @@ import { upsertAssessment } from '../graphql/mutations';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { QAView } from '../components/QAView';
 import { FreeTextView } from '../components/FreeTextView';
+import { removeTypenames } from '../helpers';
 
 const client = generateClient();
 
@@ -57,11 +58,7 @@ export default () => {
       .then(({ data }) => {
         const result = data.getAssessment;
         if (!result) throw new Error();
-        const { __typename, updatedAt, ...content } = result;
-        content[content.assessType] = content[content.assessType].map((section: any) => {
-          const { __typename, ...newSection } = section;
-          return newSection;
-        });
+        const { updatedAt, ...content } = removeTypenames(result);
         updateAssessment({ type: ActionTypes.Put, content });
       })
       .catch(() => {});
