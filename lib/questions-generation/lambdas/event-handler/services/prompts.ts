@@ -40,7 +40,7 @@ ${
 ${
   assessmentTemplate.assessType === AssessType.freeTextAssessment
     ? `
-  The questions are free text questions. for every question create a rubric weight grading guidance in a <rubric> tag. In <rubric> there should be a list of expected point to be covered in the answer and the weight associated with this point, only use integer values for weights.
+  The questions are free text questions. for every question create a rubric weight grading guidance in a <rubric> tag. In <rubric> there should be a list (minimum 2) of expected points to be covered in the answer and the weight associated with this point, only use single digit integer values for weights.
 `
     : ''
 }
