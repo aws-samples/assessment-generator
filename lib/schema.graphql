@@ -171,6 +171,16 @@ input GenerateAssessmentInput {
   assessTemplateId: String
 }
 
+type KnowledgeBase {
+  userId: String!
+  courseId: String!
+  indexName: String!
+  knowledgeBaseId: String!
+  kbDataSourceId: String!
+  s3prefix: String!
+  status: String!
+}
+
 type Mutation {
   upsertSettings(input: UpsertSettingsInput): Settings
   upsertCourse(input: CourseInput): Course
@@ -178,6 +188,7 @@ type Mutation {
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
   gradeStudentAssessment(input: StudentAssessmentInput): StudentAssessment
+  createKnowledgeBase(courseId: ID, locations: [String]): ID
 }
 
 type Query {
@@ -191,6 +202,6 @@ type Query {
   listStudentAssessments: [StudentAssessment]
   listMyStudentAssessments(studentId: ID!): [StudentAssessment]
   publishAssessment(assessmentId: ID!): Boolean
-  createKnowledgeBase(courseId: ID, locations: [String]): ID
   generateAssessment(input: GenerateAssessmentInput): ID
+  getKnowledgeBase(courseId: ID): KnowledgeBase
 }

@@ -355,7 +355,7 @@ export class DataStack extends NestedStack {
     const createKnowledgeBaseDs = api.addLambdaDataSource('CreateKnowledgeBaseDs', documentProcessorLambda);
 
     createKnowledgeBaseDs.createResolver('CreateKnowledgeBaseResolver', {
-      typeName: 'Query',
+      typeName: 'Mutation',
       fieldName: 'createKnowledgeBase',
       code: aws_appsync.Code.fromAsset('lib/resolvers/createKnowledgeBase.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,

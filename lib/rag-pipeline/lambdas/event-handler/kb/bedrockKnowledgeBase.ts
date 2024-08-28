@@ -11,8 +11,10 @@ import {
   CreateKnowledgeBaseResponse,
   StartIngestionJobCommand,
   StartIngestionJobCommandOutput,
+  GetIngestionJobCommand,
   ValidationException,
   KnowledgeBaseStatus,
+  IngestionJobStatus,
 } from '@aws-sdk/client-bedrock-agent';
 import { logger } from '../utils/pt';
 import { VectorStore } from './vectorStore';
@@ -191,13 +193,24 @@ export class BedrockKnowledgeBase {
       startIngestionJobCommand
     );
     logger.info(startIngestionResponse as any);
+    await this.waitForIngestion(this.knowledgeBaseId, this.dataSourceId, startIngestionResponse.ingestionJob!.ingestionJobId!);
     return startIngestionResponse;
+  }
+
+  private async waitForIngestion(knowledgeBaseId: string, dataSourceId: string, ingestionJobId: string) {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const response = await bedrockAgentClient.send(new GetIngestionJobCommand({ knowledgeBaseId, dataSourceId, ingestionJobId }));
+    logger.info(response as any);
+    const jobStatus = response.ingestionJob?.status;
+    if (jobStatus === IngestionJobStatus.FAILED) throw new Error('Ingestion job failed');
+    if (jobStatus !== IngestionJobStatus.COMPLETE) await this.waitForIngestion(knowledgeBaseId, dataSourceId, ingestionJobId);
   }
 
   private static async waitForKbReady(knowledgeBaseId: string) {
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const response = await bedrockAgentClient.send(new GetKnowledgeBaseCommand({ knowledgeBaseId }));
     const kbStatus = response.knowledgeBase?.status;
+    if (kbStatus === KnowledgeBaseStatus.FAILED) throw new Error('KB creation failed');
     if (kbStatus === KnowledgeBaseStatus.CREATING) await this.waitForKbReady(knowledgeBaseId);
   }
 }
