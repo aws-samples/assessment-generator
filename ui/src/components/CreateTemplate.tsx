@@ -1,10 +1,10 @@
 import { useState, useContext } from 'react';
-import { Container, Header, SpaceBetween, Button, Form, FormField, Input, Select, SelectProps, Box } from '@cloudscape-design/components';
+import { Container, SpaceBetween, Button, Form, FormField, Box, Input, Select, SelectProps } from '@cloudscape-design/components';
 import { generateClient } from 'aws-amplify/api';
-import { Lang, AssessType, Taxonomy } from '../graphql/API';
 import { createAssessTemplate } from '../graphql/mutations';
-import { optionise } from '../helpers';
+import { Lang, AssessType, Taxonomy } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
+import { optionise } from '../helpers';
 
 const client = generateClient();
 
@@ -12,8 +12,14 @@ const langs = Object.values(Lang).map(optionise);
 const assessTypes = Object.values(AssessType).map(optionise);
 const taxonomies = Object.values(Taxonomy).map(optionise);
 
-export default () => {
+type CreateTemplateProps = {
+  onSubmit: () => void;
+  onCancel: () => void;
+};
+
+export default (props: CreateTemplateProps) => {
   const dispatchAlert = useContext(DispatchAlertContext);
+  const { onSubmit, onCancel } = props;
 
   const [name, setName] = useState('');
   const [docLang, setDocLang] = useState<SelectProps.Option | null>(null);
@@ -44,14 +50,20 @@ export default () => {
               },
             },
           })
-          .then(() => dispatchAlert({ type: AlertType.SUCCESS, content: 'Templated created successfully' }))
-          .catch(() => dispatchAlert({ type: AlertType.ERROR }));
+          .then(() => {
+            dispatchAlert({ type: AlertType.SUCCESS, content: 'Templated created successfully' });
+            onSubmit();
+          })
+          .catch(() => {
+            dispatchAlert({ type: AlertType.ERROR });
+            onCancel();
+          });
       }}
     >
       <Form
         actions={
           <SpaceBetween direction="horizontal" size="xs">
-            <Button formAction="none" variant="link">
+            <Button formAction="none" variant="link" onClick={onCancel}>
               Cancel
             </Button>
             <Button
@@ -62,7 +74,6 @@ export default () => {
             </Button>
           </SpaceBetween>
         }
-        header={<Header variant="h1">Create Assessment Template</Header>}
       >
         <Container>
           <SpaceBetween size="l" alignItems="center">
