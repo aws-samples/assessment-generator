@@ -157,3 +157,13 @@ export const gradeStudentAssessment = /* GraphQL */ `
     }
   }
 `;
+export const createKnowledgeBase = /* GraphQL */ `
+  mutation CreateKnowledgeBase($courseId: ID, $locations: [String]) {
+    createKnowledgeBase(courseId: $courseId, locations: $locations) {
+      ingestionJobId
+      knowledgeBaseId
+      dataSourceId
+      status
+    }
+  }
+`;

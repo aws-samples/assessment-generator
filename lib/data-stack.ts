@@ -357,7 +357,7 @@ export class DataStack extends NestedStack {
     createKnowledgeBaseDs.createResolver('CreateKnowledgeBaseResolver', {
       typeName: 'Mutation',
       fieldName: 'createKnowledgeBase',
-      code: aws_appsync.Code.fromAsset('lib/resolvers/createKnowledgeBase.ts'),
+      code: aws_appsync.Code.fromAsset('lib/resolvers/invokeLambda.ts'),
       runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
@@ -437,6 +437,34 @@ export class DataStack extends NestedStack {
           runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
         }),
       ],
+    });
+
+    ///////// Bedrock
+
+    const getIngestionJobFn = new NodejsFunction(this, 'GetIngestionJobFn', {
+      entry: 'lib/lambdas/getIngestionJob.ts',
+      runtime: Runtime.NODEJS_18_X,
+      architecture: Architecture.ARM_64,
+      tracing: Tracing.ACTIVE,
+      bundling: {
+        minify: true,
+      },
+    });
+    getIngestionJobFn.addToRolePolicy(
+      new PolicyStatement({
+        effect: aws_iam.Effect.ALLOW,
+        resources: ['*'],
+        actions: ['bedrock:*'],
+      })
+    );
+
+    const getIngestionJobDs = api.addLambdaDataSource('GetIngestionJobDs', getIngestionJobFn);
+
+    getIngestionJobDs.createResolver('GetIngestionJobResolver', {
+      typeName: 'Query',
+      fieldName: 'getIngestionJob',
+      code: aws_appsync.Code.fromAsset('lib/resolvers/invokeLambda.ts'),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
     });
 
     this.api = api;

@@ -16,7 +16,8 @@ import {
 } from '@cloudscape-design/components';
 import { uploadData } from 'aws-amplify/storage';
 import { generateClient } from 'aws-amplify/api';
-import { createKnowledgeBase, listCourses } from '../graphql/queries';
+import { getIngestionJob, listCourses } from '../graphql/queries';
+import { createKnowledgeBase } from '../graphql/mutations';
 import { Course } from '../graphql/API';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { UserProfileContext } from '../contexts/userProfile';
@@ -41,6 +42,18 @@ export default () => {
     });
   }, []);
 
+  const waitForIngestion = async (knowledgeBaseId: string, dataSourceId: string, ingestionJobId: string) => {
+    let jobStatus = '';
+    do {
+      const response = await client.graphql<any>({
+        query: getIngestionJob,
+        variables: { input: { knowledgeBaseId, dataSourceId, ingestionJobId } },
+      });
+      jobStatus = response.data.getIngestionJob.status;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    } while (jobStatus !== 'COMPLETE');
+  };
+
   return (
     <>
       <form
@@ -61,12 +74,14 @@ export default () => {
                   }).result
               )
             );
-            const response = await client.graphql<any>({
+            const knowledgeBaseResponse = await client.graphql<any>({
               query: createKnowledgeBase,
               variables: { courseId: course?.value, locations: data.map(({ key }) => key) },
             });
+            const { knowledgeBaseId, dataSourceId, ingestionJobId } = knowledgeBaseResponse.data.createKnowledgeBase;
+            if (!ingestionJobId) throw new Error('Failed to create Knowledge Base');
+            await waitForIngestion(knowledgeBaseId, dataSourceId, ingestionJobId);
             setShowSpinner(false);
-            if (!response.data.createKnowledgeBase) throw new Error('Failed to create Knowledge Base');
             dispatchAlert({ type: AlertType.SUCCESS, content: 'Knowledge Base created successfully' });
           } catch (_e) {
             dispatchAlert({ type: AlertType.ERROR, content: 'Failed to create Knowledge Base' });

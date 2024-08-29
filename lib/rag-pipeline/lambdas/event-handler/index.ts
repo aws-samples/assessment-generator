@@ -52,9 +52,9 @@ class Lambda implements LambdaInterface {
     if (!(startIngestionJobCommandOutput.ingestionJob && startIngestionJobCommandOutput.ingestionJob.ingestionJobId)) {
       throw new Error('KB Ingestion failed');
     }
-    logger.info('KB Ingestion Job Id: ' + startIngestionJobCommandOutput.ingestionJob.knowledgeBaseId);
+    logger.info('KB Ingestion Job Id: ' + startIngestionJobCommandOutput.ingestionJob.ingestionJobId);
 
-    return startIngestionJobCommandOutput.ingestionJob.knowledgeBaseId!;
+    return startIngestionJobCommandOutput.ingestionJob;
   }
 
   private async copyObjects(objectKeys: Array<string | null>) {

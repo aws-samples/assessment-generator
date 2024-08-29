@@ -172,6 +172,14 @@ export type StudentAssessment = {
   updatedAt?: string | null,
 };
 
+export type IngestionJob = {
+  __typename: "IngestionJob",
+  ingestionJobId: string,
+  knowledgeBaseId: string,
+  dataSourceId: string,
+  status: string,
+};
+
 export type Student = {
   __typename: "Student",
   id: string,
@@ -186,6 +194,23 @@ export type GenerateAssessmentInput = {
   deadline: string,
   locations: Array< string | null >,
   assessTemplateId?: string | null,
+};
+
+export type KnowledgeBase = {
+  __typename: "KnowledgeBase",
+  userId: string,
+  courseId: string,
+  indexName: string,
+  knowledgeBaseId: string,
+  kbDataSourceId: string,
+  s3prefix: string,
+  status: string,
+};
+
+export type IngestionJobInput = {
+  ingestionJobId: string,
+  knowledgeBaseId: string,
+  dataSourceId: string,
 };
 
 export type UpsertSettingsMutationVariables = {
@@ -378,6 +403,21 @@ export type GradeStudentAssessmentMutation = {
     score?: number | null,
     report?: string | null,
     updatedAt?: string | null,
+  } | null,
+};
+
+export type CreateKnowledgeBaseMutationVariables = {
+  courseId?: string | null,
+  locations?: Array< string | null > | null,
+};
+
+export type CreateKnowledgeBaseMutation = {
+  createKnowledgeBase?:  {
+    __typename: "IngestionJob",
+    ingestionJobId: string,
+    knowledgeBaseId: string,
+    dataSourceId: string,
+    status: string,
   } | null,
 };
 
@@ -666,19 +706,41 @@ export type PublishAssessmentQuery = {
   publishAssessment?: boolean | null,
 };
 
-export type CreateKnowledgeBaseQueryVariables = {
-  courseId?: string | null,
-  locations?: Array< string | null > | null,
-};
-
-export type CreateKnowledgeBaseQuery = {
-  createKnowledgeBase?: string | null,
-};
-
 export type GenerateAssessmentQueryVariables = {
   input?: GenerateAssessmentInput | null,
 };
 
 export type GenerateAssessmentQuery = {
   generateAssessment?: string | null,
+};
+
+export type GetKnowledgeBaseQueryVariables = {
+  courseId?: string | null,
+};
+
+export type GetKnowledgeBaseQuery = {
+  getKnowledgeBase?:  {
+    __typename: "KnowledgeBase",
+    userId: string,
+    courseId: string,
+    indexName: string,
+    knowledgeBaseId: string,
+    kbDataSourceId: string,
+    s3prefix: string,
+    status: string,
+  } | null,
+};
+
+export type GetIngestionJobQueryVariables = {
+  input?: IngestionJobInput | null,
+};
+
+export type GetIngestionJobQuery = {
+  getIngestionJob?:  {
+    __typename: "IngestionJob",
+    ingestionJobId: string,
+    knowledgeBaseId: string,
+    dataSourceId: string,
+    status: string,
+  } | null,
 };

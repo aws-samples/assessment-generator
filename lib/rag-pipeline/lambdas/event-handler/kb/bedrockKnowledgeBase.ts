@@ -193,7 +193,6 @@ export class BedrockKnowledgeBase {
       startIngestionJobCommand
     );
     logger.info(startIngestionResponse as any);
-    await this.waitForIngestion(this.knowledgeBaseId, this.dataSourceId, startIngestionResponse.ingestionJob!.ingestionJobId!);
     return startIngestionResponse;
   }
 

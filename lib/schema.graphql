@@ -181,6 +181,19 @@ type KnowledgeBase {
   status: String!
 }
 
+type IngestionJob {
+  ingestionJobId: ID!
+  knowledgeBaseId: ID!
+  dataSourceId: ID!
+  status: String!
+}
+
+input IngestionJobInput {
+  ingestionJobId: ID!
+  knowledgeBaseId: ID!
+  dataSourceId: ID!
+}
+
 type Mutation {
   upsertSettings(input: UpsertSettingsInput): Settings
   upsertCourse(input: CourseInput): Course
@@ -188,7 +201,7 @@ type Mutation {
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
   gradeStudentAssessment(input: StudentAssessmentInput): StudentAssessment
-  createKnowledgeBase(courseId: ID, locations: [String]): ID
+  createKnowledgeBase(courseId: ID, locations: [String]): IngestionJob
 }
 
 type Query {
@@ -204,4 +217,5 @@ type Query {
   publishAssessment(assessmentId: ID!): Boolean
   generateAssessment(input: GenerateAssessmentInput): ID
   getKnowledgeBase(courseId: ID): KnowledgeBase
+  getIngestionJob(input: IngestionJobInput): IngestionJob
 }

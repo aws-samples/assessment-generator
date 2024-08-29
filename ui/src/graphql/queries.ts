@@ -249,13 +249,31 @@ export const publishAssessment = /* GraphQL */ `
     publishAssessment(assessmentId: $assessmentId)
   }
 `;
-export const createKnowledgeBase = /* GraphQL */ `
-  query CreateKnowledgeBase($courseId: ID, $locations: [String]) {
-    createKnowledgeBase(courseId: $courseId, locations: $locations)
-  }
-`;
 export const generateAssessment = /* GraphQL */ `
   query GenerateAssessment($input: GenerateAssessmentInput) {
     generateAssessment(input: $input)
+  }
+`;
+export const getKnowledgeBase = /* GraphQL */ `
+  query GetKnowledgeBase($courseId: ID) {
+    getKnowledgeBase(courseId: $courseId) {
+      userId
+      courseId
+      indexName
+      knowledgeBaseId
+      kbDataSourceId
+      s3prefix
+      status
+    }
+  }
+`;
+export const getIngestionJob = /* GraphQL */ `
+  query GetIngestionJob($input: IngestionJobInput) {
+    getIngestionJob(input: $input) {
+      ingestionJobId
+      knowledgeBaseId
+      dataSourceId
+      status
+    }
   }
 `;
