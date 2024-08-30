@@ -1,5 +1,18 @@
 import { useState, useEffect, useContext } from 'react';
-import { Wizard, Container, Header, SpaceBetween, FormField, Button, Box, PieChart, Tiles, Modal, Textarea } from '@cloudscape-design/components';
+import {
+  Wizard,
+  Container,
+  Header,
+  SpaceBetween,
+  FormField,
+  Button,
+  Box,
+  PieChart,
+  Tiles,
+  Modal,
+  Textarea,
+  Spinner,
+} from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
@@ -14,6 +27,7 @@ export default () => {
   const params = useParams();
   const navigate = useNavigate();
   const dispatchAlert = useContext(DispatchAlertContext);
+  const [showSpinner, setShowSpinner] = useState(false);
 
   const [assessmentId, setAssessmentId] = useState<string>();
   const [questions, setQuestions] = useState<MultiChoice[] | FreeText[]>([]);
@@ -65,6 +79,7 @@ export default () => {
       </Modal>
       <Wizard
         onSubmit={() => {
+          setShowSpinner(true);
           client
             .graphql<any>({
               query: gradeStudentAssessment,
@@ -79,7 +94,8 @@ export default () => {
               const { score } = data.gradeStudentAssessment;
               setScore(score);
             })
-            .catch(() => dispatchAlert({ type: AlertType.ERROR }));
+            .catch(() => dispatchAlert({ type: AlertType.ERROR }))
+            .finally(() => setShowSpinner(false));
         }}
         i18nStrings={{
           stepNumberLabel: (stepNumber) => `Question ${stepNumber}`,
@@ -137,6 +153,11 @@ export default () => {
           };
         })}
       />
+      <Modal visible={showSpinner} header={<Header>Grading...</Header>}>
+        <SpaceBetween size="s" alignItems="center">
+          <Spinner size="big" />
+        </SpaceBetween>
+      </Modal>
     </>
   );
 };
