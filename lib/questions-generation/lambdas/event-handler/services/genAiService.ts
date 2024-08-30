@@ -11,7 +11,7 @@ import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { MultiChoice, FreeText } from '../../../../../ui/src/graphql/API';
 import { getInitialQuestionsPrompt, getRelevantDocumentsPrompt, getTopicsPrompt, improveQuestionPrompt } from './prompts';
 
-const CLAUDE_3_HAIKU = 'anthropic.claude-3-haiku-20240307-v1:0';
+const MODEL_ID = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
 const bedrock = new BedrockRuntime();
 const bedrockAgentRuntime = new BedrockAgentRuntime();
 const parser = new XMLParser();
@@ -27,7 +27,7 @@ export class GenAiService {
   public async getTopics(referenceDocuments: ReferenceDocuments) {
     let prompt = getTopicsPrompt(referenceDocuments);
     logger.debug(prompt);
-    let llmResponse = await this.callLLM(CLAUDE_3_HAIKU, prompt);
+    let llmResponse = await this.callLLM(MODEL_ID, prompt);
     logger.debug(llmResponse);
     return llmResponse;
   }
@@ -35,7 +35,7 @@ export class GenAiService {
   public async generateInitialQuestions(topicsExtractionOutput: string, assessmentTemplate: AssessmentTemplate) {
     let prompt = getInitialQuestionsPrompt(assessmentTemplate, topicsExtractionOutput);
     logger.debug(prompt);
-    const llmResponse = await this.callLLM(CLAUDE_3_HAIKU, prompt);
+    const llmResponse = await this.callLLM(MODEL_ID, prompt);
     logger.debug(llmResponse);
     return llmResponse;
   }
@@ -117,7 +117,7 @@ export class GenAiService {
     let prompt = improveQuestionPrompt(xmlQuestion, xmlDocs, assessmentTemplate);
 
     logger.debug(prompt);
-    const llmResponse = await this.callLLM(CLAUDE_3_HAIKU, prompt);
+    const llmResponse = await this.callLLM(MODEL_ID, prompt);
     logger.debug(llmResponse);
     const { question }: { question: MultiChoice | FreeText } = parser.parse(llmResponse);
     return question;

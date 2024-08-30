@@ -50,7 +50,7 @@ Ensure you have the following installed:
 Request model access on Amazon Bedrock for the following:
 
 - Amazon Titan Embeddings G1 - Text
-- Anthropic Claude 3 Haiku
+- Anthropic Claude 3.5 Sonnet
 
 ## Deployment
 
