@@ -11,7 +11,7 @@ export function request(ctx) {
 
   const item = { ...args, updatedAt: util.time.nowISO8601() };
 
-  if (score) {
+  if (!Number.isNaN(score)) {
     item.score = score;
     item.completed = true;
   }
