@@ -17,7 +17,6 @@ export enum Lang {
 
 export enum AssessType {
   multiChoiceAssessment = "multiChoiceAssessment",
-  freeTextAssessment = "freeTextAssessment",
 }
 
 
@@ -406,6 +405,14 @@ export type GradeStudentAssessmentMutation = {
   } | null,
 };
 
+export type DeleteAssessmentsMutationVariables = {
+  id?: string | null,
+};
+
+export type DeleteAssessmentsMutation = {
+  deleteAssessments?: string | null,
+};
+
 export type CreateKnowledgeBaseMutationVariables = {
   courseId?: string | null,
   locations?: Array< string | null > | null,
@@ -421,6 +428,9 @@ export type CreateKnowledgeBaseMutation = {
   } | null,
 };
 
+export type GetSettingsQueryVariables = {
+};
+
 export type GetSettingsQuery = {
   getSettings?:  {
     __typename: "Settings",
@@ -430,6 +440,9 @@ export type GetSettingsQuery = {
   } | null,
 };
 
+export type ListCoursesQueryVariables = {
+};
+
 export type ListCoursesQuery = {
   listCourses?:  Array< {
     __typename: "Course",
@@ -437,6 +450,9 @@ export type ListCoursesQuery = {
     name?: string | null,
     description?: string | null,
   } | null > | null,
+};
+
+export type ListStudentsQueryVariables = {
 };
 
 export type ListStudentsQuery = {
@@ -491,6 +507,9 @@ export type GetAssessmentQuery = {
   } | null,
 };
 
+export type ListAssessmentsQueryVariables = {
+};
+
 export type ListAssessmentsQuery = {
   listAssessments?:  Array< {
     __typename: "Assessment",
@@ -528,6 +547,9 @@ export type ListAssessmentsQuery = {
       description?: string | null,
     } | null,
   } | null > | null,
+};
+
+export type ListAssessTemplatesQueryVariables = {
 };
 
 export type ListAssessTemplatesQuery = {
@@ -596,6 +618,9 @@ export type GetStudentAssessmentQuery = {
     report?: string | null,
     updatedAt?: string | null,
   } | null,
+};
+
+export type ListStudentAssessmentsQueryVariables = {
 };
 
 export type ListStudentAssessmentsQuery = {

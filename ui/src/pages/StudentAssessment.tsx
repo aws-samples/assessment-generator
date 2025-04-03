@@ -10,7 +10,7 @@ import {
   PieChart,
   Tiles,
   Modal,
-  Textarea,
+  // Textarea,
   Spinner,
 } from '@cloudscape-design/components';
 import { useNavigate } from 'react-router-dom';
@@ -35,6 +35,8 @@ export default () => {
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [score, setScore] = useState<number>();
+
+  console.log(assessType);
 
   useEffect(() => {
     client
@@ -122,18 +124,7 @@ export default () => {
                   <Box variant="p">{q.question}</Box>
                 </Container>
                 <Container header={<Header variant="h2">Answer</Header>}>
-                  {assessType === AssessType.freeTextAssessment ? (
-                    <FormField label={'Provide:'}>
-                      <Textarea
-                        value={answers[activeStepIndex]}
-                        onChange={({ detail }) => {
-                          const newAnswers = [...answers];
-                          newAnswers[activeStepIndex] = detail.value;
-                          setAnswers(newAnswers);
-                        }}
-                      />
-                    </FormField>
-                  ) : (
+
                     <FormField label={'Choose:'}>
                       <Tiles
                         columns={1}
@@ -146,7 +137,7 @@ export default () => {
                         }}
                       />
                     </FormField>
-                  )}
+
                 </Container>
               </SpaceBetween>
             ),

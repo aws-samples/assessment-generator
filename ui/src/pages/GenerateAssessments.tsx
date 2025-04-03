@@ -58,6 +58,9 @@ export default () => {
         if (status === AssessStatus.CREATED) {
           dispatchAlert({ type: AlertType.SUCCESS, content: 'Assessment generated successfully' });
           return navigate(`/edit-assessment/${assessId}`);
+        } else if (status === AssessStatus.FAILED) {
+          dispatchAlert({ type: AlertType.ERROR, content: 'Failed to generate Assessment' });
+          return navigate('/assessments/');
         }
         checkStatus();
       });

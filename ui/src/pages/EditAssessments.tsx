@@ -2,12 +2,11 @@ import { useState, useReducer, useEffect, useContext } from 'react';
 import { Wizard } from '@cloudscape-design/components';
 import { useParams, useNavigate } from 'react-router-dom';
 import { generateClient } from 'aws-amplify/api';
-import { Assessment, AssessType, MultiChoice, FreeText } from '../graphql/API';
+import { Assessment, MultiChoice } from '../graphql/API';
 import { getAssessment } from '../graphql/queries';
 import { upsertAssessment } from '../graphql/mutations';
 import { DispatchAlertContext, AlertType } from '../contexts/alerts';
 import { QAView } from '../components/QAView';
-import { FreeTextView } from '../components/FreeTextView';
 import { removeTypenames } from '../helpers';
 
 const client = generateClient();
@@ -68,11 +67,11 @@ export default () => {
     assessment[assessment.assessType]?.map((q) => ({
       title: q.title,
       content:
-        assessment.assessType === AssessType.multiChoiceAssessment ? (
+        /*assessment.assessType === AssessType.multiChoiceAssessment ? (*/
           <QAView activeStepIndex={activeStepIndex} multiChoiceAssessment={q as MultiChoice} updateAssessment={updateAssessment} />
-        ) : (
+        /*) : (
           <FreeTextView activeStepIndex={activeStepIndex} freetextAssessment={q as FreeText} updateAssessment={updateAssessment} />
-        ),
+        )*/,
     })) || [];
 
   return (

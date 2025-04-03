@@ -55,7 +55,7 @@ Structure your response in this format and do not include any additional text, r
 \`\`\`xml
 <response>
     <questions>
-        <title>[Brief question title]</title>
+        <title>[Brief question title] ([Difficulty])</title>
         <question>
             [Question]
         </question>
@@ -120,7 +120,8 @@ export function improveQuestionPrompt(xmlQuestion: any, xmlDocs: any, assessment
   let prompt = `
 If relevant, use the content in the EXTRACTED_DOCUMENTS to improve the QUESTION.
 Structure your response in the FORMAT.
-Any reference to the EXTRACTED_DOCUMENTS, should include the uri of the document. 
+Any reference to the EXTRACTED_DOCUMENTS, should include the uri of the document and the page number (if present in the <x-amz-bedrock-kb-document-page-number>). 
+The questionnaire should be in the ISO 639-2 Code: ${assessmentTemplate.docLang}
 
 QUESTION:
 ${xmlQuestion}
@@ -132,7 +133,7 @@ ${xmlDocs}
 Structure your response in this format and do not include any additional imput. The response must be valid XML following this FORMAT:
 \`\`\`xml
 <question>
-    <title>[Brief question title]</title>
+    <title>[Brief question title] ([Difficulty])</title>
     <question>
         [Question]
     </question>

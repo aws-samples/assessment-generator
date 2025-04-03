@@ -11,7 +11,7 @@ import { XMLBuilder, XMLParser } from 'fast-xml-parser';
 import { MultiChoice, FreeText } from '../../../../../ui/src/graphql/API';
 import { getInitialQuestionsPrompt, getRelevantDocumentsPrompt, getTopicsPrompt, improveQuestionPrompt } from './prompts';
 
-const MODEL_ID = 'anthropic.claude-3-5-sonnet-20240620-v1:0';
+const MODEL_ID = 'us.anthropic.claude-3-5-sonnet-20240620-v1:0';
 const bedrock = new BedrockRuntime();
 const bedrockAgentRuntime = new BedrockAgentRuntime();
 const parser = new XMLParser();

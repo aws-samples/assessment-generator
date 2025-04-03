@@ -28,7 +28,7 @@ const EXECUTION_RUNTIME = Runtime.NODEJS_18_X;
 /**
  * The default memory size to allocate for the compute.
  */
-const DEFAULT_MEMORY_SIZE = 512;
+const DEFAULT_MEMORY_SIZE = 10240;
 
 const NAMESPACE = 'genassess-rag';
 
@@ -106,7 +106,7 @@ export class RagPipelineStack extends NestedStack {
     bedrockExecutionRole.addToPolicy(
       new PolicyStatement({
         effect: aws_iam.Effect.ALLOW,
-        resources: [`arn:aws:bedrock:${this.region}::foundation-model/amazon.titan-embed-text-v1`],
+        resources: [`arn:aws:bedrock:${this.region}::foundation-model/cohere.embed-multilingual-v3`],
         actions: ['bedrock:InvokeModel'],
       })
     );

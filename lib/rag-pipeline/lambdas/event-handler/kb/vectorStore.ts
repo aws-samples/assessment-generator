@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
+
 import { AwsSigv4Signer } from "@opensearch-project/opensearch/aws";
 import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { Client } from "@opensearch-project/opensearch";
@@ -30,7 +30,7 @@ const settings = {
     "properties": {
       "vector": {
         "type": "knn_vector",
-        "dimension": 1536,
+        "dimension": 1024,
         "method": {
           "engine": "faiss",
           "name": "hnsw"

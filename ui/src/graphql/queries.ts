@@ -2,36 +2,155 @@
 /* eslint-disable */
 // this is an auto generated file. This will be overwritten
 
-export const getSettings = /* GraphQL */ `
-  query GetSettings {
-    getSettings {
-      uiLang
-      docLang
-      assessType
-    }
+import * as APITypes from "./API";
+type GeneratedQuery<InputType, OutputType> = string & {
+  __generatedQueryInput: InputType;
+  __generatedQueryOutput: OutputType;
+};
+
+export const getSettings = /* GraphQL */ `query GetSettings {
+  getSettings {
+    uiLang
+    docLang
+    assessType
+    __typename
   }
-`;
-export const listCourses = /* GraphQL */ `
-  query ListCourses {
-    listCourses {
+}
+` as GeneratedQuery<
+  APITypes.GetSettingsQueryVariables,
+  APITypes.GetSettingsQuery
+>;
+export const listCourses = /* GraphQL */ `query ListCourses {
+  listCourses {
+    id
+    name
+    description
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListCoursesQueryVariables,
+  APITypes.ListCoursesQuery
+>;
+export const listStudents = /* GraphQL */ `query ListStudents {
+  listStudents {
+    id
+    firstName
+    lastName
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListStudentsQueryVariables,
+  APITypes.ListStudentsQuery
+>;
+export const getAssessment = /* GraphQL */ `query GetAssessment($id: ID!) {
+  getAssessment(id: $id) {
+    id
+    name
+    courseId
+    lectureDate
+    deadline
+    updatedAt
+    assessType
+    multiChoiceAssessment {
+      title
+      question
+      answerChoices
+      correctAnswer
+      explanation
+      __typename
+    }
+    freeTextAssessment {
+      title
+      question
+      rubric {
+        weight
+        point
+        __typename
+      }
+      __typename
+    }
+    published
+    status
+    course {
       id
       name
       description
+      __typename
     }
+    __typename
   }
-`;
-export const listStudents = /* GraphQL */ `
-  query ListStudents {
-    listStudents {
+}
+` as GeneratedQuery<
+  APITypes.GetAssessmentQueryVariables,
+  APITypes.GetAssessmentQuery
+>;
+export const listAssessments = /* GraphQL */ `query ListAssessments {
+  listAssessments {
+    id
+    name
+    courseId
+    lectureDate
+    deadline
+    updatedAt
+    assessType
+    multiChoiceAssessment {
+      title
+      question
+      answerChoices
+      correctAnswer
+      explanation
+      __typename
+    }
+    freeTextAssessment {
+      title
+      question
+      rubric {
+        weight
+        point
+        __typename
+      }
+      __typename
+    }
+    published
+    status
+    course {
       id
-      firstName
-      lastName
+      name
+      description
+      __typename
     }
+    __typename
   }
-`;
-export const getAssessment = /* GraphQL */ `
-  query GetAssessment($id: ID!) {
-    getAssessment(id: $id) {
+}
+` as GeneratedQuery<
+  APITypes.ListAssessmentsQueryVariables,
+  APITypes.ListAssessmentsQuery
+>;
+export const listAssessTemplates = /* GraphQL */ `query ListAssessTemplates {
+  listAssessTemplates {
+    id
+    name
+    docLang
+    assessType
+    taxonomy
+    totalQuestions
+    easyQuestions
+    mediumQuestions
+    hardQuestions
+    createdAt
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.ListAssessTemplatesQueryVariables,
+  APITypes.ListAssessTemplatesQuery
+>;
+export const getStudentAssessment = /* GraphQL */ `query GetStudentAssessment($parentAssessId: ID!) {
+  getStudentAssessment(parentAssessId: $parentAssessId) {
+    parentAssessId
+    assessment {
       id
       name
       courseId
@@ -45,6 +164,7 @@ export const getAssessment = /* GraphQL */ `
         answerChoices
         correctAnswer
         explanation
+        __typename
       }
       freeTextAssessment {
         title
@@ -52,7 +172,9 @@ export const getAssessment = /* GraphQL */ `
         rubric {
           weight
           point
+          __typename
         }
+        __typename
       }
       published
       status
@@ -60,13 +182,26 @@ export const getAssessment = /* GraphQL */ `
         id
         name
         description
+        __typename
       }
+      __typename
     }
+    answers
+    completed
+    score
+    report
+    updatedAt
+    __typename
   }
-`;
-export const listAssessments = /* GraphQL */ `
-  query ListAssessments {
-    listAssessments {
+}
+` as GeneratedQuery<
+  APITypes.GetStudentAssessmentQueryVariables,
+  APITypes.GetStudentAssessmentQuery
+>;
+export const listStudentAssessments = /* GraphQL */ `query ListStudentAssessments {
+  listStudentAssessments {
+    parentAssessId
+    assessment {
       id
       name
       courseId
@@ -80,6 +215,7 @@ export const listAssessments = /* GraphQL */ `
         answerChoices
         correctAnswer
         explanation
+        __typename
       }
       freeTextAssessment {
         title
@@ -87,7 +223,9 @@ export const listAssessments = /* GraphQL */ `
         rubric {
           weight
           point
+          __typename
         }
+        __typename
       }
       published
       status
@@ -95,185 +233,113 @@ export const listAssessments = /* GraphQL */ `
         id
         name
         description
+        __typename
       }
+      __typename
     }
+    answers
+    completed
+    score
+    report
+    updatedAt
+    __typename
   }
-`;
-export const listAssessTemplates = /* GraphQL */ `
-  query ListAssessTemplates {
-    listAssessTemplates {
+}
+` as GeneratedQuery<
+  APITypes.ListStudentAssessmentsQueryVariables,
+  APITypes.ListStudentAssessmentsQuery
+>;
+export const listMyStudentAssessments = /* GraphQL */ `query ListMyStudentAssessments($studentId: ID!) {
+  listMyStudentAssessments(studentId: $studentId) {
+    parentAssessId
+    assessment {
       id
       name
-      docLang
-      assessType
-      taxonomy
-      totalQuestions
-      easyQuestions
-      mediumQuestions
-      hardQuestions
-      createdAt
-    }
-  }
-`;
-export const getStudentAssessment = /* GraphQL */ `
-  query GetStudentAssessment($parentAssessId: ID!) {
-    getStudentAssessment(parentAssessId: $parentAssessId) {
-      parentAssessId
-      assessment {
-        id
-        name
-        courseId
-        lectureDate
-        deadline
-        updatedAt
-        assessType
-        multiChoiceAssessment {
-          title
-          question
-          answerChoices
-          correctAnswer
-          explanation
-        }
-        freeTextAssessment {
-          title
-          question
-          rubric {
-            weight
-            point
-          }
-        }
-        published
-        status
-        course {
-          id
-          name
-          description
-        }
-      }
-      answers
-      completed
-      score
-      report
-      updatedAt
-    }
-  }
-`;
-export const listStudentAssessments = /* GraphQL */ `
-  query ListStudentAssessments {
-    listStudentAssessments {
-      parentAssessId
-      assessment {
-        id
-        name
-        courseId
-        lectureDate
-        deadline
-        updatedAt
-        assessType
-        multiChoiceAssessment {
-          title
-          question
-          answerChoices
-          correctAnswer
-          explanation
-        }
-        freeTextAssessment {
-          title
-          question
-          rubric {
-            weight
-            point
-          }
-        }
-        published
-        status
-        course {
-          id
-          name
-          description
-        }
-      }
-      answers
-      completed
-      score
-      report
-      updatedAt
-    }
-  }
-`;
-export const listMyStudentAssessments = /* GraphQL */ `
-  query ListMyStudentAssessments($studentId: ID!) {
-    listMyStudentAssessments(studentId: $studentId) {
-      parentAssessId
-      assessment {
-        id
-        name
-        courseId
-        lectureDate
-        deadline
-        updatedAt
-        assessType
-        multiChoiceAssessment {
-          title
-          question
-          answerChoices
-          correctAnswer
-          explanation
-        }
-        freeTextAssessment {
-          title
-          question
-          rubric {
-            weight
-            point
-          }
-        }
-        published
-        status
-        course {
-          id
-          name
-          description
-        }
-      }
-      answers
-      completed
-      score
-      report
-      updatedAt
-    }
-  }
-`;
-export const publishAssessment = /* GraphQL */ `
-  query PublishAssessment($assessmentId: ID!) {
-    publishAssessment(assessmentId: $assessmentId)
-  }
-`;
-export const generateAssessment = /* GraphQL */ `
-  query GenerateAssessment($input: GenerateAssessmentInput) {
-    generateAssessment(input: $input)
-  }
-`;
-export const getKnowledgeBase = /* GraphQL */ `
-  query GetKnowledgeBase($courseId: ID) {
-    getKnowledgeBase(courseId: $courseId) {
-      userId
       courseId
-      indexName
-      knowledgeBaseId
-      kbDataSourceId
-      s3prefix
+      lectureDate
+      deadline
+      updatedAt
+      assessType
+      multiChoiceAssessment {
+        title
+        question
+        answerChoices
+        correctAnswer
+        explanation
+        __typename
+      }
+      freeTextAssessment {
+        title
+        question
+        rubric {
+          weight
+          point
+          __typename
+        }
+        __typename
+      }
+      published
       status
+      course {
+        id
+        name
+        description
+        __typename
+      }
+      __typename
     }
+    answers
+    completed
+    score
+    report
+    updatedAt
+    __typename
   }
-`;
-export const getIngestionJob = /* GraphQL */ `
-  query GetIngestionJob($input: IngestionJobInput) {
-    getIngestionJob(input: $input) {
-      ingestionJobId
-      knowledgeBaseId
-      dataSourceId
-      status
-    }
+}
+` as GeneratedQuery<
+  APITypes.ListMyStudentAssessmentsQueryVariables,
+  APITypes.ListMyStudentAssessmentsQuery
+>;
+export const publishAssessment = /* GraphQL */ `query PublishAssessment($assessmentId: ID!) {
+  publishAssessment(assessmentId: $assessmentId)
+}
+` as GeneratedQuery<
+  APITypes.PublishAssessmentQueryVariables,
+  APITypes.PublishAssessmentQuery
+>;
+export const generateAssessment = /* GraphQL */ `query GenerateAssessment($input: GenerateAssessmentInput) {
+  generateAssessment(input: $input)
+}
+` as GeneratedQuery<
+  APITypes.GenerateAssessmentQueryVariables,
+  APITypes.GenerateAssessmentQuery
+>;
+export const getKnowledgeBase = /* GraphQL */ `query GetKnowledgeBase($courseId: ID) {
+  getKnowledgeBase(courseId: $courseId) {
+    userId
+    courseId
+    indexName
+    knowledgeBaseId
+    kbDataSourceId
+    s3prefix
+    status
+    __typename
   }
-`;
+}
+` as GeneratedQuery<
+  APITypes.GetKnowledgeBaseQueryVariables,
+  APITypes.GetKnowledgeBaseQuery
+>;
+export const getIngestionJob = /* GraphQL */ `query GetIngestionJob($input: IngestionJobInput) {
+  getIngestionJob(input: $input) {
+    ingestionJobId
+    knowledgeBaseId
+    dataSourceId
+    status
+    __typename
+  }
+}
+` as GeneratedQuery<
+  APITypes.GetIngestionJobQueryVariables,
+  APITypes.GetIngestionJobQuery
+>;

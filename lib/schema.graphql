@@ -15,7 +15,7 @@ enum Taxonomy {
 
 enum AssessType {
   multiChoiceAssessment
-  freeTextAssessment
+#  freeTextAssessment
 }
 
 enum AssessStatus {
@@ -201,6 +201,7 @@ type Mutation {
   upsertAssessment(input: AssessmentInput): Assessment
   upsertStudentAssessment(input: StudentAssessmentInput): StudentAssessment
   gradeStudentAssessment(input: StudentAssessmentInput): StudentAssessment
+  deleteAssessments(id: ID): ID
   createKnowledgeBase(courseId: ID, locations: [String]): IngestionJob
 }
 

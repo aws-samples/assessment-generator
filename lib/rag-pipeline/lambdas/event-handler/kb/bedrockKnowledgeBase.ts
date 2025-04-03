@@ -121,7 +121,7 @@ export class BedrockKnowledgeBase {
       knowledgeBaseConfiguration: {
         type: 'VECTOR',
         vectorKnowledgeBaseConfiguration: {
-          embeddingModelArn: `arn:aws:bedrock:${process.env.AWS_REGION}::foundation-model/amazon.titan-embed-text-v1`,
+          embeddingModelArn: `arn:aws:bedrock:${process.env.AWS_REGION}::foundation-model/cohere.embed-multilingual-v3`,
         },
       },
       roleArn: process.env.BEDROCK_ROLE_ARN,

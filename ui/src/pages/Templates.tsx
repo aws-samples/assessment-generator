@@ -89,7 +89,7 @@ export default () => {
             {
               id: 'createdAt',
               header: 'CreatedAt',
-              cell: (item) => item.createdAt,
+              cell: (item) => `${item.createdAt? new Date(item.createdAt).toDateString(): ""} ${item.createdAt? new Date(item.createdAt).toLocaleTimeString(): ""}`,
             },
           ]}
           columnDisplay={[

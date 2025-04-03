@@ -275,7 +275,7 @@ export class DataStack extends NestedStack {
     const questionsGenerator = new NodejsFunction(this, QUESTIONS_GENERATOR_NAME, {
       description: 'Generates questions',
       entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'event-handler', 'index.ts'),
-      memorySize: 512,
+      memorySize: 10240,
       role: assessmentLambdaRole,
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
@@ -303,7 +303,7 @@ export class DataStack extends NestedStack {
     const qaGeneratorWrapper = new NodejsFunction(this, `${QUESTIONS_GENERATOR_NAME}-wrapper`, {
       description: 'Wraps around the Question generator ',
       entry: path.resolve(__dirname, 'questions-generation', 'lambdas', 'wrapper', 'index.ts'),
-      memorySize: 512,
+      memorySize: 10240,
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
       tracing: Tracing.ACTIVE,
@@ -376,7 +376,7 @@ export class DataStack extends NestedStack {
     const gradeAssessmentFn = new NodejsFunction(this, 'GradeAssessmentFn', {
       description: 'Grade Assessment',
       entry: 'lib/lambdas/gradeAssessment.ts',
-      memorySize: 512,
+      memorySize: 10240,
       role: assessmentLambdaRole,
       runtime: Runtime.NODEJS_18_X,
       architecture: Architecture.ARM_64,
@@ -439,11 +439,144 @@ export class DataStack extends NestedStack {
       ],
     });
 
+
+    new aws_appsync.Resolver(this, 'DeleteAssessmentsResolver', {
+      api,
+      typeName: 'Mutation',
+      fieldName: 'deleteAssessments',
+      code: aws_appsync.Code.fromInline(`
+        export function request(ctx) {
+          return {};
+        }
+
+        export function response(ctx) {
+          if (ctx.error) {
+              util.error(ctx.error.message, ctx.error.type);
+          }
+          // Return the ID of the deleted assessment
+          return ctx.args.id;
+        }
+      `),
+      runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+      pipelineConfig: [
+        new aws_appsync.AppsyncFunction(this, 'DeleteAssessmentFn', {
+          api,
+          name: 'deleteAssessmentFn',
+          dataSource: assessmentsDs,
+          code: aws_appsync.Code.fromInline(`
+          import { util } from '@aws-appsync/utils';
+
+          /**
+           * Deletes an item with id \`ctx.args.id\` from the DynamoDB table
+           * @param {import('@aws-appsync/utils').Context} ctx the context
+           * @returns {import('@aws-appsync/utils').DynamoDBDeleteItemRequest} the request
+           */
+          export function request(ctx) {
+              const userId = ctx.identity.sub;
+              const id = ctx.args.id;
+              return {
+                  operation: 'DeleteItem',
+                  key: util.dynamodb.toMapValues({ userId, id }),
+              };
+          }
+          
+          /**
+           * Returns the deleted item. Throws an error if the operation failed
+           * @param {import('@aws-appsync/utils').Context} ctx the context
+           * @returns {*} the deleted item
+           */
+          export function response(ctx) {
+              if (ctx.error) {
+                  util.error(ctx.error.message, ctx.error.type);
+              }
+              return ctx.args.id;
+          }
+          `),
+          runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+        }),
+        new aws_appsync.AppsyncFunction(this, 'ScanStudentAssessmentsFn', {
+          api,
+          name: 'scanStudentAssessmentsFn',
+          dataSource: studentAssessmentsDs,
+          code: aws_appsync.Code.fromInline(`
+          import { util } from '@aws-appsync/utils';
+
+          /**
+           * Queries a DynamoDB table for items based on the \`id\` and that contain the \`tag\`
+           * @param {import('@aws-appsync/utils').Context<{id: string; tag:string}>} ctx the context
+           * @returns {import('@aws-appsync/utils').DynamoDBQueryRequest} the request
+           */
+          export function request(ctx) {
+          
+              const filter = JSON.parse(
+                  util.transform.toDynamoDBFilterExpression({
+                    parentAssessId: { eq: ctx.args.id },
+                  }),
+              );
+          
+              return { operation: 'Scan', filter };
+          }
+          
+          /**
+           * Returns the query items
+           * @param {import('@aws-appsync/utils').Context} ctx the context
+           * @returns {[*]} a flat list of result items
+           */
+          export function response(ctx) {
+              if (ctx.error) {
+                  util.error(ctx.error.message, ctx.error.type);
+              }
+              return ctx.result.items ? ctx.result.items : [] ;
+          }
+
+          `),
+          runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+        }),
+        new aws_appsync.AppsyncFunction(this, 'BatchDeleteStudentAssessmentsFn', {
+          api,
+          name: 'batchDeleteStudentAssessmentsFn',
+          dataSource: studentAssessmentsDs,
+          code: aws_appsync.Code.fromInline(`
+          import { util } from '@aws-appsync/utils';
+          import { runtime } from '@aws-appsync/utils';
+
+
+          export function request(ctx) {
+              const items = ctx.prev.result;
+              if (!items || items.length === 0) {
+                  // Early return when there's nothing to delete
+                  return runtime.earlyReturn([]);
+              }
+    
+              // Prepare the items for batch deletion
+              const tableItems = items.map(item => util.dynamodb.toMapValues({ userId: item.userId, parentAssessId: item.parentAssessId}));
+    
+              return {
+                  operation: 'BatchDeleteItem',
+                  tables: {
+                      "${studentAssessmentsTable.tableName}": tableItems
+                  }
+              };
+          }
+    
+          export function response(ctx) {
+              if (ctx.error) {
+                  util.error(ctx.error.message, ctx.error.type);
+              }
+              return ctx.prev.result;
+          }
+          `),
+          runtime: aws_appsync.FunctionRuntime.JS_1_0_0,
+        }),
+      ],
+    });
+
     ///////// Bedrock
 
     const getIngestionJobFn = new NodejsFunction(this, 'GetIngestionJobFn', {
       entry: 'lib/lambdas/getIngestionJob.ts',
       runtime: Runtime.NODEJS_18_X,
+      memorySize: 10240,
       architecture: Architecture.ARM_64,
       tracing: Tracing.ACTIVE,
       bundling: {

@@ -1,6 +1,6 @@
 // Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 // SPDX-License-Identifier: MIT-0
- 
+
 import { Construct } from 'constructs';
 import * as cdk from 'aws-cdk-lib';
 import { aws_cognito, Duration, NestedStack, NestedStackProps, RemovalPolicy } from 'aws-cdk-lib';
@@ -32,7 +32,7 @@ export class AuthStack extends NestedStack {
     });
 
     const userPool = new aws_cognito.UserPool(this, 'pool', {
-      selfSignUpEnabled: true,
+      selfSignUpEnabled: false,
       signInAliases: { username: false, email: true },
       customAttributes: {
         'role': new StringAttribute({ minLen: 8, maxLen: 8, mutable: false }),

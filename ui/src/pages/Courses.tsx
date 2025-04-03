@@ -58,7 +58,7 @@ export default () => {
             },
           ]}
           columnDisplay={[
-            { id: 'id', visible: true },
+            { id: 'id', visible: false },
             { id: 'name', visible: true },
             { id: 'description', visible: true },
           ]}
